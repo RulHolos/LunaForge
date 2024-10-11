@@ -14,12 +14,12 @@ namespace LunaForge.GUI.Windows;
 
 public class ToolboxWindow : ImGuiWindow
 {
-    public NodePicker NodePickerBox { get; private set; }
+    public NodePicker NodePickerBox => MainWindow.Workspaces.Current?.Toolbox;
 
     public ToolboxWindow()
         : base(true)
     {
-        NodePickerBox = new();
+
     }
 
     public override void Render()
@@ -28,7 +28,14 @@ public class ToolboxWindow : ImGuiWindow
         {
             if (ImGui.BeginTabBar("NodeToolbox"))
             {
-                foreach (NodePickerTab tab in NodePickerBox.NodePickerTabs)
+                if (NodePickerBox == null)
+                {
+                    ImGui.EndTabBar();
+                    End();
+                    return;
+                }
+
+                foreach (NodePickerTab tab in NodePickerBox.GetAllTabs())
                 {
                     ImGui.PushID(tab.Header);
                     if (ImGui.BeginTabItem(tab.Header))

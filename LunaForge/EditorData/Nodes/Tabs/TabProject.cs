@@ -10,22 +10,21 @@ using static LunaForge.EditorData.Toolbox.NodePicker;
 
 namespace LunaForge.EditorData.Nodes.Tabs;
 
-public class TabProject : NodePickerRegister
+public class TabProject
 {
-    public TabProject(NodePickerTab tab) : base(tab) { }
 
-    public override NodePickerTab RegisterTab()
+    public NodePickerTab RegisterTab()
     {
-        Tab.AddNode(new NodePickerItem("loaddefinition", "LoadDef", "Load Definition", new AddNode(AddNode_LoadDefinition)));
+        //Tab.AddNode(new NodePickerItem("loaddefinition", "LoadDef", "Load Definition", new AddNode(AddNode_LoadDefinition)));
 
-        return Tab;
+        return null;
     }
 
     #region Delegates
 
     private void AddNode_LoadDefinition()
     {
-        MainWindow.Insert(new LoadDefinition(Def));
+        //MainWindow.Insert(new LoadDefinition(Def));
     }
 
     #endregion

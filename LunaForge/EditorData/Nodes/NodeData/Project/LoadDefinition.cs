@@ -37,11 +37,6 @@ public class LoadDefinition : TreeNode
         return $"Load Definition from \"{NonMacrolize(0)}\"";
     }
 
-    public override IEnumerable<Tuple<int, TreeNode>> GetLines()
-    {
-        yield return new Tuple<int, TreeNode>(1, this);
-    }
-
     public override IEnumerable<string> ToLua(int spacing)
     {
         string sp = Indent(spacing);

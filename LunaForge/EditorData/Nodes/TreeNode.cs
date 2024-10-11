@@ -21,6 +21,7 @@ using System.Collections;
 using LunaForge.EditorData.Commands;
 using LunaForge.EditorData.Traces;
 using LunaForge.GUI;
+using MoonSharp.Interpreter;
 
 namespace LunaForge.EditorData.Nodes;
 
@@ -289,6 +290,9 @@ public abstract class TreeNode : ITraceThrowable
     {
         if (sourceNode.MetaData.IsLeafNode)
             return false;
+        if (nodeToValidate is LuaNode)
+            if (!File.Exists((nodeToValidate as LuaNode).PathToLua))
+                return false; // ?
         if (MetaData.IsFolder)
             return GetRealParent()?.ValidateChild(nodeToValidate, sourceNode) ?? true;
         if (nodeToValidate.MetaData.IsFolder)
@@ -614,21 +618,6 @@ public abstract class TreeNode : ITraceThrowable
         foreach (TreeNode tn in childrens)
             this.Children.Add(tn);
         Parent = source.Parent;
-    }
-
-    public abstract IEnumerable<Tuple<int, TreeNode>> GetLines();
-
-    protected IEnumerable<Tuple<int, TreeNode>> GetChildLines()
-    {
-        foreach (TreeNode node in Children)
-        {
-            if (node.IsBanned)
-                continue;
-            foreach (Tuple<int, TreeNode> tuple in node.GetLines())
-            {
-                yield return tuple;
-            }
-        }
     }
 
     #endregion

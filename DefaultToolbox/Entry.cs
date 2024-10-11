@@ -1,5 +1,4 @@
-﻿using DefaultToolbox.Tabs;
-using LunaForge.Plugins.Services;
+﻿using LunaForge.Plugins.Services;
 using LunaForge.Plugins.System;
 using LunaForge.Plugins.System.Attributes;
 
@@ -15,7 +14,7 @@ public class Entry : ILunaPlugin
 
     public void Initialize()
     {
-        ToolboxService.RegisterNodePickerRegister<TabGeneral>("General");
+        //ToolboxService.RegisterNodePickerRegister<TabGeneral>("General");
     }
 
     public void Update()

@@ -365,6 +365,7 @@ public class LunaDefinition : LunaProjectFile
                 node.IsExpanded = true;
             TreeNode oldSelection = SelectedNode;
             Command cmd = null;
+            node.ParentDef = this;
             switch (MainWindow.InsertMode)
             {
                 case InsertMode.Before:
@@ -387,6 +388,8 @@ public class LunaDefinition : LunaProjectFile
                 return false;
             if (AddAndExecuteCommand(cmd))
             {
+                //if (node is LuaNode)
+                //    (node as LuaNode).CreateScript();
                 RevealNode(node);
                 if (doInvoke)
                 {

@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace LunaForge.EditorData.Toolbox;
 
@@ -34,4 +35,33 @@ public class NodePickerTab : IEnumerable<NodePickerItem>
     {
         return GetEnumerator();
     }
+
+    #region Parsing
+
+    public static NodePickerTab FromXml(NodePlugin plugin, XmlNode tabNode)
+    {
+        NodePickerTab tab = new()
+        {
+            Header = tabNode.Attributes["name"]?.Value ?? "??"
+        };
+
+        foreach (XmlNode node in tabNode.ChildNodes)
+        {
+            switch (node.Name)
+            {
+                case "node":
+                    tab.AddNode(NodePickerItem.FromNode(plugin, node));
+                    break;
+                case "separator":
+                    tab.AddNode(new(true));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return tab;
+    }
+
+    #endregion
 }

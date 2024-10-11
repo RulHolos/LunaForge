@@ -25,12 +25,6 @@ public class RootNode : TreeNode
             yield return a;
     }
 
-    public override IEnumerable<Tuple<int, TreeNode>> GetLines()
-    {
-        foreach (Tuple<int, TreeNode> item in GetChildLines())
-            yield return item;
-    }
-
     public override object Clone()
     {
         RootNode node = new(ParentDef);

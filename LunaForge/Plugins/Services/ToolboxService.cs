@@ -13,17 +13,17 @@ namespace LunaForge.Plugins.Services;
 
 public interface IToolboxService
 {
-    public bool RegisterNodePickerRegister<T>(string name) where T : NodePickerRegister;
+    public bool RegisterNodePickerRegister<T>(string name);
 
     public bool Insert(TreeNode node, bool doInvoke = true);
 }
 
 internal class ToolboxService : IToolboxService
 {
-    public bool RegisterNodePickerRegister<T>(string name) where T : NodePickerRegister
+    public bool RegisterNodePickerRegister<T>(string name)
     {
         Type pluginNodeType = typeof(T);
-        if (typeof(NodePickerRegister).IsAssignableFrom(pluginNodeType))
+        /*if (typeof(NodePickerRegister).IsAssignableFrom(pluginNodeType))
         {
             try
             {
@@ -36,7 +36,7 @@ internal class ToolboxService : IToolboxService
                 NotificationManager.AddToast($"Couldn't register node register \"{pluginNodeType.Name}\".", ToastType.Error);
                 return false;
             }
-        }
+        }*/
         return false;
     }
 

@@ -34,15 +34,6 @@ public class MainMenuDefinition : TreeNode
             yield return a;
     }
 
-    public override IEnumerable<Tuple<int, TreeNode>> GetLines()
-    {
-        yield return new Tuple<int, TreeNode>(1, this);
-        foreach (Tuple<int, TreeNode> t in GetChildLines())
-        {
-            yield return t;
-        }
-    }
-
     public override object Clone()
     {
         MainMenuDefinition node = new(ParentDef);
