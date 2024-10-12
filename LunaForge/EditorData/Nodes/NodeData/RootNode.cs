@@ -20,7 +20,7 @@ public class RootNode : TreeNode
     public override IEnumerable<string> ToLua(int spacing)
     {
         string sp = Indent(spacing);
-        yield return $"-- Definition generated from {ParentDef.FileName}";
+        yield return $"-- Definition generated from {ParentDef.FileName}\n";
         foreach (var a in base.ToLua(spacing))
             yield return a;
     }

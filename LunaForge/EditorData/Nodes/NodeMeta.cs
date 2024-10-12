@@ -1,4 +1,5 @@
 ﻿using LunaForge.EditorData.Nodes.Attributes;
+using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +59,60 @@ public sealed class NodeMeta
         CreateInvokeId = type.GetCustomAttribute<CreateInvokeAttribute>()?.ID;
         RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID;
     }
+
+    public NodeMeta(TreeNode source, Table meta)
+        : this(source)
+    {
+        IsFolder = FindAttribute(meta, "IsFolder", false);
+        IsDefinition = FindAttribute(meta, "IsDefinition", false);
+        IsLeafNode = FindAttribute(meta, "LeafNode", false);
+        CannotBeDeleted = FindAttribute(meta, "CannotBeDeleted", false);
+        CannotBeBanned = FindAttribute(meta, "CannotBeBanned", false);
+        IgnoreValidation = FindAttribute(meta, "IgnoreValidation", false);
+        Unique = FindAttribute(meta, "Unique", false);
+
+        Icon = FindAttribute(meta, "Icon", "Unknown");
+    }
+
+    #region From Lua
+
+    public static bool FindAttribute(Table meta, string attrib, bool defaultValue)
+    {
+        if (meta == null)
+            return defaultValue;
+
+        foreach (DynValue item in meta.Values)
+            if (item.Type == DataType.String)
+                if (item.String.Equals(attrib, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+        return defaultValue;
+    }
+
+    public static string FindAttribute(Table meta, string attrib, string defaultValue)
+    {
+        if (meta == null)
+            return defaultValue;
+
+        foreach (TablePair item in meta.Pairs)
+        {
+            FromDataType(DataType.String, item, attrib, out DynValue? result);
+            if (result != null)
+                return item.Value.String;
+        }
+
+        return defaultValue;
+    }
+
+    private static void FromDataType(DataType valueDataType, TablePair item, string attrib, out DynValue? result)
+    {
+        result = null;
+        if (item.Key.Type == DataType.String && item.Value.Type == valueDataType)
+            if (item.Key.String.Equals(attrib, StringComparison.OrdinalIgnoreCase))
+                result = item.Value;
+    }
+
+    #endregion
 
     public static Type[] GetTypes(Type[] src)
     {

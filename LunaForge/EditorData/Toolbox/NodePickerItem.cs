@@ -1,5 +1,6 @@
 ﻿using LunaForge.EditorData.Nodes;
 using LunaForge.EditorData.Nodes.NodeData;
+using LunaForge.EditorData.Project;
 using LunaForge.GUI;
 using System;
 using System.Collections.Generic;
@@ -47,13 +48,26 @@ public class NodePickerItem
         string path = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["path"]?.Value ?? "");
         string icon = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["icon"]?.Value ?? "");
 
+        List<string> childNodesPath = [];
+        foreach (XmlNode childNode in node.ChildNodes)
+        {
+            if (childNode.Name != "node")
+                continue;
+            string childPath = Path.Combine(plugin.PathToPlugin, plugin.Namespace, childNode.Attributes["path"]?.Value ?? "");
+            if (File.Exists(childPath))
+                childNodesPath.Add(childPath);
+        }
+
         string iconName = MainWindow.LoadEditorImageFromFile(icon);
 
         Console.WriteLine($"Node \"{name}\" loaded successfully.");
         return new($"{plugin.Namespace}-{name}", iconName, name, () =>
         {
+            LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;
             // TODO : Check the innerxml to see if the node has children. If so: add them to the node.
-            TreeNode node = new LuaNode(path);
+            TreeNode node = new LuaNode(parentDef, path);
+            foreach (string pathToChildren in childNodesPath)
+                node.AddChild(new LuaNode(parentDef, pathToChildren));
             
             MainWindow.Insert(node);
         });

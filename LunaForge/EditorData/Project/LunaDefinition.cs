@@ -388,8 +388,6 @@ public class LunaDefinition : LunaProjectFile
                 return false;
             if (AddAndExecuteCommand(cmd))
             {
-                //if (node is LuaNode)
-                //    (node as LuaNode).CreateScript();
                 RevealNode(node);
                 if (doInvoke)
                 {

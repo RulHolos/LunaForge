@@ -1,4 +1,6 @@
 ﻿using LunaForge.EditorData.Project;
+using LunaForge.EditorData.Traces.EditorTraces;
+using LunaForge.EditorData.Traces;
 using LunaForge.GUI;
 using MoonSharp.Interpreter;
 using Newtonsoft.Json;
@@ -15,10 +17,13 @@ internal class LuaNode : TreeNode
     [JsonIgnore]
     public Script Script { get; private set; }
 
+    [JsonIgnore]
+    public bool InvalidNode { get; private set; } = false;
+
     [JsonConstructor]
     private LuaNode() : base() { }
-    public LuaNode(string pathToLua)
-        : base()
+    public LuaNode(LunaDefinition def, string pathToLua)
+        : base(def)
     {
         PathToLua = pathToLua;
         CreateScript();
@@ -27,22 +32,46 @@ internal class LuaNode : TreeNode
     [JsonProperty("PathToLua")]
     public string PathToLua { get; set; } = string.Empty;
 
-    public override string ToString() => "Root";
+    public override string ToString()
+    {
+        if (InvalidNode)
+        {
+            CheckTrace();
+            return $"--- Invalid Node: {PathToLua} ---";
+        }
+        CreateScript();
+        return Script?.Call(Script.Globals.Get("ToString")).String;
+    }
 
     public Script CreateScript()
     {
         if (Script != null)
             return Script;
+        if (!File.Exists(PathToLua))
+        {
+            InvalidNode = true;
+            Console.WriteLine($"Problem with loading lua script: {PathToLua}");
+            return null;
+        }
         Script script = new();
         script.Globals["this"] = this;
         script.Globals["GetChildrenLua"] = (Func<int, IEnumerable<string>>)GetChildrenLua;
+        script.Globals["GetAttribute"] = (Func<string, string>)GetAttribute;
+        script.Globals["SetAttribute"] = (Action<string, string>)SetAttribute;
+        script.Globals["Macrolize"] = (Func<int, string>)Macrolize;
+        script.Globals["NonMacrolize"] = (Func<int, string>)NonMacrolize;
+        script.Globals["SetupAttribute"] = (Func<string, string, string, string>)SetupAttribute;
+        script.Globals["SetupMeta"] = (Action<Table>)SetupMeta;
+        script.Globals["Indent"] = (Func<int, string>)Indent;
         try
         {
             script.DoFile(PathToLua);
+            InvalidNode = false;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Problem with loading lua script: {ex}");
+            InvalidNode = true;
         }
 
         Script = script;
@@ -51,9 +80,9 @@ internal class LuaNode : TreeNode
 
     public IEnumerable<string> GetChildrenLua(int spacing)
     {
-        Console.WriteLine("Getting children");
-        foreach (var children in base.ToLua(spacing + 1))
-            yield return children;
+        Console.WriteLine("Children get");
+        foreach (var a in base.ToLua(spacing))
+            yield return $"{Indent(spacing)}{a}";
     }
 
     // TODO : Return a compilation error if this function fails at any point.
@@ -72,11 +101,10 @@ internal class LuaNode : TreeNode
             {
                 if (result.Type == DataType.String)
                 {
-                    yield return Indent(spacing) + result.String;
+                    yield return $"{result.String}";
                 }
 
-                // Resume the coroutine to get the next result
-                GetCoroutineResult(ref coroutine, ref result);
+                GetCoroutineResult(ref coroutine, ref result, spacing);
             }
         }
     }
@@ -90,14 +118,23 @@ internal class LuaNode : TreeNode
         catch (Exception ex)
         {
             NotificationManager.AddToast($"Couldn't generated code from node {GetType().Name}, see console for more infos.", ToastType.Error);
+            Console.WriteLine(ex.ToString());
             result = null;
         }
     }
 
     public override object Clone()
     {
-        LuaNode node = new(PathToLua);
+        LuaNode node = new(ParentDef, PathToLua);
         node.CopyData(this);
         return node;
+    }
+
+    public override List<EditorTrace> GetTraces()
+    {
+        List<EditorTrace> traces = [];
+        if (InvalidNode)
+            traces.Add(new InvalidNodeTrace(this));
+        return traces;
     }
 }

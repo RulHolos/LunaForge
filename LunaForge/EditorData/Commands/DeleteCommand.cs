@@ -20,6 +20,7 @@ public class DeleteCommand : Command
 
     public override void Execute()
     {
+        toOperate.RaiseRemove(new() { Parent = toOperate.Parent });
         toOperate.ParentDef.DeselectAllNodes();
         toOperate.Parent.RemoveChild(toOperate);
     }

@@ -97,8 +97,6 @@ public abstract class TreeNode : ITraceThrowable
     public bool HasNoChildren => Children.Count <= 0;
 
     [JsonIgnore]
-    protected bool Activated = false;
-    [JsonIgnore]
     private TreeNode LinkedPrevious = null;
     [JsonIgnore]
     private TreeNode LinkedNext = null;
@@ -124,6 +122,11 @@ public abstract class TreeNode : ITraceThrowable
         : this()
     {
         ParentDef = def;
+        SetupHash();
+    }
+
+    public void SetupHash()
+    {
         Hash = ParentDef.TreeNodeMaxHash;
         ParentDef.TreeNodeMaxHash++;
     }
@@ -131,6 +134,28 @@ public abstract class TreeNode : ITraceThrowable
     public abstract new string ToString();
 
     #region Attributes
+
+    public string SetupAttribute(string name, string defaultValue, string editWindow)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+            return name;
+
+        Attributes.Add(new NodeAttribute(name, defaultValue, editWindow));
+        return name;
+    }
+
+    public string GetAttribute(string name)
+    {
+        return GetAttr(name).AttrValue;
+    }
+
+    public void SetAttribute(string name, string value)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+            attr.AttrValue = value;
+    }
 
     private void AttributesChanged(object sender, NotifyCollectionChangedEventArgs args)
     {
@@ -154,9 +179,9 @@ public abstract class TreeNode : ITraceThrowable
             return null;
     }
 
-    public NodeAttribute GetAttr(string name)
+    public NodeAttribute? GetAttr(string name)
     {
-        var attrs = from NodeAttribute na in attributes
+        var attrs = from NodeAttribute na in Attributes
                     where na != null && !string.IsNullOrEmpty(na.AttrName) && na.AttrName == name
                     select na;
         if (attrs != null && attrs.Any())
@@ -620,6 +645,11 @@ public abstract class TreeNode : ITraceThrowable
         Parent = source.Parent;
     }
 
+    public void SetupMeta(Table table)
+    {
+        MetaData = new(this, table);
+    }
+
     #endregion
     #region Macros
 
@@ -645,10 +675,7 @@ public abstract class TreeNode : ITraceThrowable
 
     protected string Macrolize(string attr)
     {
-        /*foreach (DefineMacroSettings macro in ParentDocument.CompileProcess.MacroDefinitions)
-        {
-            attr = ExecuteMacro(macro, attr);
-        }*/
+        attr = GetAttr(attr).AttrValue;
         return attr;
     }
 
@@ -698,22 +725,19 @@ public abstract class TreeNode : ITraceThrowable
 
     public void RaiseRemove(OnRemoveEventArgs e)
     {
-        if (e.Parent == null || e.Parent.Activated)
+        if (!IsBanned)
         {
-            if (!IsBanned)
-            {
-                OnVirtualRemove?.Invoke(e);
-            }
-            OnRemove?.Invoke(e);
-            OnCreateEventArgs args = new OnCreateEventArgs { Parent = this };
-            foreach (TreeNode node in Children)
-                node.RaiseRemove(e);
+            OnVirtualRemove?.Invoke(e);
         }
+        OnRemove?.Invoke(e);
+        OnRemoveEventArgs args = new() { Parent = this };
+        foreach (TreeNode node in Children)
+            node.RaiseRemove(args);
     }
 
     public void RaiseVirtuallyRemove(OnRemoveEventArgs e)
     {
-        if (Activated && IsBanned)
+        if (IsBanned)
         {
             OnVirtualRemove?.Invoke(e);
             foreach (TreeNode node in Children)
