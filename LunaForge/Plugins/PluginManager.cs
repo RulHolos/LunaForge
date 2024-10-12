@@ -23,31 +23,23 @@ internal enum LunaPluginState
 
 internal class LunaPluginInfo
 {
-    public LunaPluginInfo()
-    {
-    }
-
     public ILunaPlugin? Plugin { get; set; }
     public PluginLoadContext Context { get; set; }
     public LunaPluginState State { get; set; }
 
     public LunaPluginMeta Meta { get; set; }
-
-    public static LunaPluginInfo Null => new() { IsEmpty = true };
-
-    /// <summary>
-    /// Never set this yourself, this is for the UI.
-    /// </summary>
-    public bool IsEmpty { get; set; } = false;
 }
 
 [Serializable]
 internal class LunaPluginMeta
 {
-    [DefaultValue("")]
     public string Name { get; set; }
     public string[] Authors { get; set; }
     public string Description { get; set; }
+    /// <summary>
+    /// Is the plugin loaded globally (true) or per-project (false)
+    /// </summary>
+    public bool IsEditorPlugin { get; set; }
 }
 
 internal sealed class PluginManager
@@ -60,6 +52,7 @@ internal sealed class PluginManager
     {
         ServiceCollection serviceCollection = new();
         serviceCollection.AddSingleton<IToolboxService, ToolboxService>();
+        serviceCollection.AddSingleton<IWindowService, WindowService>();
 
         serviceProvider = serviceCollection.BuildServiceProvider();
 
@@ -132,6 +125,7 @@ internal sealed class PluginManager
             }
 
             info.State = LunaPluginState.Enabled;
+            Configuration.Default.EnabledPlugins[Path.GetFileName(info.Context.filePath)] = true;
             Console.WriteLine($"Plugin \"{info.Meta.Name}\" ({Path.GetFileName(info.Context.filePath)}) loaded successfully.");
         }
         catch (Exception ex)
@@ -169,6 +163,7 @@ internal sealed class PluginManager
 
         info.State = LunaPluginState.Disabled;
         info.Context = new(info.Context.filePath);
+        Configuration.Default.EnabledPlugins[Path.GetFileName(info.Context.filePath)] = false;
         Console.WriteLine($"Plugin \"{info.Meta.Name}\" ({Path.GetFileName(info.Context.filePath)}) disabled.");
     }
 }

@@ -15,7 +15,7 @@ namespace LunaForge.GUI.Windows;
 internal class PluginManagerWindow : ImGuiWindow
 {
     public Vector2 ModalSize = new(800, 600);
-    LunaPluginInfo selectedPlugin = LunaPluginInfo.Null;
+    LunaPluginInfo? selectedPlugin = null;
 
     public PluginManagerWindow()
         : base(false)
@@ -39,24 +39,14 @@ internal class PluginManagerWindow : ImGuiWindow
                 {
                     foreach (LunaPluginInfo plugin in MainWindow.PluginManager.Plugins)
                     {
-                        uint color = 0x0;
-                        switch (plugin.State)
+                        uint color = plugin.State switch
                         {
-                            case LunaPluginState.Enabled:
-                                color = ImGui.GetColorU32(ImGuiCol.Text);
-                                break;
-                            case LunaPluginState.Disabled:
-                                color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
-                                break;
-                            case LunaPluginState.ErrorWhileLoading:
-                                color = 0xFF0000FFu;
-                                break;
-                            default:
-                                color = ImGui.GetColorU32(ImGuiCol.Text);
-                                break;
-                        }
+                            LunaPluginState.Disabled => ImGui.GetColorU32(ImGuiCol.TextDisabled),
+                            LunaPluginState.ErrorWhileLoading => 0xFF0000FFu,
+                            _ => ImGui.GetColorU32(ImGuiCol.Text),
+                        };
                         ImGui.PushStyleColor(ImGuiCol.Text, color);
-                        if (ImGui.Selectable($"{plugin.Meta.Name} {(plugin.State == LunaPluginState.ErrorWhileLoading ? "(Error)" : "")}", selectedPlugin.Equals(plugin)))
+                        if (ImGui.Selectable($"{plugin.Meta.Name} {(plugin.State == LunaPluginState.ErrorWhileLoading ? "(Error)" : "")}", plugin == selectedPlugin))
                             selectedPlugin = plugin;
                         ImGui.PopStyleColor();
                     }
@@ -65,7 +55,7 @@ internal class PluginManagerWindow : ImGuiWindow
 
                 ImGui.SameLine();
 
-                if (!selectedPlugin.IsEmpty)
+                if (selectedPlugin != null)
                 {
                     ImGui.BeginGroup();
 

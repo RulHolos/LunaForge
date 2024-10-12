@@ -22,7 +22,8 @@ using LunaForge.EditorData.Nodes;
 using LunaForge.EditorData.Traces;
 using LunaForge.EditorData.InputWindows;
 using NetSparkleUpdater;
-using NetSparkleUpdater.SignatureVerifiers;
+using MoonSharp.Interpreter;
+using LunaForge.EditorData.Nodes.NodeData;
 
 namespace LunaForge.GUI;
 
@@ -47,6 +48,7 @@ namespace LunaForge.GUI;
  * There is a node to instanciate the ones who can be accessed and another one to load the definition file.
  * The packed "mod" has the same format and file tree as the actual project. Every .lfd are replaced by its lua counterpart.
  * (so it can be loaded by LoadDefinition by just replacing the extension)
+ * Definitions CAN contain multiple other definition nodes (object define, item define, ...)
  * 
  * 
  * Plugin system:
@@ -77,7 +79,7 @@ namespace LunaForge.GUI;
  * 
  * meta.dat : md5 hash of files to pack.
  * 
- * Export profile: Since THlib is not the only lib existing (Verita, KaleidoLib, HolosLib), specify a pre-existing profile for exporting (like, arguments and values, etc)
+ * Export profile: Since THlib is not the only lib existing (KaleidoLib, HolosLib, CuOLib ...), specify a pre-existing profile for exporting (like, arguments and values, etc)
  */
 
 /// <summary>
@@ -120,6 +122,8 @@ internal static class MainWindow
     public static SparkleUpdater Sparkle;
 
     #region Windows
+
+    public static List<ImGuiWindow> Windows = [];
 
     public static ToolboxWindow ToolboxWin;
     public static NodeAttributeWindow NodeAttributeWin;
@@ -192,6 +196,19 @@ internal static class MainWindow
         Raylib.MaximizeWindow();
         Raylib.SetTargetFPS(60);
 
+        try
+        {
+            PluginManager.GetAllPluginInfo();
+            PluginManager.LoadAllEnabledPlugins();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Something went wrong at plugin loading: {ex}");
+        }
+
+        UserData.RegisterType<LuaNode>();
+        UserData.RegisterType<TreeNode>();
+
         LoadEditorImages();
         NodeManager.RegisterDefinitionNodes();
         InputWindowSelector.Register(new InputWindowSelectorRegister());
@@ -201,9 +218,6 @@ internal static class MainWindow
 
         ShortcutList.RegisterShortcuts();
         GetPresets();
-
-        PluginManager.GetAllPluginInfo();
-        PluginManager.LoadAllEnabledPlugins();
 
         bool exitWindow = false;
         bool exitWindowRequested = false;
@@ -262,6 +276,9 @@ internal static class MainWindow
         ViewCodeWin.Render();
         SparkleWin.Render();
         PluginManagerWin.Render();
+
+        foreach (ImGuiWindow window in Windows)
+            window?.Render();
 
         InputWindowSelector.CurrentInputWindow?.Render();
         FileDialogManager.Draw();
@@ -478,11 +495,12 @@ internal static class MainWindow
     public static bool InsertPreset_CanExecute() => (Workspaces.Current?.CurrentProjectFile as LunaDefinition) != null;
 
     #endregion
-    #region Editor Exec
+    #region Editor Images
 
     /// <summary>
-    /// Loads all images inside the "Image" directorys to a <see cref="Texture2D"/> and adds them to <see cref="EditorImages"/>.
+    /// Loads all images inside the "Image" directory to a <see cref="Texture2D"/> and adds them to <see cref="EditorImages"/>.
     /// </summary>
+    /// <seealso cref="LoadEditorImageFromFile(string)"/>
     public static void LoadEditorImages()
     {
         EditorImages = [];
@@ -494,11 +512,21 @@ internal static class MainWindow
         string[] images = Directory.GetFiles(rootDir, "*.png", SearchOption.AllDirectories);
         foreach (string image in images)
         {
-            string key = Path.GetFileNameWithoutExtension(image);
-            if (EditorImages.ContainsKey(key))
-                continue;
-            EditorImages.Add(key, Raylib.LoadTexture(image));
+            LoadEditorImageFromFile(image);
         }
+    }
+
+    /// <summary>
+    /// Loads an image from a file path as a <see cref="Texture2D"/> and adds them to <see cref="EditorImages"/>.
+    /// </summary>
+    public static string LoadEditorImageFromFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return "Unknown";
+
+        string key = Path.GetFileNameWithoutExtension(filePath);
+        EditorImages.TryAdd(key, Raylib.LoadTexture(filePath));
+        return key;
     }
 
     /// <summary>
@@ -513,6 +541,9 @@ internal static class MainWindow
         else
             return EditorImages["Unknown"];
     }
+
+    #endregion
+    #region Editor Exec
 
     /// <summary>
     /// Prompts the user to choose a directory and creates a new project at the given location.
@@ -893,11 +924,6 @@ internal static class MainWindow
             DebugLogWin.DebugLogContent = s;
         }, () => { });
     }
-
-    #endregion
-    #region TreeNode Operation
-
-
 
     #endregion
     #region Project Operation

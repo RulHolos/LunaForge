@@ -15,11 +15,11 @@ using System.Numerics;
 using rlImGui_cs;
 using LunaForge.GUI.Helpers;
 using LunaForge.EditorData.Nodes.NodeData.Stages;
-using static LunaForge.EditorData.Nodes.NodeManager;
 using LunaForge.EditorData.InputWindows;
 using LunaForge.GUI.ImGuiFileDialog;
 using LunaForge.EditorData.Traces;
 using TextCopy;
+using LunaForge.EditorData.Nodes.NodeData;
 
 namespace LunaForge.EditorData.Project;
 
@@ -36,23 +36,27 @@ public class LunaDefinition : LunaProjectFile
     public LunaDefinition(LunaForgeProject parentProj, string path)
         : base(parentProj, path)
     {
-
+        
     }
 
     #region Rendering
 
     public override void Render()
     {
-        if (TreeNodes[0] == null)
+        RenderNodeToolbar();
+        ImGui.Separator();
+        RenderTreeView(TreeNodes[0], TreeNodes[0].IsBanned);
+        /*if (TreeNodes[0] == null)
             RenderRootTypeSelector();
         else
         {
             RenderNodeToolbar();
             ImGui.Separator();
             RenderTreeView(TreeNodes[0], TreeNodes[0].IsBanned);
-        }
+        }*/
     }
 
+    [Obsolete]
     private void RenderRootTypeSelector()
     {
         ImGui.Text("This file is currently empty. Please choose the Definition Type to start editing:");
@@ -60,7 +64,7 @@ public class LunaDefinition : LunaProjectFile
         using var listbox = ImRaii.ListBox(string.Empty);
         if (listbox)
         {
-            foreach (KeyValuePair<string, AddDefNode> type in NodeManager.DefinitionNodes)
+            foreach (KeyValuePair<string, NodeManager.AddDefNode> type in NodeManager.DefinitionNodes)
             {
                 if (ImGui.Selectable($"{type.Key}"))
                 {
@@ -316,6 +320,9 @@ public class LunaDefinition : LunaProjectFile
 
             definition.TreeNodes[0]?.CheckChildrenTraces();
 
+            if (definition.TreeNodes[0] == null)
+                definition.TreeNodes[0] = new RootNode(definition);
+
             return definition;
         }
         catch (Exception ex)
@@ -358,6 +365,7 @@ public class LunaDefinition : LunaProjectFile
                 node.IsExpanded = true;
             TreeNode oldSelection = SelectedNode;
             Command cmd = null;
+            node.ParentDef = this;
             switch (MainWindow.InsertMode)
             {
                 case InsertMode.Before:

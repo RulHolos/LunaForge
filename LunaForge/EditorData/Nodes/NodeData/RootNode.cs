@@ -1,4 +1,5 @@
-﻿using LunaForge.EditorData.Project;
+﻿using LunaForge.EditorData.Nodes.Attributes;
+using LunaForge.EditorData.Project;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace LunaForge.EditorData.Nodes.NodeData;
 
+[NodeIcon("Folder")]
+[CannotBeDeleted, CannotBeBanned]
 public class RootNode : TreeNode
 {
     public RootNode() : base() { }
@@ -14,10 +17,12 @@ public class RootNode : TreeNode
 
     public override string ToString() => "Root";
 
-    public override IEnumerable<Tuple<int, TreeNode>> GetLines()
+    public override IEnumerable<string> ToLua(int spacing)
     {
-        foreach (Tuple<int, TreeNode> item in GetChildLines())
-            yield return item;
+        string sp = Indent(spacing);
+        yield return $"-- Definition generated from {ParentDef.FileName}\n";
+        foreach (var a in base.ToLua(spacing))
+            yield return a;
     }
 
     public override object Clone()

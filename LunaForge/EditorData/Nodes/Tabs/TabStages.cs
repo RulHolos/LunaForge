@@ -9,15 +9,13 @@ using static LunaForge.EditorData.Toolbox.NodePicker;
 
 namespace LunaForge.EditorData.Nodes.Tabs;
 
-public class TabStages : NodePickerRegister
+public class TabStages
 {
-    public TabStages(NodePickerTab tab) : base(tab) { }
-
-    public override NodePickerTab RegisterTab()
+    public NodePickerTab RegisterTab()
     {
         //Tab.AddNode(new NodePickerItem("definestagegroup", "StageGroup.png", "Define Stage Group", new AddNode(AddNode_DefineStageGroup)));
 
-        return Tab;
+        return null;
     }
 
     #region Delegates

@@ -1,8 +1,13 @@
-﻿using System;
+﻿using LunaForge.EditorData.Nodes;
+using LunaForge.EditorData.Nodes.NodeData;
+using LunaForge.EditorData.Project;
+using LunaForge.GUI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace LunaForge.EditorData.Toolbox;
 
@@ -28,4 +33,45 @@ public class NodePickerItem
         Tooltip = tooltip;
         AddNodeMethod = addNodeMethod;
     }
+
+    #region Parsing Xml
+
+    /// <summary>
+    /// Creates a <see cref="NodePickerItem"/> from a <see cref="XmlNode"/>.
+    /// </summary>
+    /// <param name="plugin"></param>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    public static NodePickerItem FromNode(NodePlugin plugin, XmlNode node)
+    {
+        string name = node.Attributes["name"]?.Value ?? "no-name";
+        string path = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["path"]?.Value ?? "");
+        string icon = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["icon"]?.Value ?? "");
+
+        List<string> childNodesPath = [];
+        foreach (XmlNode childNode in node.ChildNodes)
+        {
+            if (childNode.Name != "node")
+                continue;
+            string childPath = Path.Combine(plugin.PathToPlugin, plugin.Namespace, childNode.Attributes["path"]?.Value ?? "");
+            if (File.Exists(childPath))
+                childNodesPath.Add(childPath);
+        }
+
+        string iconName = MainWindow.LoadEditorImageFromFile(icon);
+
+        Console.WriteLine($"Node \"{name}\" loaded successfully.");
+        return new($"{plugin.Namespace}-{name}", iconName, name, () =>
+        {
+            LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;
+            // TODO : Check the innerxml to see if the node has children. If so: add them to the node.
+            TreeNode node = new LuaNode(parentDef, path);
+            foreach (string pathToChildren in childNodesPath)
+                node.AddChild(new LuaNode(parentDef, pathToChildren));
+            
+            MainWindow.Insert(node);
+        });
+    }
+
+    #endregion
 }

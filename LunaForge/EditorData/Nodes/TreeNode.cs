@@ -21,6 +21,7 @@ using System.Collections;
 using LunaForge.EditorData.Commands;
 using LunaForge.EditorData.Traces;
 using LunaForge.GUI;
+using MoonSharp.Interpreter;
 
 namespace LunaForge.EditorData.Nodes;
 
@@ -74,6 +75,8 @@ public abstract class TreeNode : ITraceThrowable
     }
 
     [JsonIgnore]
+    public List<NodeAttribute> TempAttributes = [];
+    [JsonIgnore]
     public ObservableCollection<NodeAttribute> attributes = [];
     public ObservableCollection<NodeAttribute> Attributes
     {
@@ -95,8 +98,6 @@ public abstract class TreeNode : ITraceThrowable
     [JsonIgnore]
     public bool HasNoChildren => Children.Count <= 0;
 
-    [JsonIgnore]
-    protected bool Activated = false;
     [JsonIgnore]
     private TreeNode LinkedPrevious = null;
     [JsonIgnore]
@@ -123,6 +124,11 @@ public abstract class TreeNode : ITraceThrowable
         : this()
     {
         ParentDef = def;
+        SetupHash();
+    }
+
+    public void SetupHash()
+    {
         Hash = ParentDef.TreeNodeMaxHash;
         ParentDef.TreeNodeMaxHash++;
     }
@@ -130,6 +136,38 @@ public abstract class TreeNode : ITraceThrowable
     public abstract new string ToString();
 
     #region Attributes
+
+    public string SetupAttribute(string name, string defaultValue, string editWindow)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+        {
+            TempAttributes.Add(attr);
+            return name;
+        }
+
+        TempAttributes.Add(new(name, defaultValue, editWindow));
+        return name;
+    }
+
+    public void RemoveUnusedAttributes()
+    {
+        Attributes.Clear();
+        foreach (var attr in TempAttributes)
+            Attributes.Add(attr);
+    }
+
+    public string GetAttribute(string name)
+    {
+        return GetAttr(name).AttrValue;
+    }
+
+    public void SetAttribute(string name, string value)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+            attr.AttrValue = value;
+    }
 
     private void AttributesChanged(object sender, NotifyCollectionChangedEventArgs args)
     {
@@ -153,9 +191,9 @@ public abstract class TreeNode : ITraceThrowable
             return null;
     }
 
-    public NodeAttribute GetAttr(string name)
+    public NodeAttribute? GetAttr(string name)
     {
-        var attrs = from NodeAttribute na in attributes
+        var attrs = from NodeAttribute na in Attributes
                     where na != null && !string.IsNullOrEmpty(na.AttrName) && na.AttrName == name
                     select na;
         if (attrs != null && attrs.Any())
@@ -289,6 +327,9 @@ public abstract class TreeNode : ITraceThrowable
     {
         if (sourceNode.MetaData.IsLeafNode)
             return false;
+        if (nodeToValidate is LuaNode)
+            if (!File.Exists((nodeToValidate as LuaNode).PathToLua))
+                return false; // ?
         if (MetaData.IsFolder)
             return GetRealParent()?.ValidateChild(nodeToValidate, sourceNode) ?? true;
         if (nodeToValidate.MetaData.IsFolder)
@@ -600,6 +641,11 @@ public abstract class TreeNode : ITraceThrowable
         }
     }
 
+    public IEnumerable<TreeNode> FromPriority()
+    {
+        return GetRealChildren().OrderBy(s => s.MetaData.Priority ?? 0);
+    }
+
     #endregion
     #region Data Handle
 
@@ -616,19 +662,9 @@ public abstract class TreeNode : ITraceThrowable
         Parent = source.Parent;
     }
 
-    public abstract IEnumerable<Tuple<int, TreeNode>> GetLines();
-
-    protected IEnumerable<Tuple<int, TreeNode>> GetChildLines()
+    public void SetupMeta(Table table)
     {
-        foreach (TreeNode node in Children)
-        {
-            if (node.IsBanned)
-                continue;
-            foreach (Tuple<int, TreeNode> tuple in node.GetLines())
-            {
-                yield return tuple;
-            }
-        }
+        MetaData = new(this, table);
     }
 
     #endregion
@@ -656,10 +692,7 @@ public abstract class TreeNode : ITraceThrowable
 
     protected string Macrolize(string attr)
     {
-        /*foreach (DefineMacroSettings macro in ParentDocument.CompileProcess.MacroDefinitions)
-        {
-            attr = ExecuteMacro(macro, attr);
-        }*/
+        attr = GetAttr(attr).AttrValue;
         return attr;
     }
 
@@ -684,17 +717,15 @@ public abstract class TreeNode : ITraceThrowable
     private event OnRemoveNodeHandler OnVirtualRemove;
     private event OnDependencyAttributeChangedHandler OnDependencyAttributeChanged;
 
+    // TODO : Raise at node deserialization.
     public void RaiseCreate(OnCreateEventArgs e)
     {
-        if (e.Parent == null)
-        {
-            if (!IsBanned)
-                OnVirtualCreate?.Invoke(e);
-            OnCreate?.Invoke(e);
-            OnCreateEventArgs args = new() { Parent = this };
-            foreach (TreeNode node in Children)
-                node.RaiseCreate(args);
-        }
+        if (!IsBanned)
+            OnVirtualCreate?.Invoke(e);
+        OnCreate?.Invoke(e);
+        OnCreateEventArgs args = new() { Parent = this };
+        foreach (TreeNode node in Children)
+            node.RaiseCreate(args);
     }
 
     public void RaiseVirtuallyCreate(OnCreateEventArgs e)
@@ -709,22 +740,19 @@ public abstract class TreeNode : ITraceThrowable
 
     public void RaiseRemove(OnRemoveEventArgs e)
     {
-        if (e.Parent == null || e.Parent.Activated)
+        if (!IsBanned)
         {
-            if (!IsBanned)
-            {
-                OnVirtualRemove?.Invoke(e);
-            }
-            OnRemove?.Invoke(e);
-            OnCreateEventArgs args = new OnCreateEventArgs { Parent = this };
-            foreach (TreeNode node in Children)
-                node.RaiseRemove(e);
+            OnVirtualRemove?.Invoke(e);
         }
+        OnRemove?.Invoke(e);
+        OnRemoveEventArgs args = new() { Parent = this };
+        foreach (TreeNode node in Children)
+            node.RaiseRemove(args);
     }
 
     public void RaiseVirtuallyRemove(OnRemoveEventArgs e)
     {
-        if (Activated && IsBanned)
+        if (IsBanned)
         {
             OnVirtualRemove?.Invoke(e);
             foreach (TreeNode node in Children)
@@ -736,11 +764,12 @@ public abstract class TreeNode : ITraceThrowable
 
     private void OnCreateNode(OnCreateEventArgs e)
     {
-        
+        CheckTrace();
     }
 
     private void OnRemoveNode(OnRemoveEventArgs e)
     {
+        CheckTrace();
         var traces = from EditorTrace editorTrace in EditorTraceContainer.Traces
                     where editorTrace.Source == this
                     select editorTrace;

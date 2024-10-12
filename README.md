@@ -53,6 +53,15 @@ MacOS version is **NOT** stable.
 
 No testing has been made yet.
 
+## Plugins
+
+LunaForge supports user-made plugins.
+Plugins allow for modifying/adding features to the editor. Their most important use is for adding nodes to the editor.
+
+Plugins comes in two types: `Editor Plugins` (which are loaded globally) and `Project Plugins` (which are loaded on a per-project basis).
+
+See the [plugin documentation](https://rulholos.github.io/LunaForge/plugins.html) to see how to create your editor plugins.
+
 ## Credits
 
 All files from the **LunaForge.GUI.ImGuiFileDialog** namespace are taken and modified from [Dalamud](https://github.com/goatcorp/Dalamud).

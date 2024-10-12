@@ -35,16 +35,6 @@ public class MainMenuInit : TreeNode
         yield return "end\n";
     }
 
-    public override IEnumerable<Tuple<int, TreeNode>> GetLines()
-    {
-        yield return new Tuple<int, TreeNode>(1, this);
-        foreach (Tuple<int, TreeNode> t in GetChildLines())
-        {
-            yield return t;
-        }
-        yield return new Tuple<int, TreeNode>(1, this);
-    }
-
     public override object Clone()
     {
         MainMenuInit node = new(ParentDef);

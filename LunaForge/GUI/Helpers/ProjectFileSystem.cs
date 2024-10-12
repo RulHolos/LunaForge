@@ -25,9 +25,16 @@ internal static class ProjectFileSystem
         }
     }
 
+    public static void CreateNodeArchitecture(string path)
+    {
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+    }
+
     public static void CreateLunaForgeData(string pathToData)
     {
         CreateHiddenFolder(pathToData);
+        CreateNodeArchitecture(Path.Combine(pathToData, "nodes"));
         // TODO: Other files maybe?
     }
 

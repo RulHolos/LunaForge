@@ -15,6 +15,7 @@ using System.Numerics;
 using LunaForge.EditorData.Traces;
 using LunaForge.EditorData.Traces.EditorTraces;
 using LunaForge.GUI.Helpers;
+using LunaForge.EditorData.Toolbox;
 
 namespace LunaForge.EditorData.Project;
 
@@ -117,6 +118,9 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
 
     [YamlIgnore]
     public DefinitionsCache DefCache { get; private set; }
+
+    [YamlIgnore]
+    public NodePicker Toolbox { get; private set; }
 
     /* This fucking line took 1 hour of my life for nothing.
      * YamlDotNet, please make your fucking Exceptions more precise. How the fuck was I supposed to know that
@@ -304,8 +308,11 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
             using StreamReader sr = new(pathToFile);
             LunaForgeProject proj = deserializer.Deserialize<LunaForgeProject>(sr);
             proj.PathToProjectRoot = Path.GetDirectoryName(pathToFile);
+
             ProjectFileSystem.CreateLunaForgeData(proj.PathToData);
             proj.DefCache = DefinitionsCache.LoadFromProject(proj);
+            proj.Toolbox = NodePicker.FromXml(Path.Combine(proj.PathToData, "nodes"));
+
             return proj;
         }
         catch (Exception ex)

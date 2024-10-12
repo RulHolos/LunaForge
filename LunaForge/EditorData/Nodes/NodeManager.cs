@@ -1,5 +1,4 @@
-﻿using LunaForge.EditorData.Nodes.NodeData.General;
-using LunaForge.EditorData.Nodes.NodeData.Stages;
+﻿using LunaForge.EditorData.Nodes.NodeData.Stages;
 using LunaForge.EditorData.Project;
 using LunaForge.GUI;
 using System;
@@ -43,7 +42,7 @@ internal static class NodeManager
 
     private static void AddDefNode_Folder(LunaDefinition def)
     {
-        TreeNode node = new Folder(def);
+        //TreeNode node = new Folder(def);
     }
 
     #endregion

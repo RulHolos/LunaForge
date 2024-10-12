@@ -3,5 +3,6 @@
   "Authors": [
     "Rül Hölos"
   ],
-  "Description": "This is a test description for a test plugin.\nMultiple lines too."
+  "Description": "This is a test description for a test plugin.\nMultiple lines too.",
+  "IsEditorPlugin": true
 }
