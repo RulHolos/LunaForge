@@ -23,7 +23,8 @@ public class InputWindowSelectorRegister
         target.Add("bool", ["true", "false"]);
         target.Add("bubble_style", ["1", "2", "3", "4"]);
         target.Add("sineinterpolation", ["SINE_ACCEL", "SINE_DECEL", "SINE_ACC_DEC"]);
-        target.Add("target", ["self", "last", "unit", "player", "_boss"]);
+        target.Add("interpolation", ["MOVE_NORMAL", "MOVE_ACCEL", "MOVE_DECEL", "MOVE_ACC_DEC"]);
+        target.Add("target", ["self", "last", "last_task", "unit", "player", "_boss"]);
         target.Add("yield", ["_infinite"]);
 
         return target;

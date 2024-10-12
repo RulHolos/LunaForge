@@ -37,7 +37,6 @@ internal class LuaNode : TreeNode
         CreateScript();
         if (InvalidNode)
         {
-            CheckTrace();
             return $"--- Invalid Node: {PathToLua} ---";
         }        
         return Script?.Call(Script.Globals.Get("ToString")).String;
@@ -49,6 +48,7 @@ internal class LuaNode : TreeNode
             return Script;
         if (!File.Exists(PathToLua))
         {
+            CheckTrace();
             InvalidNode = true;
             Console.WriteLine($"Problem with loading lua script: {PathToLua}");
             return null;
@@ -72,6 +72,7 @@ internal class LuaNode : TreeNode
         }
         catch (Exception ex)
         {
+            CheckTrace();
             Console.WriteLine($"Problem with loading lua script: {ex}");
             InvalidNode = true;
         }
