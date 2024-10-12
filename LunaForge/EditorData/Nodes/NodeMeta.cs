@@ -32,6 +32,7 @@ public sealed class NodeMeta
 
     public int? CreateInvokeId { get; } = null;
     public int? RCInvokeId { get; } = null;
+    public int? Priority { get; } = null;
 
     public NodeMeta(TreeNode node)
     {
@@ -72,6 +73,10 @@ public sealed class NodeMeta
         Unique = FindAttribute(meta, "Unique", false);
 
         Icon = FindAttribute(meta, "Icon", "Unknown");
+
+        Priority = FindAttribute(meta, "Priority", 0);
+
+        // TODO: RequireParent, RequireAncestor from the Name of the node, not the type (cuz it's all the same type).
     }
 
     #region From Lua
@@ -99,6 +104,21 @@ public sealed class NodeMeta
             FromDataType(DataType.String, item, attrib, out DynValue? result);
             if (result != null)
                 return item.Value.String;
+        }
+
+        return defaultValue;
+    }
+
+    public static int FindAttribute(Table meta, string attrib, int defaultValue)
+    {
+        if (meta == null)
+            return defaultValue;
+
+        foreach (TablePair item in meta.Pairs)
+        {
+            FromDataType(DataType.Number, item, attrib, out DynValue? result);
+            if (result != null)
+                return (int)item.Value.Number;
         }
 
         return defaultValue;

@@ -32,14 +32,6 @@
   <ItemGroup>
     <None Remove="Images\Error.png" />
     <None Remove="Images\Info.png" />
-    <None Remove="Images\Nodes\Code.png" />
-    <None Remove="Images\Nodes\Cog.png" />
-    <None Remove="Images\Nodes\Comment.png" />
-    <None Remove="Images\Nodes\Folder.png" />
-    <None Remove="Images\Nodes\FolderBlue.png" />
-    <None Remove="Images\Nodes\FolderGreen.png" />
-    <None Remove="Images\Nodes\FolderRed.png" />
-    <None Remove="Images\Nodes\Unknown.png" />
     <None Remove="Images\Warning.png" />
     <None Remove="Templates\Empty.json" />
     <None Remove="Templates\Empty.zip" />
@@ -53,27 +45,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\Info.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\Code.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\Cog.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\Comment.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\Folder.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\FolderBlue.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\FolderGreen.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Images\Nodes\FolderRed.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\Unknown.png">

@@ -34,12 +34,12 @@ internal class LuaNode : TreeNode
 
     public override string ToString()
     {
+        CreateScript();
         if (InvalidNode)
         {
             CheckTrace();
             return $"--- Invalid Node: {PathToLua} ---";
-        }
-        CreateScript();
+        }        
         return Script?.Call(Script.Globals.Get("ToString")).String;
     }
 
@@ -56,6 +56,7 @@ internal class LuaNode : TreeNode
         Script script = new();
         script.Globals["this"] = this;
         script.Globals["GetChildrenLua"] = (Func<int, IEnumerable<string>>)GetChildrenLua;
+        script.Globals["GetChildrenLuaFromPriority"] = (Func<int, IEnumerable<string>>)GetChildrenLuaFromPriority;
         script.Globals["GetAttribute"] = (Func<string, string>)GetAttribute;
         script.Globals["SetAttribute"] = (Action<string, string>)SetAttribute;
         script.Globals["Macrolize"] = (Func<int, string>)Macrolize;
@@ -66,6 +67,7 @@ internal class LuaNode : TreeNode
         try
         {
             script.DoFile(PathToLua);
+            RemoveUnusedAttributes();
             InvalidNode = false;
         }
         catch (Exception ex)
@@ -80,9 +82,14 @@ internal class LuaNode : TreeNode
 
     public IEnumerable<string> GetChildrenLua(int spacing)
     {
-        Console.WriteLine("Children get");
         foreach (var a in base.ToLua(spacing))
-            yield return $"{Indent(spacing)}{a}";
+            yield return a;
+    }
+
+    public IEnumerable<string> GetChildrenLuaFromPriority(int spacing)
+    {
+        foreach (var a in base.ToLua(spacing, FromPriority()))
+            yield return a;
     }
 
     // TODO : Return a compilation error if this function fails at any point.

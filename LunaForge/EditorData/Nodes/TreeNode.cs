@@ -75,6 +75,8 @@ public abstract class TreeNode : ITraceThrowable
     }
 
     [JsonIgnore]
+    public List<NodeAttribute> TempAttributes = [];
+    [JsonIgnore]
     public ObservableCollection<NodeAttribute> attributes = [];
     public ObservableCollection<NodeAttribute> Attributes
     {
@@ -139,10 +141,20 @@ public abstract class TreeNode : ITraceThrowable
     {
         NodeAttribute attr = GetAttr(name);
         if (attr != null)
+        {
+            TempAttributes.Add(attr);
             return name;
+        }
 
-        Attributes.Add(new NodeAttribute(name, defaultValue, editWindow));
+        TempAttributes.Add(new(name, defaultValue, editWindow));
         return name;
+    }
+
+    public void RemoveUnusedAttributes()
+    {
+        Attributes.Clear();
+        foreach (var attr in TempAttributes)
+            Attributes.Add(attr);
     }
 
     public string GetAttribute(string name)
@@ -629,6 +641,11 @@ public abstract class TreeNode : ITraceThrowable
         }
     }
 
+    public IEnumerable<TreeNode> FromPriority()
+    {
+        return GetRealChildren().OrderBy(s => s.MetaData.Priority ?? 0);
+    }
+
     #endregion
     #region Data Handle
 
@@ -700,17 +717,15 @@ public abstract class TreeNode : ITraceThrowable
     private event OnRemoveNodeHandler OnVirtualRemove;
     private event OnDependencyAttributeChangedHandler OnDependencyAttributeChanged;
 
+    // TODO : Raise at node deserialization.
     public void RaiseCreate(OnCreateEventArgs e)
     {
-        if (e.Parent == null)
-        {
-            if (!IsBanned)
-                OnVirtualCreate?.Invoke(e);
-            OnCreate?.Invoke(e);
-            OnCreateEventArgs args = new() { Parent = this };
-            foreach (TreeNode node in Children)
-                node.RaiseCreate(args);
-        }
+        if (!IsBanned)
+            OnVirtualCreate?.Invoke(e);
+        OnCreate?.Invoke(e);
+        OnCreateEventArgs args = new() { Parent = this };
+        foreach (TreeNode node in Children)
+            node.RaiseCreate(args);
     }
 
     public void RaiseVirtuallyCreate(OnCreateEventArgs e)
@@ -749,11 +764,12 @@ public abstract class TreeNode : ITraceThrowable
 
     private void OnCreateNode(OnCreateEventArgs e)
     {
-        
+        CheckTrace();
     }
 
     private void OnRemoveNode(OnRemoveEventArgs e)
     {
+        CheckTrace();
         var traces = from EditorTrace editorTrace in EditorTraceContainer.Traces
                     where editorTrace.Source == this
                     select editorTrace;
