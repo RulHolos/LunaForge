@@ -62,8 +62,10 @@ internal class LuaNode : TreeNode
         script.Globals["Macrolize"] = (Func<int, string>)Macrolize;
         script.Globals["NonMacrolize"] = (Func<int, string>)NonMacrolize;
         script.Globals["SetupAttribute"] = (Func<string, string, string, string>)SetupAttribute;
+        script.Globals["SetupDependencyAttribute"] = (Func<string, string, string, string>)SetupDependencyAttribute;
         script.Globals["SetupMeta"] = (Action<Table>)SetupMeta;
         script.Globals["Indent"] = (Func<int, string>)Indent;
+        script.Globals["AddAttribute"] = (Func<string, string, string, string>)AddAttribute;
         try
         {
             script.DoFile(PathToLua);
@@ -128,6 +130,22 @@ internal class LuaNode : TreeNode
             NotificationManager.AddToast($"Couldn't generated code from node {GetType().Name}, see console for more infos.", ToastType.Error);
             Console.WriteLine(ex.ToString());
             result = null;
+        }
+    }
+
+    public override void ReflectAttr(NodeAttribute o, DependencyAttributeChangedEventArgs e)
+    {
+        try
+        {
+            DynValue func = Script.Globals.Get("ReflectAttr");
+            if (func.Function != null)
+            {
+                Script.Call(func, o.AttrName, o.AttrValue, e.OriginalValue);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
         }
     }
 

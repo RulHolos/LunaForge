@@ -23,4 +23,4 @@ public struct DependencyAttributeChangedEventArgs
 
 public delegate void OnCreateNodeHandler(OnCreateEventArgs e);
 public delegate void OnRemoveNodeHandler(OnRemoveEventArgs e);
-public delegate void OnDependencyAttributeChangedHandler(NodeDependencyAttribute o, DependencyAttributeChangedEventArgs e);
+public delegate void OnDependencyAttributeChangedHandler(NodeAttribute o, DependencyAttributeChangedEventArgs e);

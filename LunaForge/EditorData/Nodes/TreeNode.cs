@@ -149,6 +149,28 @@ public abstract class TreeNode : ITraceThrowable
         TempAttributes.Add(new(name, defaultValue, editWindow));
         return name;
     }
+    public string AddAttribute(string name, string defaultValue, string editWindow)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+            return name;
+
+        Attributes.Add(new(name, defaultValue, editWindow));
+        return name;
+    }
+
+    public string SetupDependencyAttribute(string name, string defaultValue, string editWindow)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+        {
+            TempAttributes.Add(attr);
+            return name;
+        }
+
+        TempAttributes.Add(new(name, defaultValue, editWindow, true));
+        return name;
+    }
 
     public void RemoveUnusedAttributes()
     {
@@ -216,7 +238,7 @@ public abstract class TreeNode : ITraceThrowable
         }
     }
 
-    public NodeAttribute CheckAttr(int id, [CallerMemberName] string name = "", string editWindow = "", bool isDependency = false)
+    public NodeAttribute CheckAttr(int id, [CallerMemberName] string name = "", string editWindow = "")
     {
         NodeAttribute na = GetAttr(id);
         if (na == null || string.IsNullOrEmpty(na.AttrName) || na.AttrName != name)
@@ -228,10 +250,7 @@ public abstract class TreeNode : ITraceThrowable
             }
             else
             {
-                if (isDependency)
-                    na = new NodeDependencyAttribute(name, (string)null, editWindow);
-                else
-                    na = new NodeAttribute(name, (string)null, editWindow);
+                na = new NodeAttribute(name, (string)null, editWindow);
                 InsertAttrAt(id, na);
             }
         }
@@ -250,7 +269,7 @@ public abstract class TreeNode : ITraceThrowable
         attributes[id] = na;
     }
 
-    public virtual void ReflectAttr(NodeDependencyAttribute o, DependencyAttributeChangedEventArgs e) { }
+    public virtual void ReflectAttr(NodeAttribute o, DependencyAttributeChangedEventArgs e) { }
 
     public static bool CheckVarName(string s)
     {
@@ -589,6 +608,7 @@ public abstract class TreeNode : ITraceThrowable
     public void AddChild(TreeNode child)
     {
         Children.Add(child);
+        // TODO: Raise create on this + other functions.
     }
 
     public void InsertChild(TreeNode node, int index)
@@ -758,6 +778,11 @@ public abstract class TreeNode : ITraceThrowable
             foreach (TreeNode node in Children)
                 node.RaiseVirtuallyRemove(e);
         }
+    }
+
+    public void RaiseDependencyPropertyChanged(NodeAttribute attr, DependencyAttributeChangedEventArgs e)
+    {
+        OnDependencyAttributeChanged?.Invoke(attr, e);
     }
 
     #region Event Implementation

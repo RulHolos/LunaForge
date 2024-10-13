@@ -23,6 +23,17 @@ using LunaForge.EditorData.Nodes.NodeData;
 
 namespace LunaForge.EditorData.Project;
 
+/*
+ * defcache:
+ * Adds a new value to "accessible from" each time the definition is loaded from another definition.
+ * 
+ * In the definition's select object selector, check for every definition files and check if "accessible from" contains the name of the current definition file.
+ * If so, let the user choose between all definitions inside "definitions"
+ * 
+ * Each "load definition file" node adds ALL the definitions contained inside the file to "definitions" field.
+ * (Clear and add everyone back, this is happening at file saving.)
+ */
+
 public class LunaDefinition : LunaProjectFile
 {
     public WorkTree TreeNodes { get; set; } = [];
@@ -32,6 +43,8 @@ public class LunaDefinition : LunaProjectFile
 
     public bool JustOpened = true;
     public bool JustInserted = false;
+
+    public List<string> Definitions { get; set; } = [];
 
     public LunaDefinition(LunaForgeProject parentProj, string path)
         : base(parentProj, path)

@@ -20,6 +20,9 @@ public class NodeAttribute : ICloneable
     [JsonProperty]
     public string AttrValue { get; set; }
 
+    [JsonProperty, DefaultValue(false)]
+    public bool IsDependency { get; set; } = false;
+
     [JsonIgnore]
     public string TempAttrValue = string.Empty;
     [JsonProperty]
@@ -51,6 +54,12 @@ public class NodeAttribute : ICloneable
         EditWindow = editWin;
     }
 
+    public NodeAttribute(string name, string value = "", string editWin = "", bool isDependency = true)
+        : this(name, value, editWin)
+    {
+        IsDependency = isDependency;
+    }
+
     public NodeAttribute(string name, TreeNode parent, string editWin)
         : this(name, parent)
     {
@@ -69,10 +78,12 @@ public class NodeAttribute : ICloneable
         EditWindow = editWin;
     }
 
-    public void RaiseEdit(string value)
+    public virtual void RaiseEdit(string value)
     {
         if (AttrValue == value)
             return; // No need for edit if the values match.
+        if (IsDependency)
+            ParentNode.RaiseDependencyPropertyChanged(this, new DependencyAttributeChangedEventArgs() { OriginalValue = value });
         ParentNode.ParentDef.AddAndExecuteCommand(new EditAttributeCommand(this, AttrValue, value));
         ParentNode.CheckTrace();
     }
