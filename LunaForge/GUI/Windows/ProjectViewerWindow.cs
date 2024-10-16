@@ -11,12 +11,14 @@ using Raylib_cs;
 using System.IO;
 using System.Diagnostics;
 using LunaForge.GUI.ImGuiFileDialog;
+using LunaForge.EditorData.Toolbox;
 
 namespace LunaForge.GUI.Windows;
 
 public class ProjectViewerWindow : ImGuiWindow
 {
     public LunaForgeProject ParentProject;
+    public bool JustCreated = true;
 
     public LunaProjectFile? fileToClose = null;
     public LunaProjectFile? filePendingModal = null;
@@ -37,6 +39,12 @@ public class ProjectViewerWindow : ImGuiWindow
     {
         if (!ShowWindow)
             return;
+
+        if (JustCreated)
+        {
+            ImGui.SetNextWindowFocus();
+            JustCreated = false;
+        }
 
         ImGui.PushID(ParentProject.Hash);
         if (Begin($"{ParentProject.ProjectName}"))
@@ -183,6 +191,8 @@ public class ProjectViewerWindow : ImGuiWindow
     public bool TempLogWindowSub;
     public Vector2 TempDebugRes;
     public int TempSelectedRes;
+    public int TempSelectedNodePluginId = 0;
+    public NodePlugin TempSelectedNodePlugin = null;
 
     public void OpenSettings()
     {
@@ -230,6 +240,13 @@ public class ProjectViewerWindow : ImGuiWindow
                     ImGui.Checkbox("Enable log window (LuaSTG Sub only)", ref TempLogWindowSub);
                     ImGui.Separator();
                     ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("Nodes & Plugins"))
+                {
+                    RenderNodePluginList();
+
+                    ImGui.Spacing();
+                    ImGui.Separator();
                 }
 
                 ImGui.EndTabBar();
@@ -345,6 +362,47 @@ public class ProjectViewerWindow : ImGuiWindow
         {
             TempDebugRes = ListOfRes[TempSelectedRes];
         }
+    }
+
+    private void RenderNodePluginList()
+    {
+        ImGui.BeginGroup();
+        {
+            Vector2 listSize = new(ImGui.GetContentRegionAvail().X / 2, ImGui.GetContentRegionAvail().Y - 150);
+            if (ImGui.BeginListBox($"##{ParentProject.ProjectName}_ProjectNodes", listSize))
+            {
+                int i = 0;
+                foreach (NodePlugin nodePlugin in ParentProject.Toolbox.Plugins)
+                {
+                    if (nodePlugin.DisplayName == "System")
+                        continue;
+                    ImGui.PushStyleColor(ImGuiCol.Text, nodePlugin.Enabled ? ImGui.GetColorU32(ImGuiCol.Text) : ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                    if (ImGui.Selectable($"{nodePlugin.DisplayName}##nodePlugin_{i}", TempSelectedNodePluginId == i))
+                    {
+                        TempSelectedNodePluginId = i;
+                        TempSelectedNodePlugin = nodePlugin;
+                    }
+                    ImGui.PopStyleColor();
+                    i++;
+                }
+                ImGui.EndListBox();
+            }
+
+            ImGui.SameLine();
+
+            if (TempSelectedNodePlugin != null)
+            {
+                ImGui.BeginGroup();
+                ImGui.Text(TempSelectedNodePlugin.DisplayName);
+                string btnText = TempSelectedNodePlugin.Enabled ? "Disable" : "Enable";
+                if (ImGui.Button($"{btnText} (You will need to reload your project)"))
+                {
+                    TempSelectedNodePlugin.ToggleState(ParentProject);
+                }
+                ImGui.EndGroup();
+            }
+        }
+        ImGui.EndGroup();
     }
 
     #endregion

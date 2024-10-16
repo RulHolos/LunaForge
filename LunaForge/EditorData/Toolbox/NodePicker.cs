@@ -16,19 +16,31 @@ using LunaForge.EditorData.Nodes.NodeData.Project;
 
 namespace LunaForge.EditorData.Toolbox;
 
-public struct NodePlugin
+public class NodePlugin
 {
     public NodePlugin() { }
 
     public string DisplayName { get; set; } = string.Empty;
     public string Namespace { get; set; } = string.Empty;
     public string PathToPlugin { get; set; } = string.Empty;
+    public string PathToXml { get; set; } = string.Empty;
 
     public List<NodePickerTab> NodePickerTabs { get; set; } = [];
+
+    public bool Enabled = true;
 
     public void AddTab(NodePickerTab tab)
     {
         NodePickerTabs.Add(tab);
+    }
+
+    public void ToggleState(LunaForgeProject proj)
+    {
+        Enabled = !Enabled;
+        if (Enabled)
+            proj.DisabledNodePlugins.Remove(Path.GetRelativePath(proj.PathToProjectRoot, PathToXml));
+        else
+            proj.SetDisabledPlugin(PathToXml);
     }
 }
 
@@ -68,7 +80,7 @@ public class NodePicker : IEnumerable<NodePlugin>
 
     #region Parsing
 
-    public static NodePicker FromXml(string pathToData)
+    public static NodePicker FromXml(string pathToData, LunaForgeProject parentProj)
     {
         NodePicker picker = new();
 
@@ -85,7 +97,16 @@ public class NodePicker : IEnumerable<NodePlugin>
                 XmlNode pluginDoc = doc.DocumentElement.SelectSingleNode("/plugin");
                 plugin.DisplayName = pluginDoc.Attributes["displayname"]?.Value ?? "Null";
                 plugin.Namespace = pluginDoc.Attributes["namespace"]?.Value ?? "Null";
+                plugin.PathToXml = path;
                 plugin.PathToPlugin = pathToData;
+
+                if (parentProj.DisabledNodePlugins.Contains(Path.GetRelativePath(parentProj.PathToProjectRoot, path)))
+                {
+                    plugin.Enabled = false;
+                    picker.AddPlugin(plugin);
+                    continue;
+                }
+
                 if (string.IsNullOrEmpty(plugin.DisplayName) || string.IsNullOrEmpty(plugin.Namespace))
                 {
                     NotificationManager.AddToast($"Couldn't create node plugin:\nMissing displayname or namespace attributes on {Path.GetFileName(pathToData)}", ToastType.Error);

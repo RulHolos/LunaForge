@@ -79,6 +79,17 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
     [DefaultValue(true)]
     public bool UseMD5Files = true;
 
+    /// <summary>
+    /// List of Node Plugins not to load at project loading. (loads the path relative to the project root.)
+    /// </summary>
+    public List<string> DisabledNodePlugins = [];
+    public void SetDisabledPlugin(string fullPath)
+    {
+        string path = Path.GetRelativePath(PathToProjectRoot, fullPath);
+        if (!DisabledNodePlugins.Contains(path))
+            DisabledNodePlugins.Add(path);
+    }
+
     #endregion
 
     [YamlIgnore]
@@ -311,7 +322,7 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
 
             ProjectFileSystem.CreateLunaForgeData(proj.PathToData);
             proj.DefCache = DefinitionsCache.LoadFromProject(proj);
-            proj.Toolbox = NodePicker.FromXml(Path.Combine(proj.PathToData, "nodes"));
+            proj.Toolbox = NodePicker.FromXml(Path.Combine(proj.PathToData, "nodes"), proj);
 
             return proj;
         }

@@ -36,7 +36,7 @@ internal class LuaNode : TreeNode
      * Proper error handling (ToString, ToLua traced error, ReflectAttr) - Check
      * RequireParent & RequireAncestor - Check
      * Throw traces.
-     * Allow node plugins to be turned on and off.
+     * Allow node plugins to be turned on and off. - Check
      */
 
     public override string ToString()
@@ -68,7 +68,8 @@ internal class LuaNode : TreeNode
             Console.WriteLine($"Path to node {PathToLua} doesn't exist.");
             return null;
         }
-        Script script = new();
+        // Removes LoadMethods, OS_System and IO.
+        Script script = new(CoreModules.Preset_SoftSandbox);
         SetScriptGlobals(ref script);
         try
         {
