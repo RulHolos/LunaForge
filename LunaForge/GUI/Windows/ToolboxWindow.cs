@@ -35,10 +35,11 @@ public class ToolboxWindow : ImGuiWindow
                     return;
                 }
 
+                int i = 0;
                 foreach (NodePickerTab tab in NodePickerBox.GetAllTabs())
                 {
-                    ImGui.PushID(tab.Header);
-                    if (ImGui.BeginTabItem(tab.Header))
+                    ImGui.PushID($"{tab.Header}##{i}");
+                    if (ImGui.BeginTabItem($"{tab.Header}##{i}"))
                     {
                         ImGui.BeginDisabled(MainWindow.Workspaces.Current?.CurrentProjectFile is not LunaDefinition);
                         //ImGui.Columns(tab.Items.Count(x => x.IsSeparator) + 1); // Number of separators.
@@ -62,6 +63,7 @@ public class ToolboxWindow : ImGuiWindow
                         ImGui.EndTabItem();
                     }
                     ImGui.PopID();
+                    i++;
                 }
                 ImGui.EndTabBar();
             }

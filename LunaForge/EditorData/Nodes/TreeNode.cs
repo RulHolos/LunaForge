@@ -105,6 +105,8 @@ public abstract class TreeNode : ITraceThrowable
 
     [JsonIgnore]
     public string DisplayString => ToString();
+    [JsonIgnore]
+    public virtual string NodeName { get; set; } = string.Empty;
 
     #endregion
 
@@ -139,39 +141,57 @@ public abstract class TreeNode : ITraceThrowable
 
     public string SetupAttribute(string name, string defaultValue, string editWindow)
     {
-        NodeAttribute attr = GetAttr(name);
-        if (attr != null)
-        {
-            TempAttributes.Add(attr);
-            return name;
-        }
-
-        TempAttributes.Add(new(name, defaultValue, editWindow));
-        return name;
-    }
-    public string AddAttribute(string name, string defaultValue, string editWindow)
-    {
-        NodeAttribute attr = GetAttr(name);
-        if (attr != null)
-            return name;
-
-        Attributes.Add(new(name, defaultValue, editWindow));
+        NodeAttribute attr = GetAttr(name) ?? new(name, defaultValue, editWindow);
+        attr.IsUsed = true;
+        TempAttributes.Add(attr);
         return name;
     }
 
     public string SetupDependencyAttribute(string name, string defaultValue, string editWindow)
     {
-        NodeAttribute attr = GetAttr(name);
-        if (attr != null)
-        {
-            TempAttributes.Add(attr);
-            return name;
-        }
-
-        TempAttributes.Add(new(name, defaultValue, editWindow, true));
+        NodeAttribute attr = GetAttr(name) ?? new(name, defaultValue, editWindow, true);
+        attr.IsUsed = true;
+        TempAttributes.Add(attr);
         return name;
     }
 
+    public string AddAttribute(string name, string defaultValue, string editWindow)
+    {
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+        {
+            attr.IsUsed = true;
+            return name;
+        }
+
+        // Don't ask.
+        attr = new(name, defaultValue, editWindow)
+        {
+            IsUsed = true
+        };
+        Attributes.Add(attr);
+        return name;
+    }
+
+    public void RemoveAttribute(string name)
+    {
+        NodeAttribute attr = GetAttr(name);
+        Attributes.Remove(attr);
+    }
+
+    public void RemoveAttribute(int i)
+    {
+        Attributes.RemoveAt(i);
+    }
+
+    public void HideAttribute(int i)
+    {
+        Console.WriteLine($"Trying to hide attr {i}");
+        NodeAttribute attr = Attributes[i];
+        attr.IsUsed = false;
+    }
+
+    [Obsolete("Old functionality")]
     public void RemoveUnusedAttributes()
     {
         Attributes.Clear();
@@ -182,6 +202,11 @@ public abstract class TreeNode : ITraceThrowable
     public string GetAttribute(string name)
     {
         return GetAttr(name).AttrValue;
+    }
+
+    public string GetAttribute(int i)
+    {
+        return GetAttr(i).AttrValue;
     }
 
     public void SetAttribute(string name, string value)
@@ -211,6 +236,14 @@ public abstract class TreeNode : ITraceThrowable
             return attributes[n];
         else
             return null;
+    }
+
+    public int GetUsedAttrCount()
+    {
+        IEnumerable<NodeAttribute> attrs = from NodeAttribute att in Attributes
+                                           where att.IsUsed
+                                           select att;
+        return attrs.Count();
     }
 
     public NodeAttribute? GetAttr(string name)
@@ -392,9 +425,10 @@ public abstract class TreeNode : ITraceThrowable
             return false;
         if (MetaData.RequireParent == null)
             return true;
-        foreach (Type type in MetaData.RequireParent)
+        foreach (string type in MetaData.RequireParent)
         {
-            if (toMatch.GetType().Equals(type))
+            var fgdf = toMatch;
+            if (toMatch.NodeName.Equals(type))
                 return true;
         }
         return false;
@@ -422,44 +456,38 @@ public abstract class TreeNode : ITraceThrowable
     {
         if (!nodeToValidate.MetaData.Unique)
             return true;
-        List<Type> foundTypes = [];
+        List<string> foundTypes = [];
         foreach (TreeNode node in sourceChildren)
-            foundTypes.Add(node.GetType());
-        return !foundTypes.Any(x => x == nodeToValidate.GetType());
+            foundTypes.Add(node.NodeName);
+        return !foundTypes.Any(x => x == nodeToValidate.NodeName);
     }
 
     private bool CheckRequiredAncestorValidation(TreeNode Beg1, TreeNode End1, TreeNode Beg2, TreeNode End2)
     {
-        Type[][] ts = MetaData.RequireAncestor;
+        string[] ts = MetaData.RequireAncestor;
         if (ts == null)
             return true;
-        List<Type[]> toSatisfiedGroups = ts.ToList();
-        List<Type> Satisfied = [];
-        List<Type[]> toRemove = [];
+        List<string> toSatisfiedGroups = [.. ts];
+        List<string> Satisfied = [];
+        List<string> toRemove = [];
         while (Beg1 != End1)
         {
             if (Beg1.MetaData.IgnoreValidation)
                 return true;
-            foreach (Type[] t1 in ts)
+            foreach (string t1 in ts)
             {
-                foreach (Type t2 in t1)
+                if (Beg1.NodeName.Equals(t1))
+                    Satisfied.Add(t1);
+            }
+            foreach (string t1 in toSatisfiedGroups)
+            {
+                foreach (string t2 in Satisfied)
                 {
-                    if (Beg1.GetType().Equals(t2))
-                        Satisfied.Add(t2);
+                    if (t1 == t2 && !toRemove.Contains(t1))
+                        toRemove.Add(t1);
                 }
             }
-            foreach (Type[] t1 in toSatisfiedGroups)
-            {
-                foreach (Type t2 in t1)
-                {
-                    foreach (Type t3 in Satisfied)
-                    {
-                        if (t2 == t3 && !toRemove.Contains(t1))
-                            toRemove.Add(t1);
-                    }
-                }
-            }
-            foreach (Type[] t1 in toRemove)
+            foreach (string t1 in toRemove)
             {
                 toSatisfiedGroups.Remove(t1);
             }
@@ -473,26 +501,20 @@ public abstract class TreeNode : ITraceThrowable
         {
             if (Beg2.MetaData.IgnoreValidation)
                 return true;
-            foreach (Type[] t1 in ts)
+            foreach (string t1 in ts)
             {
-                foreach (Type t2 in t1)
+                if (Beg2.NodeName.Equals(t1))
+                    Satisfied.Add(t1);
+            }
+            foreach (string t1 in toSatisfiedGroups)
+            {
+                foreach (string t2 in Satisfied)
                 {
-                    if (Beg2.GetType().Equals(t2))
-                        Satisfied.Add(t2);
+                    if (t1 == t2 && !toRemove.Contains(t1))
+                        toRemove.Add(t1);
                 }
             }
-            foreach (Type[] t1 in toSatisfiedGroups)
-            {
-                foreach (Type t2 in t1)
-                {
-                    foreach (Type t3 in Satisfied)
-                    {
-                        if (t2 == t3 && !toRemove.Contains(t1))
-                            toRemove.Add(t1);
-                    }
-                }
-            }
-            foreach (Type[] t1 in toRemove)
+            foreach (string t1 in toRemove)
             {
                 toSatisfiedGroups.Remove(t1);
             }
@@ -634,6 +656,14 @@ public abstract class TreeNode : ITraceThrowable
 
     public async Task SerializeToFile(StreamWriter sw, int level)
     {
+        for (int i = 0; i < Attributes.Count; i++)
+        {
+            if (!Attributes[i].IsUsed)
+            {
+                Attributes.RemoveAt(i);
+                i--;
+            }
+        }    
         await sw.WriteLineAsync($"{level},{TreeSerializer.SerializeTreeNode(this)}");
         foreach (TreeNode node in Children)
             await node.SerializeToFile(sw, level + 1);
@@ -761,9 +791,7 @@ public abstract class TreeNode : ITraceThrowable
     public void RaiseRemove(OnRemoveEventArgs e)
     {
         if (!IsBanned)
-        {
             OnVirtualRemove?.Invoke(e);
-        }
         OnRemove?.Invoke(e);
         OnRemoveEventArgs args = new() { Parent = this };
         foreach (TreeNode node in Children)
@@ -789,6 +817,15 @@ public abstract class TreeNode : ITraceThrowable
 
     private void OnCreateNode(OnCreateEventArgs e)
     {
+        if (this is LuaNode)
+            (this as LuaNode).CreateScript();
+
+        IEnumerable<NodeAttribute> attrs = from NodeAttribute att in Attributes
+                              where att.IsDependency == true
+                              select att;
+        foreach (NodeAttribute attr in attrs)
+            ReflectAttr(attr, new() { OriginalValue = attr.AttrValue });
+
         CheckTrace();
     }
 

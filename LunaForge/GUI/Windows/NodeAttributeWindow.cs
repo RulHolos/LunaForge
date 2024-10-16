@@ -40,8 +40,12 @@ public class NodeAttributeWindow : ImGuiWindow
                 ImGui.TableSetupColumn(string.Empty);
                 ImGui.TableHeadersRow();
 
-                foreach (NodeAttribute attr in CurrentNode.Attributes)
+                for (int i = 0; i < CurrentNode.Attributes.Count; i++)
                 {
+                    NodeAttribute attr = CurrentNode.Attributes[i];
+                    if (attr == null || !attr.IsUsed)
+                        continue; // Skip displaying the attribute if it's not used by the node.
+
                     ImGui.TableNextRow();
 
                     // Attr Name

@@ -13,9 +13,9 @@ namespace LunaForge.EditorData.Nodes.Attributes;
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class RequireParentAttribute : Attribute
 {
-    public Type[] ParentType { get; }
+    public string[] ParentType { get; }
 
-    public RequireParentAttribute(params Type[] parent)
+    public RequireParentAttribute(params string[] parent)
     {
         ParentType = parent;
     }

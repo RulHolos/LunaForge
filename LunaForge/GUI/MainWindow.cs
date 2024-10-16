@@ -210,7 +210,6 @@ internal static class MainWindow
         UserData.RegisterType<TreeNode>();
 
         LoadEditorImages();
-        NodeManager.RegisterDefinitionNodes();
         InputWindowSelector.Register(new InputWindowSelectorRegister());
 
         rlImGui.Setup(true, true);
@@ -497,6 +496,8 @@ internal static class MainWindow
     #endregion
     #region Editor Images
 
+    public static string DefaultImage => "Unknown";
+
     /// <summary>
     /// Loads all images inside the "Image" directory to a <see cref="Texture2D"/> and adds them to <see cref="EditorImages"/>.
     /// </summary>
@@ -522,7 +523,7 @@ internal static class MainWindow
     public static string LoadEditorImageFromFile(string filePath)
     {
         if (!File.Exists(filePath))
-            return "Unknown";
+            return DefaultImage;
 
         string key = Path.GetFileNameWithoutExtension(filePath);
         EditorImages.TryAdd(key, Raylib.LoadTexture(filePath));
@@ -539,7 +540,7 @@ internal static class MainWindow
         if (EditorImages.TryGetValue(name, out Texture2D value))
             return value;
         else
-            return EditorImages["Unknown"];
+            return EditorImages[DefaultImage];
     }
 
     #endregion

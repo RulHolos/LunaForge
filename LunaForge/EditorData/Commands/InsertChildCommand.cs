@@ -14,11 +14,14 @@ public class InsertChildCommand : InsertCommand
 
     public override void Execute()
     {
+        TreeNode parent = Source.Parent;
+        ToInsert.RaiseCreate(new() { Parent = parent });
         Source.AddChild(ToInsert);
     }
 
     public override void Undo()
     {
+        ToInsert.RaiseRemove(new() { Parent = ToInsert.Parent });
         Source.RemoveChild(ToInsert);
     }
 }

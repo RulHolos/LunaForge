@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 namespace LunaForge.EditorData.Nodes.NodeData.Project;
 
 [NodeIcon("LoadDef")]
+[RequireAncestor("Repeat")]
 [LeafNode]
 public class LoadDefinition : TreeNode
 {
@@ -24,6 +25,9 @@ public class LoadDefinition : TreeNode
     {
         PathToDefinition = filePath;
     }
+
+    [JsonIgnore]
+    public override string NodeName { get => "LoadDefinition"; }
 
     [JsonIgnore, NodeAttribute, DefaultValue("")]
     public string PathToDefinition

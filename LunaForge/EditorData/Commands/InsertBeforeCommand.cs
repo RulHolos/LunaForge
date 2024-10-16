@@ -15,11 +15,13 @@ public class InsertBeforeCommand : InsertCommand
     public override void Execute()
     {
         TreeNode parent = Source.Parent;
+        ToInsert.RaiseCreate(new() { Parent = parent });
         parent?.InsertChild(ToInsert, parent.Children.IndexOf(Source));
     }
 
     public override void Undo()
     {
+        ToInsert.RaiseRemove(new() { Parent = ToInsert.Parent });
         Source.Parent?.RemoveChild(ToInsert);
     }
 }

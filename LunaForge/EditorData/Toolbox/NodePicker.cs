@@ -1,5 +1,4 @@
-﻿using LunaForge.EditorData.Nodes.Tabs;
-using LunaForge.GUI;
+﻿using LunaForge.GUI;
 using System;
 using System.Xml;
 using System.Collections;
@@ -8,6 +7,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LunaForge.EditorData.Nodes.NodeData;
+using LunaForge.EditorData.Nodes;
+using LunaForge.EditorData.Project;
+using System.IO;
+using System.Xml.Linq;
+using LunaForge.EditorData.Nodes.NodeData.Project;
 
 namespace LunaForge.EditorData.Toolbox;
 
@@ -33,16 +38,13 @@ public class NodePicker : IEnumerable<NodePlugin>
 
     public List<NodePlugin> Plugins { get; set; } = [];
 
-    public NodePicker()
-    {
+    public List<Tuple<string, string>> NameLookup = [];
 
-    }
+    public NodePicker() { }
 
-    public void Initialize()
+    public string LookupNameFromPath(string luaPath)
     {
-        //AddRegister(new TabGeneral(new("General")));
-        //AddRegister(new TabStages(new("Stages")));
-        //AddRegister(new TabProject(new("Project")));
+        return NameLookup.FirstOrDefault(x => x.Item2 == luaPath)?.Item1 ?? "no-name";
     }
 
     /// <summary>
@@ -69,6 +71,8 @@ public class NodePicker : IEnumerable<NodePlugin>
     public static NodePicker FromXml(string pathToData)
     {
         NodePicker picker = new();
+
+        AddSystemPlugin(picker);
         
         foreach (string path in Directory.GetFiles(pathToData, "*.xml"))
         {
@@ -92,7 +96,7 @@ public class NodePicker : IEnumerable<NodePlugin>
                 {
                     if (tab.Name != "tab")
                         continue;
-                    NodePickerTab nodeTab = NodePickerTab.FromXml(plugin, tab);
+                    NodePickerTab nodeTab = NodePickerTab.FromXml(plugin, tab, picker);
                     plugin.AddTab(nodeTab);
                 }
                 picker.AddPlugin(plugin);
@@ -104,6 +108,32 @@ public class NodePicker : IEnumerable<NodePlugin>
         }
 
         return picker;
+    }
+
+    /// <summary>
+    /// Registers the System node plugin to the toolbox. Only registers C# defined nodes.<br/>
+    /// This System plugin will be registered in every project and is not disablable.
+    /// </summary>
+    /// <param name="picker">The <see cref="NodePicker"/> toolbox in which to add the plugin.</param>
+    public static void AddSystemPlugin(NodePicker picker)
+    {
+        NodePlugin plugin = new()
+        {
+            DisplayName = "System",
+            Namespace = "lunaforge_system",
+            PathToPlugin = ""
+        };
+
+        NodePickerTab tab = new("System");
+        tab.AddNode(new NodePickerItem("system_load_definition", "LoadDefinition", "Load Definition", () =>
+        {
+            LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;
+            TreeNode node = new LoadDefinition(parentDef);
+            MainWindow.Insert(node);
+        }));
+
+        plugin.AddTab(tab);
+        picker.AddPlugin(plugin);
     }
 
     #endregion

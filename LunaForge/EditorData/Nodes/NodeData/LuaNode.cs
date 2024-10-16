@@ -26,20 +26,34 @@ internal class LuaNode : TreeNode
         : base(def)
     {
         PathToLua = pathToLua;
-        CreateScript();
     }
 
     [JsonProperty("PathToLua")]
     public string PathToLua { get; set; } = string.Empty;
 
+    /*
+     * TODO:
+     * Proper error handling
+     * RequireParent & RequireAncestor
+     * Throw traces.
+     * Allow node plugins to be turned on and off.
+     */
+
     public override string ToString()
     {
-        CreateScript();
-        if (InvalidNode)
+        try
         {
-            return $"--- Invalid Node: {PathToLua} ---";
-        }        
-        return Script?.Call(Script.Globals.Get("ToString")).String;
+            if (InvalidNode)
+            {
+                return $"--- Invalid Node: {Path.GetFileName(PathToLua)} ---";
+            }
+            return Script?.Call(Script.Globals.Get("ToString")).String;
+        }
+        catch (ScriptRuntimeException ex)
+        {
+            Console.WriteLine(ex.DecoratedMessage);
+            return $"--- Invalid Node: {Path.GetFileName(PathToLua)} (Error: Report to console.) ---";
+        }
     }
 
     public Script CreateScript()
@@ -50,14 +64,37 @@ internal class LuaNode : TreeNode
         {
             CheckTrace();
             InvalidNode = true;
-            Console.WriteLine($"Problem with loading lua script: {PathToLua}");
+            NotificationManager.AddToast($"Cannot load a node.\nCheck console for more infos.");
+            Console.WriteLine($"Path to node {PathToLua} doesn't exist.");
             return null;
         }
         Script script = new();
+        SetScriptGlobals(ref script);
+        try
+        {
+            script.DoFile(PathToLua);
+            NodeName = ParentDef.ParentProject.Toolbox.LookupNameFromPath(PathToLua);
+            InvalidNode = false;
+        }
+        catch (InterpreterException ex)
+        {
+            CheckTrace();
+            NotificationManager.AddToast($"Cannot load node: {Path.GetFileName(PathToLua)}.\nCheck console for more infos.", ToastType.Error);
+            Console.WriteLine($"Problem with loading lua script: {ex.DecoratedMessage}");
+            InvalidNode = true;
+        }
+
+        Script = script;
+        return script;
+    }
+
+    private void SetScriptGlobals(ref Script script)
+    {
         script.Globals["this"] = this;
         script.Globals["GetChildrenLua"] = (Func<int, IEnumerable<string>>)GetChildrenLua;
         script.Globals["GetChildrenLuaFromPriority"] = (Func<int, IEnumerable<string>>)GetChildrenLuaFromPriority;
         script.Globals["GetAttribute"] = (Func<string, string>)GetAttribute;
+        script.Globals["GetAttributeInt"] = (Func<int, string>)GetAttribute;
         script.Globals["SetAttribute"] = (Action<string, string>)SetAttribute;
         script.Globals["Macrolize"] = (Func<int, string>)Macrolize;
         script.Globals["NonMacrolize"] = (Func<int, string>)NonMacrolize;
@@ -66,30 +103,20 @@ internal class LuaNode : TreeNode
         script.Globals["SetupMeta"] = (Action<Table>)SetupMeta;
         script.Globals["Indent"] = (Func<int, string>)Indent;
         script.Globals["AddAttribute"] = (Func<string, string, string, string>)AddAttribute;
-        try
-        {
-            script.DoFile(PathToLua);
-            RemoveUnusedAttributes();
-            InvalidNode = false;
-        }
-        catch (Exception ex)
-        {
-            CheckTrace();
-            Console.WriteLine($"Problem with loading lua script: {ex}");
-            InvalidNode = true;
-        }
-
-        Script = script;
-        return script;
+        script.Globals["RemoveAttribute"] = (Action<string>)RemoveAttribute;
+        script.Globals["RemoveAttributeInt"] = (Action<int>)RemoveAttribute;
+        script.Globals["HideAttribute"] = (Action<int>)HideAttribute;
+        script.Globals["GetUsedAttrCount"] = (Func<int>)GetUsedAttrCount;
+        //script.Globals["AddTrace"] = (Action<bool>)AddTraceWithCondition;
     }
 
-    public IEnumerable<string> GetChildrenLua(int spacing)
+    private IEnumerable<string> GetChildrenLua(int spacing)
     {
         foreach (var a in base.ToLua(spacing))
             yield return a;
     }
 
-    public IEnumerable<string> GetChildrenLuaFromPriority(int spacing)
+    private IEnumerable<string> GetChildrenLuaFromPriority(int spacing)
     {
         foreach (var a in base.ToLua(spacing, FromPriority()))
             yield return a;
@@ -98,7 +125,6 @@ internal class LuaNode : TreeNode
     // TODO : Return a compilation error if this function fails at any point.
     public override IEnumerable<string> ToLua(int spacing)
     {
-        CreateScript();
         if (Script.Globals["ToLua"] != null)
         {
             DynValue function = Script.Globals.Get("ToLua");
@@ -119,7 +145,7 @@ internal class LuaNode : TreeNode
         }
     }
 
-    public void GetCoroutineResult(ref Coroutine co, ref DynValue result, params object[] args)
+    private void GetCoroutineResult(ref Coroutine co, ref DynValue result, params object[] args)
     {
         try
         {

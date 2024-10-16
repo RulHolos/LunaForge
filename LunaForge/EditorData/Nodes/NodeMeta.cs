@@ -27,8 +27,8 @@ public sealed class NodeMeta
 
     public string Icon { get; }
 
-    public Type[] RequireParent { get; } = null;
-    public Type[][] RequireAncestor { get; } = null;
+    public string[] RequireParent { get; } = null;
+    public string[] RequireAncestor { get; } = null;
 
     public int? CreateInvokeId { get; } = null;
     public int? RCInvokeId { get; } = null;
@@ -49,13 +49,8 @@ public sealed class NodeMeta
         string pathToImage = type.GetAttributeValue((NodeIconAttribute img) => img.Path);
         Icon = $"{(string.IsNullOrEmpty(pathToImage) ? "Unknown" : pathToImage)}";
 
-        RequireParent = GetTypes(type.GetCustomAttribute<RequireParentAttribute>()?.ParentType);
-        var attrs = type.GetCustomAttributes<RequireAncestorAttribute>();
-        if (attrs.Count() != 0)
-        {
-            RequireAncestor = (from RequireAncestorAttribute at in attrs
-                               select GetTypes(at.RequiredTypes)).ToArray();
-        }
+        RequireParent = type.GetCustomAttribute<RequireParentAttribute>()?.ParentType;
+        RequireAncestor = type.GetCustomAttribute<RequireAncestorAttribute>()?.RequiredTypes;
 
         CreateInvokeId = type.GetCustomAttribute<CreateInvokeAttribute>()?.ID;
         RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID;
@@ -74,7 +69,12 @@ public sealed class NodeMeta
 
         Icon = FindAttribute(meta, "Icon", "Unknown");
 
+        RequireParent = FindAttribute(meta, "RequireParent", Array.Empty<string>());
+        RequireAncestor = FindAttribute(meta, "RequireAncestor", Array.Empty<string>());
+
         Priority = FindAttribute(meta, "Priority", 0);
+        CreateInvokeId = FindAttribute(meta, "InvokeID", 0);
+        RCInvokeId = FindAttribute(meta, "RCInvoke", 0);
 
         // TODO: RequireParent, RequireAncestor from the Name of the node, not the type (cuz it's all the same type).
     }
@@ -124,6 +124,27 @@ public sealed class NodeMeta
         return defaultValue;
     }
 
+    public static string[] FindAttribute(Table meta, string attrib, string[] defaultValue)
+    {
+        if (meta == null)
+            return defaultValue;
+
+        foreach (TablePair item in meta.Pairs)
+        {
+            FromDataType(DataType.Table, item, attrib, out DynValue? result);
+            if (result != null)
+            {
+                List<string> list = [];
+                foreach (DynValue val in result.Table.Values)
+                    if (val.Type == DataType.String)
+                        list.Add(val.String);
+                return [.. list];
+            }
+        }
+
+        return defaultValue;
+    }
+
     private static void FromDataType(DataType valueDataType, TablePair item, string attrib, out DynValue? result)
     {
         result = null;
@@ -133,32 +154,6 @@ public sealed class NodeMeta
     }
 
     #endregion
-
-    public static Type[] GetTypes(Type[] src)
-    {
-        if (src != null)
-        {
-            LinkedList<Type> types = new LinkedList<Type>();
-            Type it = typeof(IEnumerable<Type>);
-            foreach (Type t in src)
-            {
-                if (it.IsAssignableFrom(t))
-                {
-                    IEnumerable<Type> o = t.GetConstructor(Type.EmptyTypes).Invoke([]) as IEnumerable<Type>;
-                    foreach (Type ty in o)
-                    {
-                        types.AddLast(ty);
-                    }
-                }
-                else
-                {
-                    types.AddLast(t);
-                }
-            }
-            return types.ToArray();
-        }
-        return null;
-    }
 }
 
 public static class AttributeExtensions
@@ -170,15 +165,14 @@ public static class AttributeExtensions
     {
         try
         {
-            var att = type.GetCustomAttributes(
+            if (type.GetCustomAttributes(
                 typeof(TAttribute), true
-            ).FirstOrDefault() as TAttribute;
-            if (att != null)
+            ).FirstOrDefault() is TAttribute att)
             {
                 return valueSelector(att);
             }
-            return default(TValue);
+            return default;
         }
-        catch { return default(TValue); }
+        catch { return default; }
     }
 }

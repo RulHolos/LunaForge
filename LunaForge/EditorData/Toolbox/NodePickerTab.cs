@@ -38,19 +38,16 @@ public class NodePickerTab : IEnumerable<NodePickerItem>
 
     #region Parsing
 
-    public static NodePickerTab FromXml(NodePlugin plugin, XmlNode tabNode)
+    public static NodePickerTab FromXml(NodePlugin plugin, XmlNode tabNode, NodePicker picker)
     {
-        NodePickerTab tab = new()
-        {
-            Header = tabNode.Attributes["name"]?.Value ?? "??"
-        };
+        NodePickerTab tab = new(tabNode.Attributes["name"]?.Value ?? "??");
 
         foreach (XmlNode node in tabNode.ChildNodes)
         {
             switch (node.Name)
             {
                 case "node":
-                    tab.AddNode(NodePickerItem.FromNode(plugin, node));
+                    tab.AddNode(NodePickerItem.FromNode(plugin, node, picker));
                     break;
                 case "separator":
                     tab.AddNode(new(true));

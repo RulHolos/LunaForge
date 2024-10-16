@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace LunaForge.EditorData.Nodes.Attributes;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-public sealed class RequireAncestorAttribute(params Type[] types) : Attribute
+public sealed class RequireAncestorAttribute(params string[] types) : Attribute
 {
-    public Type[] RequiredTypes { get; } = types;
+    public string[] RequiredTypes { get; } = types;
 }

@@ -25,6 +25,8 @@ public class NodeAttribute : ICloneable
 
     [JsonIgnore]
     public string TempAttrValue = string.Empty;
+    [JsonIgnore]
+    public bool IsUsed = false;
     [JsonProperty]
     public string EditWindow;
 
@@ -82,9 +84,9 @@ public class NodeAttribute : ICloneable
     {
         if (AttrValue == value)
             return; // No need for edit if the values match.
+        ParentNode.ParentDef.AddAndExecuteCommand(new EditAttributeCommand(this, AttrValue, value));
         if (IsDependency)
             ParentNode.RaiseDependencyPropertyChanged(this, new DependencyAttributeChangedEventArgs() { OriginalValue = value });
-        ParentNode.ParentDef.AddAndExecuteCommand(new EditAttributeCommand(this, AttrValue, value));
         ParentNode.CheckTrace();
     }
 

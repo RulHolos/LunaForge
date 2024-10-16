@@ -1,5 +1,6 @@
 ﻿using LunaForge.EditorData.Nodes.Attributes;
 using LunaForge.EditorData.Project;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,9 @@ public class RootNode : TreeNode
     public RootNode(LunaDefinition document) : base(document) { }
 
     public override string ToString() => "Root";
+
+    [JsonIgnore]
+    public override string NodeName { get => "Root"; }
 
     public override IEnumerable<string> ToLua(int spacing)
     {

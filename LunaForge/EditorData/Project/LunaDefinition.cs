@@ -14,7 +14,6 @@ using Raylib_cs;
 using System.Numerics;
 using rlImGui_cs;
 using LunaForge.GUI.Helpers;
-using LunaForge.EditorData.Nodes.NodeData.Stages;
 using LunaForge.EditorData.InputWindows;
 using LunaForge.GUI.ImGuiFileDialog;
 using LunaForge.EditorData.Traces;
@@ -59,32 +58,6 @@ public class LunaDefinition : LunaProjectFile
         RenderNodeToolbar();
         ImGui.Separator();
         RenderTreeView(TreeNodes[0], TreeNodes[0].IsBanned);
-        /*if (TreeNodes[0] == null)
-            RenderRootTypeSelector();
-        else
-        {
-            RenderNodeToolbar();
-            ImGui.Separator();
-            RenderTreeView(TreeNodes[0], TreeNodes[0].IsBanned);
-        }*/
-    }
-
-    [Obsolete]
-    private void RenderRootTypeSelector()
-    {
-        ImGui.Text("This file is currently empty. Please choose the Definition Type to start editing:");
-
-        using var listbox = ImRaii.ListBox(string.Empty);
-        if (listbox)
-        {
-            foreach (KeyValuePair<string, NodeManager.AddDefNode> type in NodeManager.DefinitionNodes)
-            {
-                if (ImGui.Selectable($"{type.Key}"))
-                {
-                    SelectDefinition(type.Key);
-                }
-            }
-        }
     }
 
     private void RenderNodeToolbar()
@@ -248,6 +221,7 @@ public class LunaDefinition : LunaProjectFile
                     tempNode.ParentDef = def;
                     tempNode.Hash = def.TreeNodeMaxHash;
                     def.TreeNodeMaxHash++;
+                    tempNode.RaiseCreate(new() { Parent = parent});
                     parent.AddChild(tempNode);
                     parent = tempNode;
                     previousLevel += levelGraduation;
@@ -257,6 +231,7 @@ public class LunaDefinition : LunaProjectFile
                     root = TreeSerializer.DeserializeTreeNode(nodeToDeserialize);
                     root.ParentDef = def;
                     root.Hash = def.TreeNodeMaxHash;
+                    root.RaiseCreate(new() { Parent = root });
                     def.TreeNodeMaxHash++;
                     parent = root;
                     previousLevel = 0;
@@ -355,18 +330,6 @@ public class LunaDefinition : LunaProjectFile
 
     #endregion
     #region TreeNodes
-
-    private void SelectDefinition(string defName)
-    {
-        try
-        {
-            NodeManager.DefinitionNodes[defName].Invoke(this);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.ToString());
-        }
-    }
 
     public bool Insert(TreeNode node, bool doInvoke = true)
     {
