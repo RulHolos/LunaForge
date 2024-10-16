@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 namespace LunaForge.EditorData.Nodes.NodeData.Project;
 
 [NodeIcon("LoadDef")]
-[RequireAncestor("Repeat")]
 [LeafNode]
 public class LoadDefinition : TreeNode
 {

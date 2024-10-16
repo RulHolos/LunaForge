@@ -350,13 +350,14 @@ public abstract class TreeNode : ITraceThrowable
         ImGui.Separator();
         if (ImGui.MenuItem("View Code"))
         {
+            StringBuilder code = new();
+            foreach (string codeLine in TryToLua(0))
+                code.Append(codeLine);
+
             if (EditorTraceContainer.ContainSeverity(TraceSeverity.Error))
                 NotificationManager.AddToast("There are errors inside your code.\nPlease fix them before viewing code.", ToastType.Error);
             else
             {
-                StringBuilder code = new();
-                foreach (string codeLine in ToLua(0))
-                    code.Append(codeLine);
                 MainWindow.ViewCodeWin.ResetAndShow(code.ToString());
             }
         }
@@ -656,14 +657,17 @@ public abstract class TreeNode : ITraceThrowable
 
     public async Task SerializeToFile(StreamWriter sw, int level)
     {
-        for (int i = 0; i < Attributes.Count; i++)
+        if (this is LuaNode)
         {
-            if (!Attributes[i].IsUsed)
+            for (int i = 0; i < Attributes.Count; i++)
             {
-                Attributes.RemoveAt(i);
-                i--;
+                if (!Attributes[i].IsUsed && !(this as LuaNode).InvalidNode)
+                {
+                    Attributes.RemoveAt(i);
+                    i--;
+                }
             }
-        }    
+        }
         await sw.WriteLineAsync($"{level},{TreeSerializer.SerializeTreeNode(this)}");
         foreach (TreeNode node in Children)
             await node.SerializeToFile(sw, level + 1);
@@ -671,6 +675,19 @@ public abstract class TreeNode : ITraceThrowable
 
     #endregion
     #region ToLua
+
+    public IEnumerable<string> TryToLua(int spacing)
+    {
+        try
+        {
+            return ToLua(spacing);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Generic error trying to generate lua: {ex}");
+            return null;
+        }
+    }
 
     public virtual IEnumerable<string> ToLua(int spacing)
     {

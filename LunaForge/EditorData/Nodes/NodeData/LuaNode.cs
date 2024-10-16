@@ -33,8 +33,8 @@ internal class LuaNode : TreeNode
 
     /*
      * TODO:
-     * Proper error handling
-     * RequireParent & RequireAncestor
+     * Proper error handling (ToString, ToLua traced error, ReflectAttr) - Check
+     * RequireParent & RequireAncestor - Check
      * Throw traces.
      * Allow node plugins to be turned on and off.
      */
@@ -64,7 +64,7 @@ internal class LuaNode : TreeNode
         {
             CheckTrace();
             InvalidNode = true;
-            NotificationManager.AddToast($"Cannot load a node.\nCheck console for more infos.");
+            NotificationManager.AddToast($"Cannot load a node.\nCheck console for more infos.", ToastType.Error);
             Console.WriteLine($"Path to node {PathToLua} doesn't exist.");
             return null;
         }
@@ -75,6 +75,7 @@ internal class LuaNode : TreeNode
             script.DoFile(PathToLua);
             NodeName = ParentDef.ParentProject.Toolbox.LookupNameFromPath(PathToLua);
             InvalidNode = false;
+            CheckTrace();
         }
         catch (InterpreterException ex)
         {
@@ -127,13 +128,24 @@ internal class LuaNode : TreeNode
     {
         if (Script.Globals["ToLua"] != null)
         {
-            DynValue function = Script.Globals.Get("ToLua");
-            Coroutine coroutine = Script.CreateCoroutine(function).Coroutine;
+            Coroutine coroutine = null;
+            try
+            {
+                DynValue function = Script.Globals.Get("ToLua");
+                coroutine = Script.CreateCoroutine(function).Coroutine;
+            }
+            catch (InterpreterException ex)
+            {
+                InvalidNode = true;
+                CheckTrace();
+                NotificationManager.AddToast($"Couldn't generated code from node {GetType().Name}, see console for more infos.", ToastType.Error);
+                Console.WriteLine(ex.DecoratedMessage);
+            }
 
             DynValue result = null;
             GetCoroutineResult(ref coroutine, ref result, spacing);
 
-            while (result != null && result.Type != DataType.Void && result.Type != DataType.Nil)
+            while (result != null && result.Type != DataType.Void && result.Type != DataType.Nil && coroutine != null)
             {
                 if (result.Type == DataType.String)
                 {
@@ -151,10 +163,12 @@ internal class LuaNode : TreeNode
         {
             result = co.Resume(args);
         }
-        catch (Exception ex)
+        catch (ScriptRuntimeException ex)
         {
+            InvalidNode = true;
+            CheckTrace();
             NotificationManager.AddToast($"Couldn't generated code from node {GetType().Name}, see console for more infos.", ToastType.Error);
-            Console.WriteLine(ex.ToString());
+            Console.WriteLine(ex.DecoratedMessage);
             result = null;
         }
     }
@@ -169,9 +183,10 @@ internal class LuaNode : TreeNode
                 Script.Call(func, o.AttrName, o.AttrValue, e.OriginalValue);
             }
         }
-        catch (Exception ex)
+        catch (ScriptRuntimeException ex)
         {
-            Console.WriteLine(ex.ToString());
+            Console.WriteLine(ex.DecoratedMessage);
+            NotificationManager.AddToast($"Couldn't reflect {NodeName}.\nCheck console for more infos.", ToastType.Error);
         }
     }
 
