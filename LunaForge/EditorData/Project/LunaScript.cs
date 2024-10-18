@@ -139,6 +139,7 @@ public class LunaScript : LunaProjectFile
     {
         EditorTraceContainer.RemoveChecksFromSource(this);
         ParentProject.ProjectFiles.Remove(this);
+        ParentProject.CurrentProjectFile = null;
     }
 
     #endregion

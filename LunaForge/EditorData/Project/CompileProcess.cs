@@ -10,6 +10,8 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using LunaForge.Zip;
 using LunaForge.GUI.Helpers;
+using LunaForge.EditorData.Traces;
+using LunaForge.GUI;
 
 namespace LunaForge.EditorData.Project;
 
@@ -109,7 +111,12 @@ public class CompileProcess
         }
 
         WriteRootCode();
-        await GenerateCode(SCDebug, StageDebug); // Wait for all the code to be generated.
+        await GenerateCode(filesToPack, SCDebug, StageDebug); // Wait for all the code to be generated.
+        if (EditorTraceContainer.ContainSeverity(TraceSeverity.Error))
+        {
+            NotificationManager.AddToast("There are errors inside your code.\nPlease fix them before viewing code.", ToastType.Error);
+            return false;
+        }
 
         if (!PackFiles())
             return false;
@@ -119,11 +126,11 @@ public class CompileProcess
         return true;
     }
 
-    public async Task GenerateCode(bool SCDebug, bool StageDebug)
+    public async Task GenerateCode(List<string> filesToPack, bool SCDebug, bool StageDebug)
     {
         if (SCDebug)
         {
-            Source.SaveSCDebugCode();
+            await Source.SaveSCDebugCode();
         }
         else if (StageDebug)
         {

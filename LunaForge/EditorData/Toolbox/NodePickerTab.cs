@@ -13,12 +13,14 @@ namespace LunaForge.EditorData.Toolbox;
 public class NodePickerTab : IEnumerable<NodePickerItem>
 {
     public string Header { get; set; }
+    public string PluginName { get; set; }
     public List<NodePickerItem> Items { get; set; } = [];
 
     public NodePickerTab() { }
-    public NodePickerTab(string header)
+    public NodePickerTab(string header, string pluginName)
     {
         Header = header;
+        PluginName = pluginName;
     }
 
     public void AddNode(NodePickerItem item)
@@ -40,7 +42,7 @@ public class NodePickerTab : IEnumerable<NodePickerItem>
 
     public static NodePickerTab FromXml(NodePlugin plugin, XmlNode tabNode, NodePicker picker)
     {
-        NodePickerTab tab = new(tabNode.Attributes["name"]?.Value ?? "??");
+        NodePickerTab tab = new(tabNode.Attributes["name"]?.Value ?? "??", plugin.DisplayName);
 
         foreach (XmlNode node in tabNode.ChildNodes)
         {

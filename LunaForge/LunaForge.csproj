@@ -19,6 +19,7 @@
     <RootNamespace>LunaForge</RootNamespace>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -38,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Icon.ico" />
     <Content Include="Images\Error.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

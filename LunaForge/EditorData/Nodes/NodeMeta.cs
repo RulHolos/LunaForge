@@ -75,8 +75,6 @@ public sealed class NodeMeta
         Priority = FindAttribute(meta, "Priority", 0);
         CreateInvokeId = FindAttribute(meta, "InvokeID", 0);
         RCInvokeId = FindAttribute(meta, "RCInvoke", 0);
-
-        // TODO: RequireParent, RequireAncestor from the Name of the node, not the type (cuz it's all the same type).
     }
 
     #region From Lua

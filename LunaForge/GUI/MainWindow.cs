@@ -123,7 +123,7 @@ internal static class MainWindow
 
     #region Windows
 
-    public static List<ImGuiWindow> Windows = [];
+    public static List<ImGuiWindow> Windows { get; set; } = [];
 
     public static ToolboxWindow ToolboxWin;
     public static NodeAttributeWindow NodeAttributeWin;
@@ -156,6 +156,11 @@ internal static class MainWindow
     public static ProjectCollection Workspaces;
 
     public static List<PresetListInfo> PresetsList { get; set; } = [];
+
+    /// <summary>
+    /// Script cache for <see cref="LuaNode"/>. Item1 is <see cref="TreeNode.NodeName"/>, Item2 is <see cref="Script"/>.
+    /// </summary>
+    public static Dictionary<string, Script> ScriptCache = [];
 
     #endregion
 
@@ -878,9 +883,16 @@ internal static class MainWindow
                 projectToCompile.CompileProcess.ProgressChanged +=
                     (o, e) => PackageProgressReport(o, e);
                 bool success = await projectToCompile.CompileProcess.ExecuteProcess(SCDebugger != null, StageDebugger != null);
-                NotificationManager.AddToast($"Packaging finished.", ToastType.Success);
-                if (run && success)
-                    RunLuaSTG();
+                if (success)
+                {
+                    NotificationManager.AddToast($"Packaging finished!", ToastType.Success);
+                    if (run)
+                        RunLuaSTG();
+                }
+                else
+                {
+                    NotificationManager.AddToast($"Packaging failed...", ToastType.Error);
+                }
             }
             catch (Exception ex)
             {
@@ -1002,6 +1014,8 @@ internal static class MainWindow
             return false;
         }
     }
+
+    public static void ClearScriptCache() => ScriptCache.Clear();
 
     #endregion
 }

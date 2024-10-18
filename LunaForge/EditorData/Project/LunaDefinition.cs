@@ -57,7 +57,9 @@ public class LunaDefinition : LunaProjectFile
     {
         RenderNodeToolbar();
         ImGui.Separator();
+        ImGui.BeginChild($"{FullFilePath}_nodetree");
         RenderTreeView(TreeNodes[0], TreeNodes[0].IsBanned);
+        ImGui.EndChild();
     }
 
     private void RenderNodeToolbar()
@@ -221,7 +223,7 @@ public class LunaDefinition : LunaProjectFile
                     tempNode.ParentDef = def;
                     tempNode.Hash = def.TreeNodeMaxHash;
                     def.TreeNodeMaxHash++;
-                    tempNode.RaiseCreate(new() { Parent = parent});
+                    tempNode.RaiseCreate(new() { Parent = parent });
                     parent.AddChild(tempNode);
                     parent = tempNode;
                     previousLevel += levelGraduation;
@@ -326,6 +328,7 @@ public class LunaDefinition : LunaProjectFile
         EditorTraceContainer.RemoveChecksFromSource(this);
         SelectedNode = null;
         ParentProject.ProjectFiles.Remove(this);
+        ParentProject.CurrentProjectFile = null;
     }
 
     #endregion

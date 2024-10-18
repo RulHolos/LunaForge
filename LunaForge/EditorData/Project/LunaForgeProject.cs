@@ -242,7 +242,7 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
                     using FileStream fs = new(Path.Combine(CompileProcess.CurrentTempPath, Path.ChangeExtension(pathToTemp, ".lua")), FileMode.Create, FileAccess.Write);
                     using (StreamWriter sw = new(fs))
                     {
-                        foreach (string code in def.TreeNodes[0].ToLua(0))
+                        foreach (string code in def.TreeNodes[0].TryToLua(0))
                             sw.Write(code);
                     }
                 }
@@ -269,7 +269,7 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
                     using FileStream fs = new(Path.Combine(CompileProcess.CurrentTempPath, Path.ChangeExtension(pathToTemp, ".lua")), FileMode.Create, FileAccess.Write);
                     using (StreamWriter sw = new(fs))
                     {
-                        foreach (string code in def.TreeNodes[0].ToLua(0))
+                        foreach (string code in def.TreeNodes[0].TryToLua(0))
                             sw.Write(code);
                     }
                 }

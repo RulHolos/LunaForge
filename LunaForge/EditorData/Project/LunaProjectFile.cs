@@ -126,7 +126,5 @@ public abstract class LunaProjectFile : ITraceThrowable
 
     public abstract void Close();
 
-    
-
     #endregion
 }

@@ -74,7 +74,7 @@ public class ProjectViewerWindow : ImGuiWindow
 
                     if (ImGui.BeginTabItem(file.FileName, ref isOpened, flags))
                     {
-                        if (ParentProject.CurrentProjectFile != file)
+                        if (ParentProject.CurrentProjectFile == null || ParentProject.CurrentProjectFile != file)
                         {
                             ParentProject.CurrentProjectFile = file;
                             Console.WriteLine($"Current ProjectFile: {file.FileName}");
@@ -112,7 +112,12 @@ public class ProjectViewerWindow : ImGuiWindow
                 RenderProjectSettings();
 
                 // Close the file if confirmed
-                fileToClose?.Close();
+                if (fileToClose != null)
+                {
+                    fileToClose?.Close();
+                    fileToClose = null;
+                }
+                
 
                 ImGui.EndTabBar();
             }
@@ -368,7 +373,7 @@ public class ProjectViewerWindow : ImGuiWindow
     {
         ImGui.BeginGroup();
         {
-            Vector2 listSize = new(ImGui.GetContentRegionAvail().X / 2, ImGui.GetContentRegionAvail().Y - 150);
+            Vector2 listSize = new(ImGui.GetContentRegionAvail().X / 2, ImGui.GetContentRegionAvail().Y - 300);
             if (ImGui.BeginListBox($"##{ParentProject.ProjectName}_ProjectNodes", listSize))
             {
                 int i = 0;
@@ -394,11 +399,14 @@ public class ProjectViewerWindow : ImGuiWindow
             {
                 ImGui.BeginGroup();
                 ImGui.Text(TempSelectedNodePlugin.DisplayName);
+                if (!string.IsNullOrEmpty(TempSelectedNodePlugin.Authors))
+                    ImGui.TextWrapped($"By: {TempSelectedNodePlugin.Authors}");
                 string btnText = TempSelectedNodePlugin.Enabled ? "Disable" : "Enable";
-                if (ImGui.Button($"{btnText} (You will need to reload your project)"))
+                if (ImGui.Button($"{btnText}"))
                 {
                     TempSelectedNodePlugin.ToggleState(ParentProject);
                 }
+                ImGui.TextWrapped("(You will need to reload your project for these changes to take effect.)");
                 ImGui.EndGroup();
             }
         }

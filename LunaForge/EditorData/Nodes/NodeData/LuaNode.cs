@@ -15,10 +15,10 @@ namespace LunaForge.EditorData.Nodes.NodeData;
 internal class LuaNode : TreeNode
 {
     [JsonIgnore]
-    public Script Script { get; private set; }
+    public Script? Script => GetScript();
 
     [JsonIgnore]
-    public bool InvalidNode { get; private set; } = false;
+    public bool InvalidNode { get; set; } = false;
 
     [JsonConstructor]
     private LuaNode() : base() { }
@@ -37,7 +37,16 @@ internal class LuaNode : TreeNode
      * RequireParent & RequireAncestor - Check
      * Throw traces.
      * Allow node plugins to be turned on and off. - Check
+     * 
+     * Put PathToLua to be relative to the project root.
+     * 
+     * For the ToLua: Use threads and split all children into separate buffers given to the thread. They're put back together after
      */
+
+    public Script GetScript()
+    {
+        return NodeScript.CreateScript(this);
+    }
 
     public override string ToString()
     {
@@ -47,6 +56,8 @@ internal class LuaNode : TreeNode
             {
                 return $"--- Invalid Node: {Path.GetFileName(PathToLua)} ---";
             }
+            // Set script.Globals dynamically this context being this
+            NodeScript.SetScriptToString(Script, this);
             return Script?.Call(Script.Globals.Get("ToString")).String;
         }
         catch (ScriptRuntimeException ex)
@@ -56,78 +67,29 @@ internal class LuaNode : TreeNode
         }
     }
 
-    public Script CreateScript()
+    public void CreateScript()
     {
-        if (Script != null)
-            return Script;
-        if (!File.Exists(PathToLua))
-        {
-            CheckTrace();
-            InvalidNode = true;
-            NotificationManager.AddToast($"Cannot load a node.\nCheck console for more infos.", ToastType.Error);
-            Console.WriteLine($"Path to node {PathToLua} doesn't exist.");
-            return null;
-        }
-        // Removes LoadMethods, OS_System and IO.
-        Script script = new(CoreModules.Preset_SoftSandbox);
-        SetScriptGlobals(ref script);
-        try
-        {
-            script.DoFile(PathToLua);
-            NodeName = ParentDef.ParentProject.Toolbox.LookupNameFromPath(PathToLua);
-            InvalidNode = false;
-            CheckTrace();
-        }
-        catch (InterpreterException ex)
-        {
-            CheckTrace();
-            NotificationManager.AddToast($"Cannot load node: {Path.GetFileName(PathToLua)}.\nCheck console for more infos.", ToastType.Error);
-            Console.WriteLine($"Problem with loading lua script: {ex.DecoratedMessage}");
-            InvalidNode = true;
-        }
-
-        Script = script;
-        return script;
+        NodeScript.CreateScript(this);
+        if (Script?.Globals["Initialize"] != null)
+            Script.Call(Script.Globals.Get("Initialize"));
     }
 
-    private void SetScriptGlobals(ref Script script)
-    {
-        script.Globals["this"] = this;
-        script.Globals["GetChildrenLua"] = (Func<int, IEnumerable<string>>)GetChildrenLua;
-        script.Globals["GetChildrenLuaFromPriority"] = (Func<int, IEnumerable<string>>)GetChildrenLuaFromPriority;
-        script.Globals["GetAttribute"] = (Func<string, string>)GetAttribute;
-        script.Globals["GetAttributeInt"] = (Func<int, string>)GetAttribute;
-        script.Globals["SetAttribute"] = (Action<string, string>)SetAttribute;
-        script.Globals["Macrolize"] = (Func<int, string>)Macrolize;
-        script.Globals["NonMacrolize"] = (Func<int, string>)NonMacrolize;
-        script.Globals["SetupAttribute"] = (Func<string, string, string, string>)SetupAttribute;
-        script.Globals["SetupDependencyAttribute"] = (Func<string, string, string, string>)SetupDependencyAttribute;
-        script.Globals["SetupMeta"] = (Action<Table>)SetupMeta;
-        script.Globals["Indent"] = (Func<int, string>)Indent;
-        script.Globals["AddAttribute"] = (Func<string, string, string, string>)AddAttribute;
-        script.Globals["RemoveAttribute"] = (Action<string>)RemoveAttribute;
-        script.Globals["RemoveAttributeInt"] = (Action<int>)RemoveAttribute;
-        script.Globals["HideAttribute"] = (Action<int>)HideAttribute;
-        script.Globals["GetUsedAttrCount"] = (Func<int>)GetUsedAttrCount;
-        //script.Globals["AddTrace"] = (Action<bool>)AddTraceWithCondition;
-    }
-
-    private IEnumerable<string> GetChildrenLua(int spacing)
+    public IEnumerable<string> GetChildrenLua(int spacing)
     {
         foreach (var a in base.ToLua(spacing))
             yield return a;
     }
 
-    private IEnumerable<string> GetChildrenLuaFromPriority(int spacing)
+    public IEnumerable<string> GetChildrenLuaFromPriority(int spacing)
     {
         foreach (var a in base.ToLua(spacing, FromPriority()))
             yield return a;
     }
 
-    // TODO : Return a compilation error if this function fails at any point.
     public override IEnumerable<string> ToLua(int spacing)
     {
-        if (Script.Globals["ToLua"] != null)
+        NodeScript.SetScriptToLua(Script, this);
+        if (Script?.Globals["ToLua"] != null)
         {
             Coroutine coroutine = null;
             try
@@ -174,16 +136,18 @@ internal class LuaNode : TreeNode
         }
     }
 
-    public override void ReflectAttr(NodeAttribute o, DependencyAttributeChangedEventArgs e)
+    public override void ReflectAttr(NodeAttribute o, AttributeChangedEventArgs e)
     {
         try
         {
-            DynValue func = Script.Globals.Get("ReflectAttr");
-            if (func.Function != null)
+            NodeScript.SetScriptReflectAttr(Script, this);
+            DynValue? func = Script?.Globals.Get("ReflectAttr");
+            if (func?.Function != null)
             {
                 Script.Call(func, o.AttrName, o.AttrValue, e.OriginalValue);
             }
         }
+        catch (NullReferenceException) { }
         catch (ScriptRuntimeException ex)
         {
             Console.WriteLine(ex.DecoratedMessage);

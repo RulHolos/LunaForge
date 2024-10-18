@@ -62,6 +62,10 @@ public class ToolboxWindow : ImGuiWindow
                         //ImGui.Columns(1);
                         ImGui.EndTabItem();
                     }
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.SetTooltip($"{tab.Header} ({tab.PluginName})");
+                    }
                     ImGui.PopID();
                     i++;
                 }
@@ -69,10 +73,5 @@ public class ToolboxWindow : ImGuiWindow
             }
             End();
         }
-    }
-
-    public void RenderTabItem()
-    {
-
     }
 }

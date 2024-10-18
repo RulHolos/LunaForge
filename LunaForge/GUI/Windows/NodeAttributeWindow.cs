@@ -33,11 +33,11 @@ public class NodeAttributeWindow : ImGuiWindow
             }
 
             ImGuiTableFlags flags = ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders;
-            if (ImGui.BeginTable("NodeAttributeTable", 3, flags))
+            if (ImGui.BeginTable($"NodeAttributeTable_{CurrentNode.NodeName}", 3, flags))
             {
-                ImGui.TableSetupColumn("Properties");
-                ImGui.TableSetupColumn("Parameters");
-                ImGui.TableSetupColumn(string.Empty);
+                ImGui.TableSetupColumn("Properties", ImGuiTableColumnFlags.NoResize, 1.3f);
+                ImGui.TableSetupColumn("Parameters", ImGuiTableColumnFlags.NoResize, 1.7f);
+                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.NoResize, 0.4f);
                 ImGui.TableHeadersRow();
 
                 for (int i = 0; i < CurrentNode.Attributes.Count; i++)
@@ -64,6 +64,8 @@ public class NodeAttributeWindow : ImGuiWindow
                         CommitEdit(attr);
 
                     // More...
+                    Vector2 vec = ImGui.CalcTextSize("...");
+                    ImGui.SetNextItemWidth(vec.X + 5);
                     ImGui.TableSetColumnIndex(2);
                     if (ImGui.Button($"...##{attr.AttrName}", new Vector2(ImGui.GetContentRegionAvail().X, 0)))
                     {

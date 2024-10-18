@@ -16,11 +16,12 @@ public struct OnRemoveEventArgs
     public TreeNode Parent;
 }
 
-public struct DependencyAttributeChangedEventArgs
+public struct AttributeChangedEventArgs
 {
+    public string NewValue;
     public string OriginalValue;
 }
 
 public delegate void OnCreateNodeHandler(OnCreateEventArgs e);
 public delegate void OnRemoveNodeHandler(OnRemoveEventArgs e);
-public delegate void OnDependencyAttributeChangedHandler(NodeAttribute o, DependencyAttributeChangedEventArgs e);
+public delegate void OnAttributeChangedHandler(NodeAttribute o, AttributeChangedEventArgs e);

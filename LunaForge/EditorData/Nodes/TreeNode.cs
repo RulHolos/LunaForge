@@ -22,6 +22,7 @@ using LunaForge.EditorData.Commands;
 using LunaForge.EditorData.Traces;
 using LunaForge.GUI;
 using MoonSharp.Interpreter;
+using System.Collections.Concurrent;
 
 namespace LunaForge.EditorData.Nodes;
 
@@ -75,7 +76,7 @@ public abstract class TreeNode : ITraceThrowable
     }
 
     [JsonIgnore]
-    public List<NodeAttribute> TempAttributes = [];
+    public List<NodeAttribute> TempAttributes { get; set; } = [];
     [JsonIgnore]
     public ObservableCollection<NodeAttribute> attributes = [];
     public ObservableCollection<NodeAttribute> Attributes
@@ -104,7 +105,7 @@ public abstract class TreeNode : ITraceThrowable
     private TreeNode LinkedNext = null;
 
     [JsonIgnore]
-    public string DisplayString => ToString();
+    public string DisplayString { get; private set; }
     [JsonIgnore]
     public virtual string NodeName { get; set; } = string.Empty;
 
@@ -112,10 +113,9 @@ public abstract class TreeNode : ITraceThrowable
 
     protected TreeNode()
     {
-        OnDependencyAttributeChanged += new OnDependencyAttributeChangedHandler(ReflectAttr);
-        //OnVirtualCreate += new OnCreateNodeHandler(CreateMeta);
+        OnAttributeChanged += new OnAttributeChangedHandler(ReflectDisplayString);
+        OnDependencyAttributeChanged += new OnAttributeChangedHandler(ReflectAttr);
         OnCreate += new OnCreateNodeHandler(OnCreateNode);
-        //OnVirtualRemove += new OnRemoveNodeHandler(RemoveMeta);
         OnRemove += new OnRemoveNodeHandler(OnRemoveNode);
         MetaData = new(this);
         Children = null;
@@ -141,17 +141,33 @@ public abstract class TreeNode : ITraceThrowable
 
     public string SetupAttribute(string name, string defaultValue, string editWindow)
     {
-        NodeAttribute attr = GetAttr(name) ?? new(name, defaultValue, editWindow);
-        attr.IsUsed = true;
-        TempAttributes.Add(attr);
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+        {
+            attr.IsUsed = true;
+            return name;
+        }
+        attr = new(name, defaultValue, editWindow)
+        {
+            IsUsed = true
+        };
+        Attributes.Add(attr);
         return name;
     }
 
     public string SetupDependencyAttribute(string name, string defaultValue, string editWindow)
     {
-        NodeAttribute attr = GetAttr(name) ?? new(name, defaultValue, editWindow, true);
-        attr.IsUsed = true;
-        TempAttributes.Add(attr);
+        NodeAttribute attr = GetAttr(name);
+        if (attr != null)
+        {
+            attr.IsUsed = true;
+            return name;
+        }
+        attr = new(name, defaultValue, editWindow, true)
+        {
+            IsUsed = true
+        };
+        Attributes.Add(attr);
         return name;
     }
 
@@ -287,6 +303,7 @@ public abstract class TreeNode : ITraceThrowable
                 InsertAttrAt(id, na);
             }
         }
+        na.IsUsed = true;
         na.EditWindow = editWindow;
         return na;
     }
@@ -302,7 +319,7 @@ public abstract class TreeNode : ITraceThrowable
         attributes[id] = na;
     }
 
-    public virtual void ReflectAttr(NodeAttribute o, DependencyAttributeChangedEventArgs e) { }
+    public virtual void ReflectAttr(NodeAttribute o, AttributeChangedEventArgs e) { }
 
     public static bool CheckVarName(string s)
     {
@@ -580,7 +597,7 @@ public abstract class TreeNode : ITraceThrowable
             for (int index = 0; index < e.OldItems.Count; index++)
             {
                 node = (TreeNode)e.OldItems[index];
-                node.RaiseRemove(new OnRemoveEventArgs() { Parent = this });
+                //node.RaiseRemove(new OnRemoveEventArgs() { Parent = this });
                 if (index + e.OldStartingIndex != 0)
                 {
                     if (previousNode == null)
@@ -603,8 +620,8 @@ public abstract class TreeNode : ITraceThrowable
             for (int index = 0; index < e.NewItems.Count; index++)
             {
                 node = (TreeNode)e.NewItems[index];
-                node.RaiseCreate(new OnCreateEventArgs() { Parent = this });
                 node.Parent = this;
+                //node.RaiseCreate(new OnCreateEventArgs() { Parent = this });
                 if (index + e.NewStartingIndex != 0)
                 {
                     if (previousNode == null)
@@ -694,23 +711,52 @@ public abstract class TreeNode : ITraceThrowable
         return ToLua(spacing, Children);
     }
 
-    protected IEnumerable<string> ToLua(int spacing, IEnumerable<TreeNode> children)
+    protected IEnumerable<string> ToLua(int spacing, ObservableCollection<TreeNode> children)
     {
-        foreach (TreeNode t in children)
+        int totalChildren = children.Count;
+        int chunkSize = 100;
+        int chunkCount = (int)Math.Ceiling((double)totalChildren / chunkSize);
+        string[] results = new string[chunkCount];
+        Console.WriteLine($"Children count={totalChildren}; chunkSize={chunkSize}; chunkCount={chunkCount}");
+
+        StringBuilder finalResult = new();
+
+        List<Task> tasks = [];
+
+        for (int i = 0; i < chunkCount; i++)
         {
-            if (!t.IsBanned)
+            int startIndex = i * chunkSize;
+            int endIndex = Math.Min(startIndex + chunkSize, totalChildren);
+            int chunkIndex = i;
+
+            tasks.Add(Task.Run(() =>
             {
-                foreach (var a in t.ToLua(spacing))
+                Console.WriteLine($"Running task from {startIndex} to {endIndex} (chunkIndex: {chunkIndex})");
+                StringBuilder chunkResult = new();
+                for (int j = startIndex; j < endIndex; j++)
                 {
-                    yield return a;
+                    if (children[j].IsBanned)
+                        continue;
+                    IEnumerable<string> childLua = children[j].ToLua(spacing);
+                    string combinedChildLua = string.Join("", childLua);
+                    var f = $"{startIndex} -> {endIndex}";
+                    chunkResult.Append(combinedChildLua);
                 }
-            }
+                results[chunkIndex] = chunkResult.ToString();
+            }));
         }
+
+        Task.WaitAll([.. tasks]);
+
+        foreach (string result in results)
+            finalResult.Append(result);
+
+        yield return finalResult.ToString();
     }
 
-    public IEnumerable<TreeNode> FromPriority()
+    public ObservableCollection<TreeNode> FromPriority()
     {
-        return GetRealChildren().OrderBy(s => s.MetaData.Priority ?? 0);
+        return [.. GetRealChildren().OrderBy(s => s.MetaData.Priority ?? 0)];
     }
 
     #endregion
@@ -782,9 +828,9 @@ public abstract class TreeNode : ITraceThrowable
     private event OnCreateNodeHandler OnVirtualCreate;
     private event OnRemoveNodeHandler OnRemove;
     private event OnRemoveNodeHandler OnVirtualRemove;
-    private event OnDependencyAttributeChangedHandler OnDependencyAttributeChanged;
+    private event OnAttributeChangedHandler OnAttributeChanged;
+    private event OnAttributeChangedHandler OnDependencyAttributeChanged;
 
-    // TODO : Raise at node deserialization.
     public void RaiseCreate(OnCreateEventArgs e)
     {
         if (!IsBanned)
@@ -825,7 +871,12 @@ public abstract class TreeNode : ITraceThrowable
         }
     }
 
-    public void RaiseDependencyPropertyChanged(NodeAttribute attr, DependencyAttributeChangedEventArgs e)
+    public void RaisePropertyChanged(NodeAttribute attr, AttributeChangedEventArgs e)
+    {
+        OnAttributeChanged?.Invoke(attr, e);
+    }
+
+    public void RaiseDependencyPropertyChanged(NodeAttribute attr, AttributeChangedEventArgs e)
     {
         OnDependencyAttributeChanged?.Invoke(attr, e);
     }
@@ -837,12 +888,15 @@ public abstract class TreeNode : ITraceThrowable
         if (this is LuaNode)
             (this as LuaNode).CreateScript();
 
-        IEnumerable<NodeAttribute> attrs = from NodeAttribute att in Attributes
-                              where att.IsDependency == true
-                              select att;
-        foreach (NodeAttribute attr in attrs)
-            ReflectAttr(attr, new() { OriginalValue = attr.AttrValue });
+        List<NodeAttribute> attrs = (from NodeAttribute att in Attributes
+                                    where att.IsDependency == true
+                                    select att).ToList();
+        for (int i = 0; i < attrs.Count; i++)
+        {
+            ReflectAttr(attrs[i], new() { OriginalValue = attrs[i].AttrValue });
+        }
 
+        ReflectDisplayString(null, new());
         CheckTrace();
     }
 
@@ -855,6 +909,11 @@ public abstract class TreeNode : ITraceThrowable
         List<EditorTrace> list = new(traces);
         foreach (EditorTrace trace in list)
             EditorTraceContainer.Traces.Remove(trace);
+    }
+
+    private void ReflectDisplayString(NodeAttribute attr, AttributeChangedEventArgs e)
+    {
+        DisplayString = ToString();
     }
 
     #endregion

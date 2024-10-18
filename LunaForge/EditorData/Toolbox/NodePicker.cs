@@ -22,6 +22,7 @@ public class NodePlugin
 
     public string DisplayName { get; set; } = string.Empty;
     public string Namespace { get; set; } = string.Empty;
+    public string Authors { get; set; } = string.Empty;
     public string PathToPlugin { get; set; } = string.Empty;
     public string PathToXml { get; set; } = string.Empty;
 
@@ -97,6 +98,7 @@ public class NodePicker : IEnumerable<NodePlugin>
                 XmlNode pluginDoc = doc.DocumentElement.SelectSingleNode("/plugin");
                 plugin.DisplayName = pluginDoc.Attributes["displayname"]?.Value ?? "Null";
                 plugin.Namespace = pluginDoc.Attributes["namespace"]?.Value ?? "Null";
+                plugin.Authors = pluginDoc.Attributes["authors"]?.Value ?? "";
                 plugin.PathToXml = path;
                 plugin.PathToPlugin = pathToData;
 
@@ -142,10 +144,11 @@ public class NodePicker : IEnumerable<NodePlugin>
         {
             DisplayName = "System",
             Namespace = "lunaforge_system",
-            PathToPlugin = ""
+            PathToPlugin = "",
+            Authors = "Rül Hölos",
         };
 
-        NodePickerTab tab = new("System");
+        NodePickerTab tab = new("System", "Built-in");
         tab.AddNode(new NodePickerItem("system_load_definition", "LoadDefinition", "Load Definition", () =>
         {
             LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;
