@@ -114,7 +114,7 @@ public class LunaDefinition : LunaProjectFile
         ImGui.SameLine(0, 1.5f);
 
 #if DEBUG
-        bool isOpen = ImGui.TreeNodeEx($"{node.DisplayString} | Hash={node.Hash}", flags);
+        bool isOpen = ImGui.TreeNodeEx($"{node.DisplayString} | Hash={node.Hash} | NodeName={node.NodeName}", flags);
 #else
     bool isOpen = ImGui.TreeNodeEx(node.DisplayString, flags);
 #endif

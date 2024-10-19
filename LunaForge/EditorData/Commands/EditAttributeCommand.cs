@@ -25,9 +25,10 @@ public class EditAttributeCommand : Command
     {
         toEdit.AttrValue = newValue;
         toEdit.TempAttrValue = newValue;
+        var eventArgs = new AttributeChangedEventArgs() { NewValue = newValue, OriginalValue = originalValue };
         if (toEdit.IsDependency)
-            toEdit.ParentNode.RaiseDependencyPropertyChanged(toEdit, new AttributeChangedEventArgs() { NewValue = newValue, OriginalValue = originalValue });
-        toEdit.ParentNode.RaisePropertyChanged(toEdit, new AttributeChangedEventArgs() { NewValue = newValue, OriginalValue = originalValue });
+            toEdit.ParentNode.RaiseDependencyPropertyChanged(toEdit, eventArgs);
+        toEdit.ParentNode.RaisePropertyChanged(toEdit, eventArgs);
         toEdit.ParentNode.CheckTrace();
     }
 
@@ -35,9 +36,10 @@ public class EditAttributeCommand : Command
     {
         toEdit.AttrValue = originalValue;
         toEdit.TempAttrValue = originalValue;
+        var eventArgs = new AttributeChangedEventArgs() { NewValue = originalValue, OriginalValue = newValue };
         if (toEdit.IsDependency)
-            toEdit.ParentNode.RaiseDependencyPropertyChanged(toEdit, new AttributeChangedEventArgs() { NewValue = originalValue, OriginalValue = newValue });
-        toEdit.ParentNode.RaisePropertyChanged(toEdit, new AttributeChangedEventArgs() { NewValue = originalValue, OriginalValue = newValue });
+            toEdit.ParentNode.RaiseDependencyPropertyChanged(toEdit, eventArgs);
+        toEdit.ParentNode.RaisePropertyChanged(toEdit, eventArgs);
         toEdit.ParentNode.CheckTrace();
     }
 

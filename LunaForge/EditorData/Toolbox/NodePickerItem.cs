@@ -48,7 +48,7 @@ public class NodePickerItem
         string name = node.Attributes["name"]?.Value ?? "no-name";
         string path = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["path"]?.Value ?? "");
         string icon = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["icon"]?.Value ?? "");
-        picker.NameLookup.Add(new(name, path));
+        picker.NameLookup.TryAdd(name, path);
 
         List<Tuple<string, string>> childNodes = [];
         foreach (XmlNode childNode in node.ChildNodes)
@@ -58,7 +58,10 @@ public class NodePickerItem
             string childPath = Path.Combine(plugin.PathToPlugin, plugin.Namespace, childNode.Attributes["path"]?.Value ?? "");
             string childName = childNode.Attributes["name"]?.Value ?? "no-name";
             if (File.Exists(childPath))
+            {
                 childNodes.Add(new(childName, childPath));
+                picker.NameLookup.TryAdd(childName, childPath);
+            }
         }
 
         string iconName = MainWindow.LoadEditorImageFromFile(icon);

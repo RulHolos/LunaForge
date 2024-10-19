@@ -51,13 +51,13 @@ public class NodePicker : IEnumerable<NodePlugin>
 
     public List<NodePlugin> Plugins { get; set; } = [];
 
-    public List<Tuple<string, string>> NameLookup = [];
+    public Dictionary<string, string> NameLookup { get; set; } = [];
 
     public NodePicker() { }
 
     public string LookupNameFromPath(string luaPath)
     {
-        return NameLookup.FirstOrDefault(x => x.Item2 == luaPath)?.Item1 ?? "no-name";
+        return NameLookup.FirstOrDefault(x => x.Value == luaPath).Key ?? "no-name";
     }
 
     /// <summary>
