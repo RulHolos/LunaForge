@@ -713,7 +713,23 @@ public abstract class TreeNode : ITraceThrowable
 
     protected IEnumerable<string> ToLua(int spacing, ObservableCollection<TreeNode> children)
     {
-        int totalChildren = children.Count;
+        foreach (TreeNode t in children)
+        {
+            if (!t.IsBanned)
+            {
+                foreach (var a in t.ToLua(spacing))
+                {
+                    yield return a;
+                }
+            }
+        }
+
+        /*
+         * This code will stay here because it's the source of 48 hours of pure mental and physical suffering.
+         * I want everyone to know how fucking miserable this code made me.
+         */
+
+        /*int totalChildren = children.Count;
         int chunkSize = 100;
         int chunkCount = (int)Math.Ceiling((double)totalChildren / chunkSize);
         string[] results = new string[chunkCount];
@@ -751,7 +767,7 @@ public abstract class TreeNode : ITraceThrowable
         foreach (string result in results)
             finalResult.Append(result);
 
-        yield return finalResult.ToString();
+        yield return finalResult.ToString();*/
     }
 
     public ObservableCollection<TreeNode> FromPriority()

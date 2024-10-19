@@ -39,7 +39,7 @@ internal static class NodeScript
             try
             {
                 script.DoFile(context.PathToLua);
-                MainWindow.ScriptCache.Add(context.NodeName, script);
+                MainWindow.ScriptCache.TryAdd(context.NodeName, script);
                 context.InvalidNode = false;
                 context.CheckTrace();
             }
@@ -55,9 +55,10 @@ internal static class NodeScript
         }
     }
 
+    // TODO: Argument exception, key was already set.
+
     public static void SetScriptToString(Script script, LuaNode context)
     {
-        var s = $"context: {context.NodeName}; attributes: {context.Attributes.Count}";
         script.Globals["GetChildrenLua"] = (Func<int, IEnumerable<string>>)context.GetChildrenLua;
         script.Globals["GetChildrenLuaFromPriority"] = (Func<int, IEnumerable<string>>)context.GetChildrenLuaFromPriority;
         script.Globals["GetAttribute"] = (Func<string, string>)context.GetAttribute;
@@ -72,6 +73,7 @@ internal static class NodeScript
         script.Globals["SetupMeta"] = (Action<Table>)context.SetupMeta;
         script.Globals["GetAttribute"] = (Func<string, string>)context.GetAttribute;
         script.Globals["GetAttributeInt"] = (Func<int, string>)context.GetAttribute;
+        script.Globals["Indent"] = (Func<int, string>)context.Indent;
         //script.Globals["AddTrace"] = (Action<bool>)AddTraceWithCondition;
     }
 
@@ -79,7 +81,6 @@ internal static class NodeScript
     {
         SetScriptToString(script, context);
         script.Globals["SetAttribute"] = (Action<string, string>)context.SetAttribute;
-        script.Globals["Indent"] = (Func<int, string>)context.Indent;
         script.Globals["AddAttribute"] = (Func<string, string, string, string>)context.AddAttribute;
         script.Globals["RemoveAttribute"] = (Action<string>)context.RemoveAttribute;
         script.Globals["RemoveAttributeInt"] = (Action<int>)context.RemoveAttribute;
@@ -91,7 +92,6 @@ internal static class NodeScript
     {
         SetScriptToString(script, context);
         script.Globals["SetAttribute"] = (Action<string, string>)context.SetAttribute;
-        script.Globals["Indent"] = (Func<int, string>)context.Indent;
         script.Globals["AddAttribute"] = (Func<string, string, string, string>)context.AddAttribute;
         script.Globals["RemoveAttribute"] = (Action<string>)context.RemoveAttribute;
         script.Globals["RemoveAttributeInt"] = (Action<int>)context.RemoveAttribute;

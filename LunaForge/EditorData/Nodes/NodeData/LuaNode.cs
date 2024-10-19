@@ -56,9 +56,9 @@ internal class LuaNode : TreeNode
             {
                 return $"--- Invalid Node: {Path.GetFileName(PathToLua)} ---";
             }
-            // Set script.Globals dynamically this context being this
             NodeScript.SetScriptToString(Script, this);
-            return Script?.Call(Script.Globals.Get("ToString")).String;
+            string res = Script?.Call(Script.Globals.Get("ToString")).String;
+            return res;
         }
         catch (ScriptRuntimeException ex)
         {
@@ -88,9 +88,9 @@ internal class LuaNode : TreeNode
 
     public override IEnumerable<string> ToLua(int spacing)
     {
-        NodeScript.SetScriptToLua(Script, this);
         if (Script?.Globals["ToLua"] != null)
         {
+            NodeScript.SetScriptToLua(Script, this);
             Coroutine coroutine = null;
             try
             {
@@ -124,7 +124,10 @@ internal class LuaNode : TreeNode
     {
         try
         {
-            result = co.Resume(args);
+            if (args != null && args.Length > 0)
+                result = co.Resume(args);
+            else
+                result = co.Resume();
         }
         catch (ScriptRuntimeException ex)
         {

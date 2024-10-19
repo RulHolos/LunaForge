@@ -37,14 +37,14 @@ public class LoadDefinition : TreeNode
 
     public override string ToString()
     {
-        return $"Load Definition from \"{NonMacrolize(0)}\"";
+        return $"Load Definition from \"{GetAttribute(0)}\"";
     }
 
     public override IEnumerable<string> ToLua(int spacing)
     {
         string sp = Indent(spacing);
         yield return sp + $"Include'{Path.ChangeExtension(
-            Path.GetRelativePath(ParentDef.ParentProject.PathToProjectRoot, Macrolize(0) ?? string.Empty), ".lua")
+            Path.GetRelativePath(ParentDef.ParentProject.PathToProjectRoot, GetAttribute(0) ?? string.Empty), ".lua")
             .Replace("\\", "/")}'\n";
     }
 
@@ -60,7 +60,7 @@ public class LoadDefinition : TreeNode
         List<EditorTrace> traces = [];
         if (string.IsNullOrEmpty(NonMacrolize(0)))
             traces.Add(new ArgNotNullTrace(this, GetAttr(0).AttrName));
-        if (!string.IsNullOrEmpty(NonMacrolize(0)) && !File.Exists(Path.Combine(ParentDef.ParentProject.PathToProjectRoot, NonMacrolize(0))))
+        if (!string.IsNullOrEmpty(NonMacrolize(0)) && !File.Exists(Path.Combine(ParentDef.ParentProject.PathToProjectRoot, GetAttribute(0))))
             traces.Add(new FileMustExistTrace(this, GetAttr(0).AttrName));
         return traces;
     }
