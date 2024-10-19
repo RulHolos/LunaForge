@@ -70,7 +70,6 @@ public class NodePickerItem
         return new($"{plugin.Namespace}-{name}", iconName, name, () =>
         {
             LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;
-            // TODO : Check the innerxml to see if the node has children. If so: add them to the node.
             TreeNode node = new LuaNode(parentDef, path) { NodeName = name };
             foreach (Tuple<string, string> child in childNodes)
             {

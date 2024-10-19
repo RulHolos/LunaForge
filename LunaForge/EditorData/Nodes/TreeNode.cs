@@ -192,7 +192,8 @@ public abstract class TreeNode : ITraceThrowable
     public void RemoveAttribute(string name)
     {
         NodeAttribute attr = GetAttr(name);
-        Attributes.Remove(attr);
+        if (attr != null)
+            Attributes.Remove(attr);
     }
 
     public void RemoveAttribute(int i)
@@ -215,14 +216,14 @@ public abstract class TreeNode : ITraceThrowable
             Attributes.Add(attr);
     }
 
-    public string GetAttribute(string name)
+    public string? GetAttribute(string name)
     {
-        return GetAttr(name).AttrValue;
+        return GetAttr(name)?.AttrValue;
     }
 
-    public string GetAttribute(int i)
+    public string? GetAttribute(int i)
     {
-        return GetAttr(i).AttrValue;
+        return GetAttr(i)?.AttrValue;
     }
 
     public void SetAttribute(string name, string value)
@@ -246,7 +247,7 @@ public abstract class TreeNode : ITraceThrowable
         }
     }
 
-    public NodeAttribute GetAttr(int n)
+    public NodeAttribute? GetAttr(int n)
     {
         if (Attributes.Count > n)
             return attributes[n];
@@ -398,7 +399,7 @@ public abstract class TreeNode : ITraceThrowable
         if (sourceNode.MetaData.IsLeafNode)
             return false;
         if (nodeToValidate is LuaNode)
-            if (!File.Exists((nodeToValidate as LuaNode).PathToLua))
+            if (!File.Exists((nodeToValidate as LuaNode).PathToLuaFull))
                 return false; // ?
         if (MetaData.IsFolder)
             return GetRealParent()?.ValidateChild(nodeToValidate, sourceNode) ?? true;

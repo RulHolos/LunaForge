@@ -1,4 +1,5 @@
 ﻿using LunaForge.EditorData.Nodes.NodeData;
+using LunaForge.EditorData.Traces;
 using LunaForge.GUI;
 using Microsoft.VisualBasic;
 using MoonSharp.Interpreter;
@@ -14,15 +15,15 @@ internal static class NodeScript
 {
     public static Script CreateScript(LuaNode context)
     {
-        if (!File.Exists(context.PathToLua))
+        if (!File.Exists(context.PathToLuaFull))
         {
             context.CheckTrace();
             context.InvalidNode = true;
             NotificationManager.AddToast($"Cannot load a node.\nCheck console for more infos.", ToastType.Error);
-            Console.WriteLine($"Path to node {context.PathToLua} doesn't exist.");
+            Console.WriteLine($"Path to node {context.PathToLuaFull} doesn't exist.");
             return null;
         }
-        context.NodeName = context.ParentDef.ParentProject.Toolbox.LookupNameFromPath(context.PathToLua);
+        context.NodeName = context.ParentDef.ParentProject.Toolbox.LookupNameFromPath(context.PathToLuaFull);
 
         // Set script to a reference of the script cache.
         if (MainWindow.ScriptCache.TryGetValue(context.NodeName, out Script scriptRef))
@@ -38,7 +39,7 @@ internal static class NodeScript
             SetScriptInitial(script, context);
             try
             {
-                script.DoFile(context.PathToLua);
+                script.DoFile(context.PathToLuaFull);
                 MainWindow.ScriptCache.TryAdd(context.NodeName, script);
                 context.InvalidNode = false;
                 context.CheckTrace();
@@ -46,7 +47,7 @@ internal static class NodeScript
             catch (InterpreterException ex)
             {
                 context.CheckTrace();
-                NotificationManager.AddToast($"Cannot load node: {Path.GetFileName(context.PathToLua)}.\nCheck console for more infos.", ToastType.Error);
+                NotificationManager.AddToast($"Cannot load node: {Path.GetFileName(context.PathToLuaRelative)}.\nCheck console for more infos.", ToastType.Error);
                 Console.WriteLine($"Problem with loading lua script: {ex.DecoratedMessage}");
                 context.InvalidNode = true;
             }
@@ -74,7 +75,6 @@ internal static class NodeScript
         script.Globals["GetAttribute"] = (Func<string, string>)context.GetAttribute;
         script.Globals["GetAttributeInt"] = (Func<int, string>)context.GetAttribute;
         script.Globals["Indent"] = (Func<int, string>)context.Indent;
-        //script.Globals["AddTrace"] = (Action<bool>)AddTraceWithCondition;
     }
 
     public static void SetScriptToLua(Script script, LuaNode context)
@@ -97,5 +97,13 @@ internal static class NodeScript
         script.Globals["RemoveAttributeInt"] = (Action<int>)context.RemoveAttribute;
         script.Globals["HideAttribute"] = (Action<int>)context.HideAttribute;
         script.Globals["GetUsedAttrCount"] = (Func<int>)context.GetUsedAttrCount;
+    }
+
+    public static void SetScriptCheckTrace(Script script, LuaNode context)
+    {
+        script.Globals["INFO"] = TraceSeverity.Info;
+        script.Globals["WARNING"] = TraceSeverity.Warning;
+        script.Globals["ERROR"] = TraceSeverity.Error;
+        script.Globals["AddTrace"] = (Action<bool, string, string[]>)context.AddTrace;
     }
 }

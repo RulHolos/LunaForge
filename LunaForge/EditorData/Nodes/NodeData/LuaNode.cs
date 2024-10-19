@@ -25,11 +25,15 @@ internal class LuaNode : TreeNode
     public LuaNode(LunaDefinition def, string pathToLua)
         : base(def)
     {
-        PathToLua = pathToLua;
+        PathToLuaRelative = GetRelativePathToLua(pathToLua);
     }
 
+    [JsonIgnore]
+    public string PathToLuaFull => Path.Combine(ParentDef.ParentProject.PathToData, PathToLuaRelative);
     [JsonProperty("PathToLua")]
-    public string PathToLua { get; set; } = string.Empty;
+    public string PathToLuaRelative { get; set; } = string.Empty;
+
+    public string GetRelativePathToLua(string fullPath) => Path.GetRelativePath(ParentDef.ParentProject.PathToData, fullPath);
 
     /*
      * TODO:
@@ -39,8 +43,6 @@ internal class LuaNode : TreeNode
      * Allow node plugins to be turned on and off. - Check
      * 
      * Put PathToLua to be relative to the project root.
-     * 
-     * For the ToLua: Use threads and split all children into separate buffers given to the thread. They're put back together after
      */
 
     public Script GetScript()
@@ -54,7 +56,7 @@ internal class LuaNode : TreeNode
         {
             if (InvalidNode)
             {
-                return $"--- Invalid Node: {Path.GetFileName(PathToLua)} ---";
+                return $"--- Invalid Node: {Path.GetFileName(PathToLuaFull)} ---";
             }
             NodeScript.SetScriptToString(Script, this);
             string res = Script?.Call(Script.Globals.Get("ToString")).String;
@@ -63,7 +65,7 @@ internal class LuaNode : TreeNode
         catch (ScriptRuntimeException ex)
         {
             Console.WriteLine(ex.DecoratedMessage);
-            return $"--- Invalid Node: {Path.GetFileName(PathToLua)} (Error: Report to console.) ---";
+            return $"--- Invalid Node: {Path.GetFileName(PathToLuaFull)} (Error: Report to console.) ---";
         }
     }
 
@@ -143,10 +145,10 @@ internal class LuaNode : TreeNode
     {
         try
         {
-            NodeScript.SetScriptReflectAttr(Script, this);
             DynValue? func = Script?.Globals.Get("ReflectAttr");
             if (func?.Function != null)
             {
+                NodeScript.SetScriptReflectAttr(Script, this);
                 Script.Call(func, o.AttrName, o.AttrValue, e.OriginalValue);
             }
         }
@@ -160,16 +162,62 @@ internal class LuaNode : TreeNode
 
     public override object Clone()
     {
-        LuaNode node = new(ParentDef, PathToLua);
+        LuaNode node = new(ParentDef, PathToLuaFull);
         node.CopyData(this);
         return node;
     }
 
+    #region Traces
+
+    public static Dictionary<string, Type> TraceTypes { get; } = new()
+    {
+        ["ArgNotNull"] = typeof(ArgNotNullTrace),
+        ["FileMustExist"] = typeof(FileMustExistTrace),
+        ["ProjectPathNotNull"] = typeof(ProjectPathNotNullTrace)
+    };
+
+    public List<EditorTrace> TempTraces = [];
+
     public override List<EditorTrace> GetTraces()
     {
         List<EditorTrace> traces = [];
+        TempTraces.Clear();
+        try
+        {
+            DynValue? func = Script?.Globals.Get("GetTraces");
+            if (func?.Function != null)
+            {
+                NodeScript.SetScriptCheckTrace(Script, this);
+                Script.Call(func);
+            }
+        }
+        catch (ScriptRuntimeException ex)
+        {
+            Console.WriteLine(ex.DecoratedMessage);
+        }
+
         if (InvalidNode)
             traces.Add(new InvalidNodeTrace(this));
+
+        foreach (EditorTrace trace in TempTraces)
+            traces.Add(trace);
+
         return traces;
     }
+
+    public void AddTrace(bool condition, string type, params string[] args)
+    {
+        if (condition == false)
+            return; // Doesn't do anything if condition is false.
+        TraceTypes.TryGetValue(type, out Type traceType);
+        if (traceType == null)
+        {
+            Console.WriteLine($"Type {type} is not a valid trace type. See documentation for a list of valid traces.");
+        }
+        EditorTrace trace = (EditorTrace)Activator.CreateInstance(traceType, args);
+        if (trace != null)
+            TempTraces.Add(trace);
+    }
+
+    #endregion
 }
