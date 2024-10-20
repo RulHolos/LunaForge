@@ -46,21 +46,23 @@ public class NodePickerItem
     public static NodePickerItem FromNode(NodePlugin plugin, XmlNode node, NodePicker picker)
     {
         string name = node.Attributes["name"]?.Value ?? "no-name";
-        string path = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["path"]?.Value ?? "");
+        string relativePath = Path.Combine(plugin.Namespace, node.Attributes["path"]?.Value ?? "").Replace('/', Path.DirectorySeparatorChar);
+        string path = Path.Combine(plugin.PathToPlugin, relativePath);
         string icon = Path.Combine(plugin.PathToPlugin, plugin.Namespace, node.Attributes["icon"]?.Value ?? "");
-        picker.NameLookup.TryAdd(name, path);
+        picker.NameLookup.TryAdd(name, relativePath);
 
         List<Tuple<string, string>> childNodes = [];
         foreach (XmlNode childNode in node.ChildNodes)
         {
             if (childNode.Name != "node")
                 continue;
-            string childPath = Path.Combine(plugin.PathToPlugin, plugin.Namespace, childNode.Attributes["path"]?.Value ?? "");
             string childName = childNode.Attributes["name"]?.Value ?? "no-name";
+            string relativeChildPath = Path.Combine(plugin.Namespace, childNode.Attributes["path"]?.Value ?? "").Replace('/', Path.DirectorySeparatorChar);
+            string childPath = Path.Combine(plugin.PathToPlugin, relativeChildPath);
             if (File.Exists(childPath))
             {
                 childNodes.Add(new(childName, childPath));
-                picker.NameLookup.TryAdd(childName, childPath);
+                picker.NameLookup.TryAdd(childName, relativeChildPath);
             }
         }
 

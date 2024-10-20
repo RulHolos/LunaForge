@@ -23,7 +23,8 @@ internal static class NodeScript
             Console.WriteLine($"Path to node {context.PathToLuaFull} doesn't exist.");
             return null;
         }
-        context.NodeName = context.ParentDef.ParentProject.Toolbox.LookupNameFromPath(context.PathToLuaFull);
+        var s = context.PathToLuaRelative;
+        context.NodeName = context.ParentDef.ParentProject.Toolbox.LookupNameFromPath(context.PathToLuaRelative);
 
         // Set script to a reference of the script cache.
         if (MainWindow.ScriptCache.TryGetValue(context.NodeName, out Script scriptRef))
@@ -64,6 +65,7 @@ internal static class NodeScript
         script.Globals["GetChildrenLuaFromPriority"] = (Func<int, IEnumerable<string>>)context.GetChildrenLuaFromPriority;
         script.Globals["GetAttribute"] = (Func<string, string>)context.GetAttribute;
         script.Globals["GetAttributeInt"] = (Func<int, string>)context.GetAttribute;
+        script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
     }
 
     public static void SetScriptInitial(Script script, LuaNode context)
@@ -86,6 +88,7 @@ internal static class NodeScript
         script.Globals["RemoveAttributeInt"] = (Action<int>)context.RemoveAttribute;
         script.Globals["HideAttribute"] = (Action<int>)context.HideAttribute;
         script.Globals["GetUsedAttrCount"] = (Func<int>)context.GetUsedAttrCount;
+        script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
     }
 
     public static void SetScriptReflectAttr(Script script, LuaNode context)
@@ -97,6 +100,7 @@ internal static class NodeScript
         script.Globals["RemoveAttributeInt"] = (Action<int>)context.RemoveAttribute;
         script.Globals["HideAttribute"] = (Action<int>)context.HideAttribute;
         script.Globals["GetUsedAttrCount"] = (Func<int>)context.GetUsedAttrCount;
+        script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
     }
 
     public static void SetScriptCheckTrace(Script script, LuaNode context)
@@ -105,5 +109,6 @@ internal static class NodeScript
         script.Globals["WARNING"] = TraceSeverity.Warning;
         script.Globals["ERROR"] = TraceSeverity.Error;
         script.Globals["AddTrace"] = (Action<bool, string, string[]>)context.AddTrace;
+        script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
     }
 }

@@ -113,10 +113,10 @@ public class LunaDefinition : LunaProjectFile
         rlImGui.ImageSize(MainWindow.FindTexture(node.MetaData.Icon), 18, 18);
         ImGui.SameLine(0, 1.5f);
 
-#if !DEBUG
+#if DEBUG
         bool isOpen = ImGui.TreeNodeEx($"{node.DisplayString} | Hash={node.Hash} | NodeName={node.NodeName}", flags);
 #else
-    bool isOpen = ImGui.TreeNodeEx(node.DisplayString, flags);
+        bool isOpen = ImGui.TreeNodeEx(node.DisplayString, flags);
 #endif
 
         ImGui.PopStyleColor();

@@ -55,9 +55,9 @@ public class NodePicker : IEnumerable<NodePlugin>
 
     public NodePicker() { }
 
-    public string LookupNameFromPath(string luaPath)
+    public string LookupNameFromPath(string relativeLuaPath)
     {
-        return NameLookup.FirstOrDefault(x => x.Value == luaPath).Key ?? "no-name";
+        return NameLookup.FirstOrDefault(x => x.Value == relativeLuaPath).Key ?? "no-name";
     }
 
     /// <summary>

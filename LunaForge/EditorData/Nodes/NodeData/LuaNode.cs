@@ -29,11 +29,11 @@ internal class LuaNode : TreeNode
     }
 
     [JsonIgnore]
-    public string PathToLuaFull => Path.Combine(ParentDef.ParentProject.PathToData, PathToLuaRelative);
+    public string PathToLuaFull => Path.Combine(ParentDef.ParentProject.PathToNodeData, PathToLuaRelative);
     [JsonProperty("PathToLua")]
     public string PathToLuaRelative { get; set; } = string.Empty;
 
-    public string GetRelativePathToLua(string fullPath) => Path.GetRelativePath(ParentDef.ParentProject.PathToData, fullPath);
+    public string GetRelativePathToLua(string fullPath) => Path.GetRelativePath(ParentDef.ParentProject.PathToNodeData, fullPath);
 
     /*
      * TODO:
@@ -59,8 +59,10 @@ internal class LuaNode : TreeNode
                 return $"--- Invalid Node: {Path.GetFileName(PathToLuaFull)} ---";
             }
             NodeScript.SetScriptToString(Script, this);
-            string res = Script?.Call(Script.Globals.Get("ToString")).String;
-            return res;
+            DynValue? ToStringFunc = Script?.Globals.Get("ToString");
+            if (ToStringFunc.Function != null)
+                return Script?.Call(Script.Globals.Get("ToString")).String;
+            return $"--- {NodeName} (No ToString method) ---";
         }
         catch (ScriptRuntimeException ex)
         {
@@ -176,12 +178,12 @@ internal class LuaNode : TreeNode
         ["ProjectPathNotNull"] = typeof(ProjectPathNotNullTrace)
     };
 
-    public List<EditorTrace> TempTraces = [];
+    public List<EditorTrace> TempTraces;
 
     public override List<EditorTrace> GetTraces()
     {
         List<EditorTrace> traces = [];
-        TempTraces.Clear();
+        TempTraces = [];
         try
         {
             DynValue? func = Script?.Globals.Get("GetTraces");

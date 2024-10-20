@@ -101,6 +101,8 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
     public string PathToLFP => Path.Combine(PathToProjectRoot, "Project.lfp");
     [YamlIgnore]
     public string PathToData => Path.Combine(PathToProjectRoot, ".lunaforge");
+    [YamlIgnore]
+    public string PathToNodeData => Path.Combine(PathToData, "nodes");
 
     [YamlIgnore]
     public int Hash { get; set; }
