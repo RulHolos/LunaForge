@@ -59,7 +59,8 @@ public sealed class NodeMeta
     public bool IsInit { get; set; } = false;
 
     /// <summary>
-    /// Indicates the meta model of this node (Object, Item, Player, ...) for caching and Input Window.
+    /// Indicates the meta model of this node (Object, Item, Player, ...) for caching and Input Window.<br/>
+    /// Or, tell the input window which type to search.
     /// </summary>
     public string MetaModel { get; set; } = string.Empty;
 

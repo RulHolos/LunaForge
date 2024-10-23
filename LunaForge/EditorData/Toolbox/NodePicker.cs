@@ -25,6 +25,8 @@ public class NodePlugin
     public string Authors { get; set; } = string.Empty;
     public string PathToPlugin { get; set; } = string.Empty;
     public string PathToXml { get; set; } = string.Empty;
+    public string Version { get; set; } = "1.0.0.0";
+    public string LowestCompatibleVersion { get; set; } = "1.0.0.0";
 
     public List<NodePickerTab> NodePickerTabs { get; set; } = [];
 

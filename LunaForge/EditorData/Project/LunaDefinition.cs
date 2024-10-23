@@ -48,6 +48,8 @@ public class LunaDefinition : LunaProjectFile
     public List<TreeNode> TempDefinitions { get; set; } = [];
     public List<string> AccessibleFrom { get; set; } = [];
 
+    public TreeNode CopyClipboard { get; set; } = null;
+
     public LunaDefinition(LunaForgeProject parentProj, string path)
         : base(parentProj, path)
     {
@@ -413,7 +415,8 @@ public class LunaDefinition : LunaProjectFile
     {
         try
         {
-            ClipboardService.SetText(TreeSerializer.SerializeTreeNode((TreeNode)SelectedNode.Clone()));
+            CopyClipboard = (TreeNode)SelectedNode.Clone();
+            //ClipboardService.SetText(TreeSerializer.SerializeTreeNode((TreeNode)SelectedNode.Clone()));
             TreeNode prev = SelectedNode.GetNearestEdited();
             AddAndExecuteCommand(new DeleteCommand(SelectedNode));
             if (prev != null)
@@ -435,7 +438,8 @@ public class LunaDefinition : LunaProjectFile
     {
         try
         {
-            ClipboardService.SetText(TreeSerializer.SerializeTreeNode((TreeNode)SelectedNode.Clone()));
+            CopyClipboard = (TreeNode)SelectedNode.Clone();
+            //ClipboardService.SetText(TreeSerializer.SerializeTreeNode((TreeNode)SelectedNode.Clone()));
         }
         catch (Exception ex)
         {
@@ -448,7 +452,7 @@ public class LunaDefinition : LunaProjectFile
     {
         try
         {
-            TreeNode node = TreeSerializer.DeserializeTreeNode(ClipboardService.GetText());
+            TreeNode node = CopyClipboard;
             node.ParentDef = this;
             TreeNode newNode = (TreeNode)node.Clone();
             Insert(newNode, false);
@@ -458,7 +462,7 @@ public class LunaDefinition : LunaProjectFile
             Console.WriteLine(ex.ToString());
         }
     }
-    public bool PasteNode_CanExecute() => SelectedNode != null && !string.IsNullOrEmpty(ClipboardService.GetText());
+    public bool PasteNode_CanExecute() => SelectedNode != null && CopyClipboard != null;
 
     public override void Delete()
     {

@@ -99,15 +99,29 @@ public class DefinitionsCache
     #endregion
     #region Caching
 
+    public bool DefinitionExistsInCache(string relativeDefPath) => Definitions.Any(x => x.PathToDefinition == relativeDefPath);
+
     public void AddToCache(LunaDefinition loadedDefinition)
     {
         CachedDefinitionFile def = new()
         {
             PathToDefinition = Path.GetRelativePath(loadedDefinition.ParentProject.PathToProjectRoot, loadedDefinition.FullFilePath),
-            Definitions = loadedDefinition.Definitions,
-            AccessibleFrom = loadedDefinition.AccessibleFrom,
+            Definitions = loadedDefinition.Definitions ?? [],
+            AccessibleFrom = loadedDefinition.AccessibleFrom ?? [],
         };
         Definitions.RemoveAll(x => x.PathToDefinition == def.PathToDefinition);
+        Definitions.Add(def);
+        Save();
+    }
+
+    public void AddToCache(string relativeDefPath, string relativeSrcPath)
+    {
+        CachedDefinitionFile def = new()
+        {
+            PathToDefinition = relativeDefPath,
+            Definitions = [],
+            AccessibleFrom = [relativeSrcPath],
+        };
         Definitions.Add(def);
         Save();
     }
@@ -116,6 +130,32 @@ public class DefinitionsCache
     {
         Definitions.RemoveAll(x => x.PathToDefinition == Path.GetRelativePath(loadedDefinition.ParentProject.PathToProjectRoot, loadedDefinition.FullFilePath));
         Save();
+    }
+
+    public void AddAccessibleFrom(string relativeDefPath, string relativeSrcPath)
+    {
+        foreach (CachedDefinitionFile def in Definitions)
+        {
+            if (def.PathToDefinition == relativeDefPath)
+            {
+                def.AccessibleFrom.Add(relativeSrcPath);
+                Save();
+                break;
+            }
+        }
+    }
+
+    public void RemoveAccessibleFrom(string relativeDefPath, string relativeSrcPath)
+    {
+        foreach (CachedDefinitionFile def in Definitions)
+        {
+            if (def.PathToDefinition == relativeDefPath)
+            {
+                def.AccessibleFrom.Remove(relativeSrcPath);
+                Save();
+                break;
+            }   
+        }
     }
 
     #endregion

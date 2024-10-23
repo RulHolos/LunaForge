@@ -23,6 +23,7 @@ public class PathInput : InputWindow
         : base("Open File")
     {
         Result = s;
+        CurrentFilePath = Result;
         Filter = filter;
         InitialDirectory = Path.GetDirectoryName(owner?.ParentNode?.ParentDef?.FullFilePath ?? string.Empty);
         Owner = owner;

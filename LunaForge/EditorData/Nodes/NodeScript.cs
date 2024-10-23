@@ -13,6 +13,7 @@ namespace LunaForge.EditorData.Nodes;
 
 internal static class NodeScript
 {
+    // TODO: Unload script cache for the current project at project closure.
     public static Script CreateScript(LuaNode context)
     {
         if (!File.Exists(context.PathToLuaFull))
@@ -105,6 +106,7 @@ internal static class NodeScript
 
     public static void SetScriptCheckTrace(Script script, LuaNode context)
     {
+        script.Globals["this"] = context;
         script.Globals["INFO"] = TraceSeverity.Info;
         script.Globals["WARNING"] = TraceSeverity.Warning;
         script.Globals["ERROR"] = TraceSeverity.Error;

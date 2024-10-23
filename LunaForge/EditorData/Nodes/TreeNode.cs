@@ -308,7 +308,6 @@ public abstract class TreeNode : ITraceThrowable
                 InsertAttrAt(id, na);
             }
         }
-        na.IsUsed = true;
         na.EditWindow = editWindow;
         return na;
     }
@@ -895,7 +894,10 @@ public abstract class TreeNode : ITraceThrowable
     public void RaisePropertyChanged(NodeAttribute attr, AttributeChangedEventArgs e)
     {
         OnAttributeChanged?.Invoke(attr, e);
+        OnAttributeChangedImpl(attr, e);
     }
+
+    public virtual void OnAttributeChangedImpl(NodeAttribute attr, AttributeChangedEventArgs e) { }
 
     public void RaiseDependencyPropertyChanged(NodeAttribute attr, AttributeChangedEventArgs e)
     {
@@ -908,6 +910,11 @@ public abstract class TreeNode : ITraceThrowable
     {
         if (this is LuaNode)
             (this as LuaNode).CreateScript();
+        else
+        {
+            foreach (NodeAttribute attr in Attributes)
+                attr.IsUsed = true;
+        }
 
         List<NodeAttribute> attrs = (from NodeAttribute att in Attributes
                                     where att.IsDependency == true
@@ -920,7 +927,10 @@ public abstract class TreeNode : ITraceThrowable
         ReflectDisplayString(null, new());
         CheckTrace();
         AddToTemporaryCache();
+        OnCreateNodeImpl(e);
     }
+
+    public virtual void OnCreateNodeImpl(OnCreateEventArgs e) { }
 
     private void OnRemoveNode(OnRemoveEventArgs e)
     {
@@ -934,7 +944,10 @@ public abstract class TreeNode : ITraceThrowable
         foreach (EditorTrace trace in list)
             EditorTraceContainer.Traces.Remove(trace);
         RemoveFromTemporaryCache();
+        OnRemoveNodeImpl(e);
     }
+
+    public virtual void OnRemoveNodeImpl(OnRemoveEventArgs e) { }
 
     private void ReflectDisplayString(NodeAttribute attr, AttributeChangedEventArgs e)
     {
