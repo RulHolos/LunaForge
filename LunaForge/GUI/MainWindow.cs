@@ -341,7 +341,7 @@ internal static class MainWindow
                 ImGui.Separator();
                 if (ImGui.MenuItem("Save", "Ctrl+S", false, SaveActiveProjectFile_CanExecute()))
                     SaveActiveProjectFile();
-                if (ImGui.MenuItem("Save As", string.Empty, false, SaveActiveProjectFile_CanExecute()))
+                if (ImGui.MenuItem("Save As", string.Empty, false, SaveActiveProjectAsFile_CanExecute()))
                     SaveActiveProjectFileAs();
                 ImGui.Separator();
                 ImGui.MenuItem("Close", "Ctrl+Q");
@@ -751,7 +751,18 @@ internal static class MainWindow
     }
     public static bool OpenProj_CanExecute() => true;
 
-    public static bool SaveActiveProjectFile_CanExecute() => Workspaces.Current?.CurrentProjectFile != null;
+    public static bool SaveActiveProjectFile_CanExecute()
+    {
+        LunaProjectFile file = Workspaces.Current?.CurrentProjectFile;
+        if (file == null)
+            return false;
+        return file.IsUnsaved;
+    }
+
+    public static bool SaveActiveProjectAsFile_CanExecute()
+    {
+        return Workspaces.Current?.CurrentProjectFile != null;
+    }
 
     public static void Undo()
     {

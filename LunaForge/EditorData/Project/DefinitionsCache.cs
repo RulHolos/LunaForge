@@ -165,12 +165,12 @@ public class DefinitionsCache
         List<CachedDefinition> defs = [];
         foreach (CachedDefinitionFile defFile in Definitions)
         {
-            if (!defFile.AccessibleFrom.Contains(relativeSourceDef))
-                continue;
-            foreach (CachedDefinition def in defFile.Definitions)
-                if (def.MetaModelName == filter)
-                    defs.Add(def);
+            if (defFile.AccessibleFrom.Contains(relativeSourceDef) || defFile.PathToDefinition.Contains(relativeSourceDef))
+                foreach (CachedDefinition def in defFile.Definitions)
+                    if (def.MetaModelName == filter)
+                        defs.Add(def);
         }
+        defs.Sort((x, y) => x.ClassName.CompareTo(y.ClassName));
         return [.. defs];
     }
 

@@ -45,13 +45,16 @@ public class ObjectDefInput : InputWindow
             ImGui.Text(FontAwesome6.MagnifyingGlass);
             ImGui.SameLine();
             ImGui.InputText("##CreateObjectSearchText", ref searchInput, 2048);
+            ImGui.Separator();
 
             int index = 0;
+            Vector2 size = ImGui.GetContentRegionAvail() - new Vector2(0, 30);
+            ImGui.BeginListBox("##CreateObjectScrollbarComponent", size);
             foreach (CachedDefinition definition in Definitions)
             {
                 string[] housama = definition.ClassName.Split(':');
                 string className = housama[0];
-                string diff = housama[1];
+                string diff = (housama.Length > 1) ? housama[1] : "Any";
                 string parameters = string.Join(", ", definition.Parameters);
                 if (string.IsNullOrEmpty(searchInput) || definition.ClassName.Contains(searchInput, StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -68,6 +71,7 @@ public class ObjectDefInput : InputWindow
                 }
                 index++;
             }
+            ImGui.EndListBox();
 
             RenderModalButtons();
             ImGui.EndPopup();
