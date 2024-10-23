@@ -500,7 +500,7 @@ public class LunaDefinition : LunaProjectFile
             if (!node.MetaData.IsDefinition || node.IsBanned)
                 return;
 
-            string? className = node.GetAttribute("Name");
+            string? className = $"{node.GetAttribute("Name")}:{node.GetAttribute("Difficulty") ?? "All"}";
             string[]? parameters = node.GetInitParameters();
             if ((className != null && parameters != null) && !token.IsCancellationRequested)
             {

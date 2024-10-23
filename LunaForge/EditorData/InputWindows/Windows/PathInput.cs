@@ -5,6 +5,7 @@ using LunaForge.GUI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,8 +18,6 @@ public class PathInput : InputWindow
     private string InitialDirectory = "";
     private string Filter = "";
 
-    private NodeAttribute Owner;
-
     public PathInput(string s, string filter, NodeAttribute owner)
         : base("Open File")
     {
@@ -26,7 +25,6 @@ public class PathInput : InputWindow
         CurrentFilePath = Result;
         Filter = filter;
         InitialDirectory = Path.GetDirectoryName(owner?.ParentNode?.ParentDef?.FullFilePath ?? string.Empty);
-        Owner = owner;
     }
 
     public override void RenderModal()

@@ -138,6 +138,8 @@ public class DefinitionsCache
         {
             if (def.PathToDefinition == relativeDefPath)
             {
+                if (def.AccessibleFrom.Any(x => x == relativeSrcPath))
+                    break;
                 def.AccessibleFrom.Add(relativeSrcPath);
                 Save();
                 break;
@@ -156,6 +158,20 @@ public class DefinitionsCache
                 break;
             }   
         }
+    }
+
+    public CachedDefinition[] GetAccessibleDefinitionsWithType(string relativeSourceDef, string filter)
+    {
+        List<CachedDefinition> defs = [];
+        foreach (CachedDefinitionFile defFile in Definitions)
+        {
+            if (!defFile.AccessibleFrom.Contains(relativeSourceDef))
+                continue;
+            foreach (CachedDefinition def in defFile.Definitions)
+                if (def.MetaModelName == filter)
+                    defs.Add(def);
+        }
+        return [.. defs];
     }
 
     #endregion

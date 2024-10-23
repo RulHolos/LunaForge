@@ -38,6 +38,7 @@ public class InputWindowSelectorRegister
         target.Add("target", (src, tar) => new Selector(tar, InputWindowSelector.SelectComboBox("target"), "Input Target Object"));
         target.Add("plainFile", (src, tar) => new PathInput(tar, "File{*.*}", src));
         target.Add("definitionFile", (src, tar) => new PathInput(tar, "LunaForge Definition{.lfd}", src));
+        target.Add("objectDef", (src, tar) => new ObjectDefInput(tar, "Object", src));
         // TODO: difficulty
 
         return target;

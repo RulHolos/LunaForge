@@ -61,6 +61,9 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
     [DefaultValue(false)]
     public bool LogWindowSub = false;
 
+    // Project-wide defined difficulties. By default: ["Easy", "Normal", "Hard", "Lunatic", "Extra", "Phantasm"];
+    public List<string> Difficulties = ["Easy", "Normal", "Hard", "Lunatic", "Extra", "Phantasm"];
+
     public Vector2 DebugRes = new(800, 600);
 
     /// <summary>
