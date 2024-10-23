@@ -45,7 +45,7 @@ public class TracesWindow : ImGuiWindow
                     ImGui.Text(trace.Trace);
 
                     ImGui.TableSetColumnIndex(2);
-                    ImGui.Text(trace.SourceName);
+                    ImGui.Text(trace.SourceName ?? "Unknown source");
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

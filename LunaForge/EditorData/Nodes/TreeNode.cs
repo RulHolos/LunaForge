@@ -137,6 +137,10 @@ public abstract class TreeNode : ITraceThrowable
 
     public abstract new string ToString();
 
+    public string Indent(int length) => string.Empty.PadLeft(4 * length);
+
+    public abstract object Clone();
+
     #region Attributes
 
     public string SetupAttribute(string name, string defaultValue, string editWindow)
@@ -915,10 +919,13 @@ public abstract class TreeNode : ITraceThrowable
 
         ReflectDisplayString(null, new());
         CheckTrace();
+        AddToTemporaryCache();
     }
 
     private void OnRemoveNode(OnRemoveEventArgs e)
     {
+        if (MetaData.IsDefinition)
+            ParentDef.RemoveNodeFromCache(GetAttr(0).AttrValue);
         CheckTrace();
         var traces = from EditorTrace editorTrace in EditorTraceContainer.Traces
                     where editorTrace.Source == this
@@ -926,6 +933,7 @@ public abstract class TreeNode : ITraceThrowable
         List<EditorTrace> list = new(traces);
         foreach (EditorTrace trace in list)
             EditorTraceContainer.Traces.Remove(trace);
+        RemoveFromTemporaryCache();
     }
 
     private void ReflectDisplayString(NodeAttribute attr, AttributeChangedEventArgs e)
@@ -1022,8 +1030,46 @@ public abstract class TreeNode : ITraceThrowable
     }
 
     #endregion
+    #region DefCache
 
-    public string Indent(int length) => string.Empty.PadLeft(4 * length);
+    public void AddToTemporaryCache()
+    {
+        ParentDef.TempDefinitions.Add(this);
+    }
 
-    public abstract object Clone();
+    public void RemoveFromTemporaryCache()
+    {
+        ParentDef.TempDefinitions.Remove(this);
+    }
+    
+    /// <summary>
+    /// Finds the first init children of this node.
+    /// </summary>
+    /// <returns>The init node if it exists; otherwise, null.</returns>
+    public TreeNode GetInitChild()
+    {
+        TreeNode initChild = null;
+        foreach (TreeNode child in Children)
+        {
+            if (child.MetaData.IsInit)
+            {
+                initChild = child;
+                break;
+            }
+        }
+        return initChild;
+    }
+
+    public string[]? GetInitParameters()
+    {
+        string nameOfAttr = "Parameters";
+        TreeNode init = GetInitChild();
+        if (init.GetAttr(nameOfAttr) != null)
+        {
+            return init.GetAttr(nameOfAttr).AttrValue.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        }
+        return null;
+    }
+
+    #endregion
 }

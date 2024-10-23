@@ -18,11 +18,18 @@ public enum DefinitionMetaType
     BGM, Image, ImageGroup, SE, Animation, Particle, Texture, FX, Font, TTF
 }
 
-public struct CachedDefinition
+public struct CachedDefinitionFile
 {
     public string PathToDefinition;
+    public List<CachedDefinition> Definitions;
+    public List<string> AccessibleFrom;
+}
+
+public struct CachedDefinition
+{
+    public string ClassName;
     public string[] Parameters;
-    public string[] AccessibleFrom;
+    public string MetaModelName; // Object, Item, ...
 }
 
 [Serializable]
@@ -30,7 +37,7 @@ public class DefinitionsCache
 {
     #region Serialized Properties
 
-    public List<CachedDefinition> Definitions = [];
+    public List<CachedDefinitionFile> Definitions = [];
 
     #endregion
 
@@ -92,21 +99,22 @@ public class DefinitionsCache
     #endregion
     #region Caching
 
-    public void UpdateCache(LunaDefinition loadedDefinition)
+    public void AddToCache(LunaDefinition loadedDefinition)
     {
-        TreeNode defNode = loadedDefinition.TreeNodes[0];
-        CachedDefinition cached = new()
+        CachedDefinitionFile def = new()
         {
-            PathToDefinition = loadedDefinition.FileName,
-            //Parameters = defNode.Attributes
+            PathToDefinition = Path.GetRelativePath(loadedDefinition.ParentProject.PathToProjectRoot, loadedDefinition.FullFilePath),
+            Definitions = loadedDefinition.Definitions,
+            AccessibleFrom = loadedDefinition.AccessibleFrom,
         };
-        Definitions.Add(cached);
+        Definitions.RemoveAll(x => x.PathToDefinition == def.PathToDefinition);
+        Definitions.Add(def);
         Save();
     }
 
     public void RemoveFromCache(LunaDefinition loadedDefinition)
     {
-        Definitions.RemoveAll(x => x.PathToDefinition == loadedDefinition.FileName);
+        Definitions.RemoveAll(x => x.PathToDefinition == Path.GetRelativePath(loadedDefinition.ParentProject.PathToProjectRoot, loadedDefinition.FullFilePath));
         Save();
     }
 

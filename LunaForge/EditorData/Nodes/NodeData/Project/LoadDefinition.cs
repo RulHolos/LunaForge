@@ -43,9 +43,9 @@ public class LoadDefinition : TreeNode
     public override IEnumerable<string> ToLua(int spacing)
     {
         string sp = Indent(spacing);
-        yield return sp + $"Include'{Path.ChangeExtension(
+        yield return sp + $"require('{Path.ChangeExtension(
             Path.GetRelativePath(ParentDef.ParentProject.PathToProjectRoot, GetAttribute(0) ?? string.Empty), ".lua")
-            .Replace("\\", "/")}'\n";
+            .Replace("\\", "/")}')\n";
     }
 
     public override object Clone()

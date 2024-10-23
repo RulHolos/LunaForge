@@ -19,6 +19,7 @@ using LunaForge.GUI.ImGuiFileDialog;
 using LunaForge.EditorData.Traces;
 using TextCopy;
 using LunaForge.EditorData.Nodes.NodeData;
+using Org.BouncyCastle.Asn1.Cms;
 
 namespace LunaForge.EditorData.Project;
 
@@ -43,7 +44,9 @@ public class LunaDefinition : LunaProjectFile
     public bool JustOpened = true;
     public bool JustInserted = false;
 
-    public List<string> Definitions { get; set; } = [];
+    public List<CachedDefinition> Definitions { get; set; } = [];
+    public List<TreeNode> TempDefinitions { get; set; } = [];
+    public List<string> AccessibleFrom { get; set; } = [];
 
     public LunaDefinition(LunaForgeProject parentProj, string path)
         : base(parentProj, path)
@@ -253,10 +256,11 @@ public class LunaDefinition : LunaProjectFile
         {
             if (success)
             {
+                await MakeCache();
                 FullFilePath = path;
                 FileName = Path.GetFileName(path);
                 PushSavedCommand();
-                ParentProject.DefCache.UpdateCache(this);
+                ParentProject.DefCache.AddToCache(this);
                 try
                 {
                     using StreamWriter sw = new(path);
@@ -469,6 +473,59 @@ public class LunaDefinition : LunaProjectFile
         if (SelectedNode == null)
             return false;
         return SelectedNode.CanLogicallyDelete();
+    }
+
+    #endregion
+    #region DefCache
+
+    public void AddAccessibleFrom(string otherFilePath)
+    {
+        if (!AccessibleFrom.Any(x => x == otherFilePath))
+            AccessibleFrom.Add(otherFilePath);
+    }
+
+    /// <summary>
+    /// Called at saving time. Construct the node cache from all temporary nodes.
+    /// </summary>
+    public async Task MakeCache()
+    {
+        Definitions.Clear();
+        ParallelOptions options = new() { CancellationToken = CancellationToken.None };
+        await Parallel.ForEachAsync<TreeNode>(TempDefinitions, options, async (node, token) =>
+        {
+            if (!node.MetaData.IsDefinition || node.IsBanned)
+                return;
+
+            string? className = node.GetAttribute("Name");
+            string[]? parameters = node.GetInitParameters();
+            if ((className != null && parameters != null) && !token.IsCancellationRequested)
+            {
+                AddNodeToCache(className, parameters, node.MetaData.MetaModel);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Adds a new definition to the cache.
+    /// </summary>
+    /// <param name="className">The class name, example: "motae_player". Use in _editor_class["motae_player"].</param>
+    /// <param name="parameterList">An array of parameters for the init function.</param>
+    /// <param name="metaModel"></param>
+    public void AddNodeToCache(string className, string[] parameterList, string metaModel)
+    {
+        CachedDefinition def = new()
+        {
+            ClassName = className,
+            Parameters = parameterList,
+            MetaModelName = metaModel
+        };
+        if (!Definitions.Any(x => x.ClassName == def.ClassName))
+            Definitions.Add(def);
+    }
+
+    public void RemoveNodeFromCache(string className)
+    {
+        Definitions.RemoveAll(x => x.ClassName == className);
     }
 
     #endregion

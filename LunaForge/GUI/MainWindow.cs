@@ -113,6 +113,11 @@ internal static class MainWindow
     private static Version? VersionNumber = Assembly.GetEntryAssembly()?.GetName().Version;
 
     /// <summary>
+    /// Should the interface be used and generated on startup? (Should ALWAYS be yes on release versions)
+    /// </summary>
+    public static bool UseInterface { get; } = true;
+
+    /// <summary>
     /// The plugin manager. Currently not active in alpha. See the API documentation to see how to use plugins.
     /// </summary>
     public static PluginManager PluginManager { get; private set; } = new();
@@ -194,13 +199,6 @@ internal static class MainWindow
 
         Workspaces = [];
 
-        Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.HighDpiWindow | ConfigFlags.VSyncHint | ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(1280, 800, $"{LunaForgeName} v{VersionNumber}");
-        Raylib.SetWindowIcon(EditorIcon);
-        Raylib.SetExitKey(KeyboardKey.Null);
-        Raylib.MaximizeWindow();
-        Raylib.SetTargetFPS(60);
-
         try
         {
             PluginManager.GetAllPluginInfo();
@@ -211,59 +209,72 @@ internal static class MainWindow
             Console.WriteLine($"Something went wrong at plugin loading: {ex}");
         }
 
+        InputWindowSelector.Register(new InputWindowSelectorRegister());
+
         UserData.RegisterType<LuaNode>();
         UserData.RegisterType<TreeNode>();
 
-        LoadEditorImages();
-        InputWindowSelector.Register(new InputWindowSelectorRegister());
-
-        rlImGui.Setup(true, true);
-        ImGui.GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
-
-        ShortcutList.RegisterShortcuts();
         GetPresets();
 
-        bool exitWindow = false;
-        bool exitWindowRequested = false;
-
-        while (!exitWindow && !ForceCloseWindow)
+        // Define the interface only if UseInterface is true. Should always be the case in release.
+        if (UseInterface)
         {
-            try
+            Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.HighDpiWindow | ConfigFlags.VSyncHint | ConfigFlags.ResizableWindow);
+            Raylib.InitWindow(1280, 800, $"{LunaForgeName} v{VersionNumber}");
+            Raylib.SetWindowIcon(EditorIcon);
+            Raylib.SetExitKey(KeyboardKey.Null);
+            Raylib.MaximizeWindow();
+            Raylib.SetTargetFPS(60);
+
+            LoadEditorImages();
+
+            rlImGui.Setup(true, true);
+            ImGui.GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
+
+            ShortcutList.RegisterShortcuts();
+
+            bool exitWindow = false;
+            bool exitWindowRequested = false;
+
+            while (!exitWindow && !ForceCloseWindow)
             {
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(Color.Black);
-
-                rlImGui.Begin();
-
-                ImGui.DockSpaceOverViewport();
-                ShortcutList.CheckKeybinds();
-
-                RenderMenu();
-                //ImGui.ShowDemoWindow();
-                Render();
-
-                if (Raylib.WindowShouldClose() || exitWindowRequested) // Will ask save files if they're unsaved then close all opened files then projects.
+                try
                 {
-                    exitWindowRequested = true;
-                    exitWindow = RenderCloseOpenedProjects();
+                    Raylib.BeginDrawing();
+                    Raylib.ClearBackground(Color.Black);
+
+                    rlImGui.Begin();
+
+                    ImGui.DockSpaceOverViewport();
+                    ShortcutList.CheckKeybinds();
+
+                    RenderMenu();
+                    //ImGui.ShowDemoWindow();
+                    Render();
+
+                    if (Raylib.WindowShouldClose() || exitWindowRequested) // Will ask save files if they're unsaved then close all opened files then projects.
+                    {
+                        exitWindowRequested = true;
+                        exitWindow = RenderCloseOpenedProjects();
+                    }
+
+                    rlImGui.End();
+
+                    Raylib.EndDrawing();
                 }
-
-                rlImGui.End();
-
-                Raylib.EndDrawing();
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+
+            Dispose();
+
+            rlImGui.Shutdown();
+            Raylib.CloseWindow();
         }
 
         Configuration.Save();
-
-        Dispose();
-
-        rlImGui.Shutdown();
-        Raylib.CloseWindow();
     }
 
     private static void Render()

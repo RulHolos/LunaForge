@@ -92,8 +92,4 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="EditorData\Nodes\Tabs\" />
-  </ItemGroup>
 </Project>

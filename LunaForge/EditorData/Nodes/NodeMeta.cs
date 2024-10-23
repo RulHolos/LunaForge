@@ -1,7 +1,9 @@
 ﻿using LunaForge.EditorData.Nodes.Attributes;
 using MoonSharp.Interpreter;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,21 +13,55 @@ namespace LunaForge.EditorData.Nodes;
 
 public sealed class NodeMeta
 {
-    public bool IsFolder { get; }
+    /// <summary>
+    /// Indicates that this node is a folder (ignored in validation and logical gets/sets).
+    /// </summary>
+    public bool IsFolder { get; } = false;
 
-    public bool IsDefinition { get; }
+    /// <summary>
+    /// This node is a class/definition node. Will usually contain a Init node as its child.
+    /// </summary>
+    public bool IsDefinition { get; } = false;
 
-    public bool IsLeafNode { get; }
+    /// <summary>
+    /// Indicates that this node can't have children.
+    /// </summary>
+    public bool IsLeafNode { get; } = false;
 
-    public bool CannotBeDeleted { get; }
+    /// <summary>
+    /// Indicates that this node cannot be deleted by the user.
+    /// </summary>
+    public bool CannotBeDeleted { get; } = false;
 
-    public bool CannotBeBanned { get; }
+    /// <summary>
+    /// Indicates that this node cannot be banned by the user.
+    /// </summary>
+    public bool CannotBeBanned { get; } = false;
 
-    public bool IgnoreValidation { get; }
+    /// <summary>
+    /// Indicates that this node will ignore all kind of validation when inserted.
+    /// </summary>
+    public bool IgnoreValidation { get; } = false;
 
-    public bool Unique { get; }
+    /// <summary>
+    /// Indicates that there can't be any more than one instance of this node's siblings
+    /// </summary>
+    public bool Unique { get; } = false;
 
-    public string Icon { get; }
+    /// <summary>
+    /// The name of the node's displayed icon.
+    /// </summary>
+    public string Icon { get; } = string.Empty;
+
+    /// <summary>
+    /// Indicates that this node is a init node of a definition parent.
+    /// </summary>
+    public bool IsInit { get; set; } = false;
+
+    /// <summary>
+    /// Indicates the meta model of this node (Object, Item, Player, ...) for caching and Input Window.
+    /// </summary>
+    public string MetaModel { get; set; } = string.Empty;
 
     public string[] RequireParent { get; } = null;
     public string[] RequireAncestor { get; } = null;
@@ -45,6 +81,7 @@ public sealed class NodeMeta
         CannotBeBanned = type.IsDefined(typeof(CannotBeBannedAttribute), false);
         IgnoreValidation = type.IsDefined(typeof(IgnoreValidationAttribute), false);
         Unique = type.IsDefined(typeof(UniqueAttribute), false);
+        IsInit = type.IsDefined(typeof(IsInitAttribute), false);
 
         string pathToImage = type.GetAttributeValue((NodeIconAttribute img) => img.Path);
         Icon = $"{(string.IsNullOrEmpty(pathToImage) ? "Unknown" : pathToImage)}";
@@ -66,9 +103,11 @@ public sealed class NodeMeta
         CannotBeBanned = FindAttribute(meta, "CannotBeBanned", false);
         IgnoreValidation = FindAttribute(meta, "IgnoreValidation", false);
         Unique = FindAttribute(meta, "Unique", false);
+        IsInit = FindAttribute(meta, "IsInit", false);
 
         Icon = FindAttribute(meta, "Icon", "Unknown");
 
+        MetaModel = FindAttribute(meta, "MetaModel", "None");
         RequireParent = FindAttribute(meta, "RequireParent", Array.Empty<string>());
         RequireAncestor = FindAttribute(meta, "RequireAncestor", Array.Empty<string>());
 

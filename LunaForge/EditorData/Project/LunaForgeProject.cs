@@ -225,7 +225,8 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
 
         c.CurrentTempPath = tempPath;
         c.Source = this;
-        c.RootCode = $"Include\'THlib.lua\'\nInclude\'{Path.ChangeExtension(EntryPointRelative, ".lua")}\'";
+        // TODO: Be able to set a root code in the settings.
+        c.RootCode = $"require(\'THlib.lua\')\nrequire(\'{Path.ChangeExtension(EntryPointRelative, ".lua")}\')";
 
         CompileProcess = c;
     }

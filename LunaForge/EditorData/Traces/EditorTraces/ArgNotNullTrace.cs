@@ -14,7 +14,7 @@ public class ArgNotNullTrace : EditorTrace
     public string ArgName { get; private set; }
 
     public ArgNotNullTrace(ITraceThrowable source, string argName)
-        : base(TraceSeverity.Error, source, (source as TreeNode).ParentDef.FileName)
+        : base(TraceSeverity.Error, source, (source as TreeNode)?.ParentDef.FileName)
     {
         ArgName = argName;
     }

@@ -30,10 +30,7 @@ public class ProjectViewerWindow : ImGuiWindow
     private bool ShouldForceClose = false;
 
     public ProjectViewerWindow()
-        : base(true)
-    {
-        
-    }
+        : base(true) { }
 
     public override void Render()
     {
@@ -77,7 +74,9 @@ public class ProjectViewerWindow : ImGuiWindow
                         if (ParentProject.CurrentProjectFile == null || ParentProject.CurrentProjectFile != file)
                         {
                             ParentProject.CurrentProjectFile = file;
+#if DEBUG
                             Console.WriteLine($"Current ProjectFile: {file.FileName}");
+#endif
                         }
                         file.Render();
 
@@ -164,7 +163,9 @@ public class ProjectViewerWindow : ImGuiWindow
         if (ImGui.IsWindowFocused() && ParentProject.Parent.Current != ParentProject)
         {
             ParentProject.Parent.Current = ParentProject;
+#if DEBUG
             Console.WriteLine($"Current Project: {ParentProject.ProjectName}");
+#endif
         }
     }
 
