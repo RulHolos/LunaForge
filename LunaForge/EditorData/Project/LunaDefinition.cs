@@ -259,10 +259,10 @@ public class LunaDefinition : LunaProjectFile
             if (success)
             {
                 await MakeCache();
+                ParentProject.DefCache.AddToCache(this);
                 FullFilePath = path;
                 FileName = Path.GetFileName(path);
                 PushSavedCommand();
-                ParentProject.DefCache.AddToCache(this);
                 try
                 {
                     using StreamWriter sw = new(path);
@@ -500,9 +500,11 @@ public class LunaDefinition : LunaProjectFile
             if (!node.MetaData.IsDefinition || node.IsBanned)
                 return;
 
-            string? className = $"{node.GetAttribute("Name")}:{node.GetAttribute("Difficulty") ?? "Any"}";
+            string? className = node.GetAttribute("Name");
+            if (!(string.IsNullOrEmpty(node.GetAttribute("Difficulty")) || node.GetAttribute("Difficulty") == "Any"))
+                className += $":{node.GetAttribute("Difficulty")}";
             string[]? parameters = node.GetInitParameters();
-            if ((className != null && parameters != null) && !token.IsCancellationRequested)
+            if (className != null && parameters != null)
             {
                 AddNodeToCache(className, parameters, node.MetaData.MetaModel);
             }

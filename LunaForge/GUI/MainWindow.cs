@@ -110,7 +110,7 @@ internal static class MainWindow
     /// Static string to be inserted into the window titles.
     /// </summary>
     public static readonly string LunaForgeName = $"LunaForge Editor";
-    private static Version? VersionNumber = Assembly.GetEntryAssembly()?.GetName().Version;
+    public static Version? VersionNumber = Assembly.GetEntryAssembly()?.GetName().Version;
 
     /// <summary>
     /// Should the interface be used and generated on startup? (Should ALWAYS be yes on release versions)

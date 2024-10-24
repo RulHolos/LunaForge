@@ -13,8 +13,8 @@ public class ArgNotNullTrace : EditorTrace
 {
     public string ArgName { get; private set; }
 
-    public ArgNotNullTrace(ITraceThrowable source, string argName)
-        : base(TraceSeverity.Error, source, (source as TreeNode)?.ParentDef.FileName)
+    public ArgNotNullTrace(TreeNode source, string argName)
+        : base(TraceSeverity.Error, source, source?.ParentDef.FileName)
     {
         ArgName = argName;
     }
@@ -26,7 +26,7 @@ public class ArgNotNullTrace : EditorTrace
 
     public override object Clone()
     {
-        return new ArgNotNullTrace(Source, ArgName);
+        return new ArgNotNullTrace((TreeNode)Source, ArgName);
     }
 
     public override void Invoke()

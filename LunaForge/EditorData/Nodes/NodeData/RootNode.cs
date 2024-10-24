@@ -1,5 +1,6 @@
 ﻿using LunaForge.EditorData.Nodes.Attributes;
 using LunaForge.EditorData.Project;
+using LunaForge.GUI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ public class RootNode : TreeNode
     public override IEnumerable<string> ToLua(int spacing)
     {
         string sp = Indent(spacing);
-        yield return $"-- Definition generated from {ParentDef.FileName}\n";
+        yield return $"-- Definition generated from \"{ParentDef.FileName}\" by {MainWindow.LunaForgeName} v{MainWindow.VersionNumber}\n";
         foreach (var a in base.ToLua(spacing))
             yield return a;
     }

@@ -169,6 +169,18 @@ internal class LuaNode : TreeNode
         return node;
     }
 
+    public string GetParentDefinitionClassName()
+    {
+        TreeNode Parent = GetRealParent();
+        string parentName = "";
+        if (Parent?.attributes != null && Parent.Attributes.Count >= 2)
+        {
+            parentName = Lua.StringParser.ParseLua(Parent.GetAttribute(0) +
+                (Parent.GetAttribute(1) == "Any" ? "" : ":" + Parent.GetAttribute(1)));
+        }
+        return parentName;
+    }
+
     #region Traces
 
     public static Dictionary<string, Type> TraceTypes { get; } = new()
@@ -207,7 +219,7 @@ internal class LuaNode : TreeNode
         return traces;
     }
 
-    public void AddTrace(bool condition, string type, params string[] args)
+    public void AddTrace(bool condition, string type, string argName)
     {
         if (condition == false)
             return; // Doesn't do anything if condition is false.
@@ -216,6 +228,7 @@ internal class LuaNode : TreeNode
         {
             Console.WriteLine($"Type {type} is not a valid trace type. See documentation for a list of valid traces.");
         }
+        object[] args = [this, argName];
         EditorTrace trace = (EditorTrace)Activator.CreateInstance(traceType, args);
         if (trace != null)
             TempTraces.Add(trace);

@@ -39,15 +39,20 @@ public class ToolboxWindow : ImGuiWindow
                 foreach (NodePickerTab tab in NodePickerBox.GetAllTabs())
                 {
                     ImGui.PushID($"{tab.Header}##{i}");
-                    if (ImGui.BeginTabItem($"{tab.Header}##{i}"))
+                    bool isOpened = ImGui.BeginTabItem($"{tab.Header}##{i}");
+                    if (isOpened)
                     {
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip($"{tab.Header} ({tab.PluginName})");
+                        }
+
                         ImGui.BeginDisabled(MainWindow.Workspaces.Current?.CurrentProjectFile is not LunaDefinition);
-                        //ImGui.Columns(tab.Items.Count(x => x.IsSeparator) + 1); // Number of separators.
 
                         foreach (NodePickerItem item in tab.Items)
                         {
                             if (item.IsSeparator)
-                                VerticalSeparator(); //ImGui.NextColumn();
+                                VerticalSeparator();
                             else
                             {
                                 if (rlImGui.ImageButtonSize(item.Tag, MainWindow.FindTexture(item.Icon), new Vector2(24, 24)))
@@ -59,10 +64,9 @@ public class ToolboxWindow : ImGuiWindow
                         }
 
                         ImGui.EndDisabled();
-                        //ImGui.Columns(1);
                         ImGui.EndTabItem();
                     }
-                    if (ImGui.IsItemHovered())
+                    else if (ImGui.IsItemHovered())
                     {
                         ImGui.SetTooltip($"{tab.Header} ({tab.PluginName})");
                     }

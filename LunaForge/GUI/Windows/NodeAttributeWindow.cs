@@ -33,7 +33,7 @@ public class NodeAttributeWindow : ImGuiWindow
             }
 
             ImGuiTableFlags flags = ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders;
-            if (ImGui.BeginTable($"NodeAttributeTable_{CurrentNode.NodeName}", 3, flags))
+            if (ImGui.BeginTable($"NodeAttributeTable_{CurrentNode.NodeName}_{CurrentNode.Hash}", 3, flags))
             {
                 ImGui.TableSetupColumn("Properties", ImGuiTableColumnFlags.NoResize, 1.3f);
                 ImGui.TableSetupColumn("Parameters", ImGuiTableColumnFlags.NoResize, 1.7f);
@@ -58,7 +58,7 @@ public class NodeAttributeWindow : ImGuiWindow
                     ImGuiInputTextFlags Tflags = ImGuiInputTextFlags.EnterReturnsTrue;
                     if (attr.AttrValue != string.Empty && attr.TempAttrValue == string.Empty)
                         attr.TempAttrValue = attr.AttrValue;
-                    if (ImGui.InputText($"##{attr.AttrName}_input", ref attr.TempAttrValue, 2048, Tflags))
+                    if (ImGui.InputText($"##{CurrentNode.Hash}_{attr.AttrName}_input", ref attr.TempAttrValue, 2048, Tflags))
                         CommitEdit(attr);
                     if (ImGui.IsItemDeactivated())
                         CommitEdit(attr);
@@ -67,7 +67,7 @@ public class NodeAttributeWindow : ImGuiWindow
                     Vector2 vec = ImGui.CalcTextSize("...");
                     ImGui.SetNextItemWidth(vec.X + 5);
                     ImGui.TableSetColumnIndex(2);
-                    if (ImGui.Button($"...##{attr.AttrName}", new Vector2(ImGui.GetContentRegionAvail().X, 0)))
+                    if (ImGui.Button($"...##{CurrentNode.Hash}_{attr.AttrName}", new Vector2(ImGui.GetContentRegionAvail().X, 0)))
                     {
                         CurrentNode.ParentDef.ShowEditWindow(CurrentNode, CurrentNode.Attributes.IndexOf(attr));
                     }

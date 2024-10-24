@@ -13,8 +13,8 @@ public class FileMustExistTrace : EditorTrace
 {
     public string ArgName { get; private set; }
 
-    public FileMustExistTrace(ITraceThrowable source, string argName)
-        : base(TraceSeverity.Error, source, (source as TreeNode)?.ParentDef.FileName)
+    public FileMustExistTrace(TreeNode source, string argName)
+        : base(TraceSeverity.Error, source, source?.ParentDef.FileName)
     {
         ArgName = argName;
     }
@@ -26,7 +26,7 @@ public class FileMustExistTrace : EditorTrace
 
     public override object Clone()
     {
-        return new ArgNotNullTrace(Source, ArgName);
+        return new FileMustExistTrace((TreeNode)Source, ArgName);
     }
 
     public override void Invoke()

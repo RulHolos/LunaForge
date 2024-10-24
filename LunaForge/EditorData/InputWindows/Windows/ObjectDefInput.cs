@@ -54,7 +54,7 @@ public class ObjectDefInput : InputWindow
             {
                 string[] housama = definition.ClassName.Split(':');
                 string className = housama[0];
-                string diff = (housama.Length > 1) ? housama[1] : "Any";
+                string diff = (housama.Length > 1) ? $":{housama[1]}" : "";
                 string parameters = string.Join(", ", definition.Parameters);
                 if (string.IsNullOrEmpty(searchInput) || definition.ClassName.Contains(searchInput, StringComparison.CurrentCultureIgnoreCase))
                 {

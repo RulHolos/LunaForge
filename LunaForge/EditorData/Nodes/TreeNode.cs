@@ -351,10 +351,14 @@ public abstract class TreeNode : ITraceThrowable
         if (ImGui.MenuItem("Edit"))
             ParentDef.ShowEditWindow(this);
         ImGui.Separator();
-        if (ImGui.MenuItem($"Undo - {((ParentDef.CommandStack.Count != 0) ? ParentDef.CommandStack.Peek() : "///")}", "Ctrl+Z", false, ParentDef.CommandStack.Count > 0))
+        if (ImGui.MenuItem($"Undo", "Ctrl+Z", false, ParentDef.CommandStack.Count > 0))
             ParentDef.Undo();
-        if (ImGui.MenuItem($"Redo - {((ParentDef.UndoCommandStack.Count != 0) ? ParentDef.UndoCommandStack.Peek() : "///")}", "Ctrl+Y", false, ParentDef.UndoCommandStack.Count > 0))
+        if (ImGui.IsItemHovered() && ParentDef.CommandStack.Count != 0)
+            ImGui.SetTooltip(ParentDef.CommandStack.Peek().ToString());
+        if (ImGui.MenuItem($"Redo", "Ctrl+Y", false, ParentDef.UndoCommandStack.Count > 0))
             ParentDef.Redo();
+        if (ImGui.IsItemHovered() && ParentDef.UndoCommandStack.Count != 0)
+            ImGui.SetTooltip(ParentDef.UndoCommandStack.Peek().ToString());
         ImGui.Separator();
         if (ImGui.MenuItem("Cut", "Ctrl+X", false, ParentDef.CutNode_CanExecute()))
             ParentDef.CutNode();

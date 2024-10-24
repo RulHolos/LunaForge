@@ -90,6 +90,7 @@ internal static class NodeScript
         script.Globals["HideAttribute"] = (Action<int>)context.HideAttribute;
         script.Globals["GetUsedAttrCount"] = (Func<int>)context.GetUsedAttrCount;
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
+        script.Globals["GetDefinitionName"] = (Func<string>)context.GetParentDefinitionClassName;
     }
 
     public static void SetScriptReflectAttr(Script script, LuaNode context)
@@ -110,7 +111,7 @@ internal static class NodeScript
         script.Globals["INFO"] = TraceSeverity.Info;
         script.Globals["WARNING"] = TraceSeverity.Warning;
         script.Globals["ERROR"] = TraceSeverity.Error;
-        script.Globals["AddTrace"] = (Action<bool, string, string[]>)context.AddTrace;
+        script.Globals["AddTrace"] = (Action<bool, string, string>)context.AddTrace;
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
     }
 }

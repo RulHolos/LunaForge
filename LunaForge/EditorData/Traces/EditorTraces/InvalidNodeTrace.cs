@@ -11,7 +11,7 @@ namespace LunaForge.EditorData.Traces.EditorTraces;
 
 public class InvalidNodeTrace : EditorTrace
 {
-    public InvalidNodeTrace(ITraceThrowable source)
+    public InvalidNodeTrace(TreeNode source)
         : base(TraceSeverity.Error, source)
     {
     }
@@ -23,7 +23,7 @@ public class InvalidNodeTrace : EditorTrace
 
     public override object Clone()
     {
-        return new InvalidNodeTrace(Source);
+        return new InvalidNodeTrace((TreeNode)Source);
     }
 
     public override void Invoke()
