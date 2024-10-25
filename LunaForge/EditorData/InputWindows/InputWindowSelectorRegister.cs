@@ -39,6 +39,7 @@ public class InputWindowSelectorRegister
         target.Add("plainFile", (src, tar) => new PathInput(tar, "File{*.*}", src));
         target.Add("definitionFile", (src, tar) => new PathInput(tar, "LunaForge Definition{.lfd}", src));
         target.Add("objectDef", (src, tar) => new ObjectDefInput(tar, "Object", src));
+        target.Add("difficulty", (src, tar) => new DifficultySelectInput(tar, "Difficulty", src));
         // TODO: difficulty
 
         return target;

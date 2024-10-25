@@ -1,5 +1,6 @@
 ﻿using LunaForge.EditorData.InputWindows.Windows;
 using LunaForge.EditorData.Nodes;
+using LunaForge.GUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,16 @@ public static class InputWindowSelector
 
     public static string[] SelectComboBox(string name)
     {
+        if (name == "difficulty")
+            return GetDifficulties();
         return ComboBox.GetValueOrDefault(name, NullSelection);
+    }
+
+    public static string[] GetDifficulties()
+    {
+        List<string> diffs = ["Any"];
+        diffs.AddRange(MainWindow.Workspaces.Current.Difficulties);
+        return [.. diffs];
     }
 
     public static InputWindow SelectInputWindow(NodeAttribute source, string name, string toEdit)

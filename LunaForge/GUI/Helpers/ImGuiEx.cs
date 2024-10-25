@@ -10,11 +10,15 @@ namespace LunaForge.GUI.Helpers;
 
 public static class ImGuiEx
 {
-    public static void ComboBox(string label, ref int currentItem, ref string currentInput, string[] items)
+    public static bool ComboBox(string label, ref int currentItem, ref string currentInput, string[] items, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None)
     {
+        bool pressedCombo = false;
         ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X - 20);
 
-        ImGui.InputText($"{label}", ref currentInput, 1024);
+        if (ImGui.InputText($"{label}", ref currentInput, 5_000, flags))
+        {
+            return true;
+        }
         ImGui.SameLine(0f, 0f);
         if (ImGui.ArrowButton($"{label}_ArrowCombo", ImGuiDir.Down))
         {
@@ -29,12 +33,14 @@ public static class ImGuiEx
                 {
                     currentItem = i;
                     currentInput = items[i];
+                    pressedCombo = true;
                 }
                 if (isSelected)
                     ImGui.SetItemDefaultFocus();
             }
             ImGui.EndPopup();
         }
+        return pressedCombo;
     }
 
     [Obsolete("Not complete.", true)]

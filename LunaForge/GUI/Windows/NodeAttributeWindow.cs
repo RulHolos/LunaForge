@@ -9,6 +9,7 @@ using LunaForge.EditorData.Project;
 using TreeNode = LunaForge.EditorData.Nodes.TreeNode;
 using LunaForge.EditorData.Nodes;
 using System.Numerics;
+using LunaForge.EditorData.InputWindows;
 
 namespace LunaForge.GUI.Windows;
 
@@ -58,7 +59,11 @@ public class NodeAttributeWindow : ImGuiWindow
                     ImGuiInputTextFlags Tflags = ImGuiInputTextFlags.EnterReturnsTrue;
                     if (attr.AttrValue != string.Empty && attr.TempAttrValue == string.Empty)
                         attr.TempAttrValue = attr.AttrValue;
-                    if (ImGui.InputText($"##{CurrentNode.Hash}_{attr.AttrName}_input", ref attr.TempAttrValue, 2048, Tflags))
+                    string[] combo = InputWindowSelector.SelectComboBox(attr.EditWindow);
+                    int selectedComboIndex = Array.IndexOf(combo, attr.TempAttrValue);
+                    if (ImGuiEx.ComboBox($"##{CurrentNode.Hash}_{attr.AttrName}_input", ref selectedComboIndex,
+                            ref attr.TempAttrValue, combo,
+                            Tflags))
                         CommitEdit(attr);
                     if (ImGui.IsItemDeactivated())
                         CommitEdit(attr);

@@ -200,6 +200,7 @@ public class ProjectViewerWindow : ImGuiWindow
     public int TempSelectedRes;
     public int TempSelectedNodePluginId = 0;
     public NodePlugin TempSelectedNodePlugin = null;
+    public string TempDifficulties = string.Empty; // 1 difficulty per line. Detected with line breaks.
 
     public void OpenSettings()
     {
@@ -254,6 +255,8 @@ public class ProjectViewerWindow : ImGuiWindow
 
                     ImGui.Spacing();
                     ImGui.Separator();
+
+                    RenderDifficultiesList();
                 }
 
                 ImGui.EndTabBar();
@@ -415,6 +418,13 @@ public class ProjectViewerWindow : ImGuiWindow
         ImGui.EndGroup();
     }
 
+    private void RenderDifficultiesList()
+    {
+        Vector2 listSize = new(ImGui.GetContentRegionAvail().X / 3, 100);
+        ImGui.Text("Difficulty list.\nPlease enter one difficulty per line.");
+        ImGui.InputTextMultiline("##DifficultyListInput", ref TempDifficulties, (uint)ImGui.GetContentRegionAvail().X, listSize);
+    }
+
     #endregion
 
     public void GetSettings()
@@ -429,6 +439,7 @@ public class ProjectViewerWindow : ImGuiWindow
         TempLogWindowSub = ParentProject.LogWindowSub;
         TempDebugRes = ParentProject.DebugRes;
         TempSelectedRes = ListOfRes.IndexOf(ParentProject.DebugRes);
+        TempDifficulties = string.Join('\n', ParentProject.Difficulties);
 
         SettingsModalClosed = false;
     }
@@ -444,6 +455,7 @@ public class ProjectViewerWindow : ImGuiWindow
         ParentProject.Cheat = TempCheat;
         ParentProject.LogWindowSub = TempLogWindowSub;
         ParentProject.DebugRes = TempDebugRes;
+        ParentProject.Difficulties = [.. TempDifficulties.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
 
         ParentProject.Save();
 

@@ -87,6 +87,11 @@ public class FileSystemWindow : ImGuiWindow
                         ImGui.CloseCurrentPopup();
                     ImGui.EndPopup();
                 }
+                else
+                {
+                    newFilePopupOpen = -1;
+                    newFolderPopupOpen = false;
+                }
             }
 
             End();
@@ -171,15 +176,34 @@ public class FileSystemWindow : ImGuiWindow
     #endregion
     #region Context Menus
 
+    public static string AddEllipses(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+        {
+            return text;
+        }
+
+        string ellipses = "...";
+        string trimmedText = text[^(maxLength - ellipses.Length)..];
+
+        return ellipses + trimmedText;
+    }
+
+    private bool newFolderPopupOpen = false;
+    private int newFilePopupOpen = -1;
+
     public void WindowContextMenu(ref bool shouldClose)
     {
-        if (ImGui.Button("New Folder"))
+        ImGui.MenuItem($"{AddEllipses(CurrentRelativePath, 30)}", null, false, false);
+        ImGui.Separator();
+        if (ImGui.Selectable("New Folder", false, ImGuiSelectableFlags.NoAutoClosePopups) || newFolderPopupOpen)
         {
             ImGui.OpenPopup("Enter Folder Name");
+            newFolderPopupOpen = true;
         }
         if (ImGui.BeginPopup("Enter Folder Name"))
         {
-            ImGui.Text("Enter folder name:");
+            ImGui.Text("Enter Folder name:");
             ImGui.SetKeyboardFocusHere();
             if (ImGui.InputText("##newFolderName", ref newFolderName, 100, ImGuiInputTextFlags.EnterReturnsTrue))
             {
@@ -188,24 +212,26 @@ public class FileSystemWindow : ImGuiWindow
                 newFolderName = string.Empty;
                 SetPath(p);
                 ImGui.CloseCurrentPopup();
+                newFolderPopupOpen = false;
                 shouldClose = true;
             }
             ImGui.EndPopup();
         }
-        NewFileContext("Definition", ".lfd", ref shouldClose);
-        NewFileContext("Script", ".lua", ref shouldClose);
-        NewFileContext("Shader", ".lfs", ref shouldClose);
+        NewFileContext("Definition", ".lfd", 0, ref shouldClose);
+        NewFileContext("Script", ".lua", 1, ref shouldClose);
+        NewFileContext("Shader", ".lfs", 2, ref shouldClose);
     }
 
-    public void NewFileContext(string type, string ext, ref bool shouldClose)
+    public void NewFileContext(string type, string ext, int housamas_return, ref bool shouldClose)
     {
-        if (ImGui.Button($"New {type}"))
+        if (ImGui.Selectable($"New {type}", false, ImGuiSelectableFlags.NoAutoClosePopups) || newFilePopupOpen == housamas_return)
         {
             ImGui.OpenPopup($"Enter {type} Name");
+            newFilePopupOpen = housamas_return;
         }
         if (ImGui.BeginPopup($"Enter {type} Name"))
         {
-            ImGui.Text("Enter file name:");
+            ImGui.Text($"Enter {type} name:");
             ImGui.SetKeyboardFocusHere();
             if (ImGui.InputText("##newFileName", ref newFileName, 100, ImGuiInputTextFlags.EnterReturnsTrue))
             {
@@ -213,6 +239,7 @@ public class FileSystemWindow : ImGuiWindow
                 using FileStream fs = File.Create(Path.Combine(CurrentPath, newFileName));
                 newFileName = string.Empty;
                 ImGui.CloseCurrentPopup();
+                newFilePopupOpen = -1;
                 shouldClose = true;
             }
             ImGui.EndPopup();
