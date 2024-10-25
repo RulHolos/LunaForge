@@ -41,7 +41,7 @@ public partial class FileDialog
 
         this.ResetEvents();
 
-        ImGui.SetNextWindowSize(new Vector2(800, 500), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new Vector2(800, 500), ImGuiCond.Once);
 
         if (this.isModal && !this.okResultToConfirm)
         {

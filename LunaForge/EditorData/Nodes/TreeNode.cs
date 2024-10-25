@@ -374,18 +374,7 @@ public abstract class TreeNode : ITraceThrowable
             ParentDef.AddAndExecuteCommand(new SwitchBanCommand(this, !IsBanned));
         ImGui.Separator();
         if (ImGui.MenuItem("View Code"))
-        {
-            StringBuilder code = new();
-            foreach (string codeLine in TryToLua(0))
-                code.Append(codeLine);
-
-            if (EditorTraceContainer.ContainSeverity(TraceSeverity.Error))
-                NotificationManager.AddToast("There are errors inside your code.\nPlease fix them before viewing code.", ToastType.Error);
-            else
-            {
-                MainWindow.ViewCodeWin.ResetAndShow(code.ToString());
-            }
-        }
+            ViewCode();
         ImGui.Separator();
         if (ImGui.MenuItem("Save as Preset", string.Empty, false, MainWindow.NodeToPreset_CanExecute()))
         {
@@ -700,6 +689,22 @@ public abstract class TreeNode : ITraceThrowable
 
     #endregion
     #region ToLua
+
+    public void ViewCode() => ViewCode(this);
+
+    public void ViewCode(TreeNode node)
+    {
+        StringBuilder code = new();
+        foreach (string codeLine in node.TryToLua(0))
+            code.Append(codeLine);
+
+        if (EditorTraceContainer.ContainSeverity(TraceSeverity.Error))
+            NotificationManager.AddToast("There are errors inside your code.\nPlease fix them before viewing code.", ToastType.Error);
+        else
+        {
+            MainWindow.ViewCodeWin.ResetAndShow(code.ToString());
+        }
+    }
 
     public IEnumerable<string> TryToLua(int spacing)
     {

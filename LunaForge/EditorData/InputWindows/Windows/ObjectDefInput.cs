@@ -59,7 +59,7 @@ public class ObjectDefInput : InputWindow
                 if (string.IsNullOrEmpty(searchInput) || definition.ClassName.Contains(searchInput, StringComparison.CurrentCultureIgnoreCase))
                 {
                     bool isSelected = selectedDef == index;
-                    if (ImGui.Selectable($"Name: {className}\nDifficulty: {diff}\nParameters: {parameters}", isSelected, ImGuiSelectableFlags.NoAutoClosePopups))
+                    if (ImGui.Selectable($"Name: {className}\nDifficulty: {(string.IsNullOrEmpty(diff) ? "Any" : diff)}\nParameters: {parameters}", isSelected, ImGuiSelectableFlags.NoAutoClosePopups))
                     {
                         selectedDef = index;
                         Result = Definitions[selectedDef].ClassName;

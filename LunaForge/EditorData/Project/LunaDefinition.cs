@@ -302,9 +302,9 @@ public class LunaDefinition : LunaProjectFile
 
     public static async Task<LunaDefinition> CreateFromFile(LunaForgeProject parentProject, string filePath)
     {
-        LunaDefinition definition = new(parentProject, filePath);
         try
         {
+            LunaDefinition definition = new(parentProject, filePath);
             using (StreamReader sr = new(filePath, Encoding.UTF8))
             {
                 definition.TreeNodes = await DeserializeTree(sr, definition);

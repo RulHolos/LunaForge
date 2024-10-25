@@ -28,7 +28,11 @@ using LunaForge.EditorData.Nodes.NodeData;
 namespace LunaForge.GUI;
 
 /*
- * LunaForge - *.lfp (LunaForge Project) for the ini file. - *.lfd (LunaForge Definition) for object definitions.
+ * LunaForge
+ * - *.lfp (LunaForge Project) for the project data and configuration (YAML)
+ * - *.lfd (LunaForge Definition) for object definitions. (Node Tree)
+ * - *.lua (lua script) plain lua scripts. (Plain text)
+ * - *.lfs (LunaForge Shader) for shader compilation. (Node graph)
  * 
  * Design:
  * A project has a .ini file for the configuration and everything else.
@@ -249,7 +253,7 @@ internal static class MainWindow
                     ShortcutList.CheckKeybinds();
 
                     RenderMenu();
-                    //ImGui.ShowDemoWindow();
+                    ImGui.ShowDemoWindow();
                     Render();
 
                     if (Raylib.WindowShouldClose() || exitWindowRequested) // Will ask save files if they're unsaved then close all opened files then projects.

@@ -163,6 +163,7 @@ public class ProjectViewerWindow : ImGuiWindow
         if (ImGui.IsWindowFocused() && ParentProject.Parent.Current != ParentProject)
         {
             ParentProject.Parent.Current = ParentProject;
+            MainWindow.FSWin.InitializeProject(ParentProject);
 #if DEBUG
             Console.WriteLine($"Current Project: {ParentProject.ProjectName}");
 #endif

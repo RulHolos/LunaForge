@@ -186,8 +186,7 @@ internal class LuaNode : TreeNode
     public static Dictionary<string, Type> TraceTypes { get; } = new()
     {
         ["ArgNotNull"] = typeof(ArgNotNullTrace),
-        ["FileMustExist"] = typeof(FileMustExistTrace),
-        ["ProjectPathNotNull"] = typeof(ProjectPathNotNullTrace)
+        ["FileMustExist"] = typeof(FileMustExistTrace)
     };
 
     public List<EditorTrace> TempTraces;

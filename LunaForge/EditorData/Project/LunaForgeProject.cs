@@ -370,6 +370,21 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
     }
 
     #endregion
+    #region Shaders
+
+    public async Task<bool> OpenShaderFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return false;
+
+        LunaShader newShader = await LunaShader.CreateFromFile(this, filePath);
+        newShader.AllocHash(ref ProjectFileMaxHash);
+        ProjectFiles.Add(newShader);
+
+        return true;
+    }
+
+    #endregion
     #region Traces
 
     public void RemoveTraces()

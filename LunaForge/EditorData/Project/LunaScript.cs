@@ -117,9 +117,9 @@ public class LunaScript : LunaProjectFile
 
     public static async Task<LunaScript> CreateFromFile(LunaForgeProject parentProject, string filePath)
     {
-        LunaScript script = new(parentProject, filePath);
         try
         {
+            LunaScript script = new(parentProject, filePath);
             using (StreamReader sr = new(filePath))
             {
                 script.FileContent = await sr.ReadToEndAsync();
