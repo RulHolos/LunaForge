@@ -24,4 +24,9 @@ public class InsertChildCommand : InsertCommand
         ToInsert.RaiseRemove(new() { Parent = ToInsert.Parent });
         Source.RemoveChild(ToInsert);
     }
+
+    public override string ToString()
+    {
+        return $"Insert node {Source.NodeName} as child";
+    }
 }

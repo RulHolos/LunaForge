@@ -24,4 +24,9 @@ public class InsertBeforeCommand : InsertCommand
         ToInsert.RaiseRemove(new() { Parent = ToInsert.Parent });
         Source.Parent?.RemoveChild(ToInsert);
     }
+
+    public override string ToString()
+    {
+        return $"Insert node {Source.NodeName} before";
+    }
 }

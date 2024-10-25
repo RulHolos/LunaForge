@@ -20,6 +20,7 @@ using LunaForge.EditorData.Traces;
 using TextCopy;
 using LunaForge.EditorData.Nodes.NodeData;
 using Org.BouncyCastle.Asn1.Cms;
+using System.Runtime.InteropServices;
 
 namespace LunaForge.EditorData.Project;
 
@@ -57,6 +58,8 @@ public class LunaDefinition : LunaProjectFile
     }
 
     #region Rendering
+
+    private TreeNode? DraggedNode = null;
 
     public override void Render()
     {
@@ -124,6 +127,8 @@ public class LunaDefinition : LunaProjectFile
         bool isOpen = ImGui.TreeNodeEx(node.DisplayString, flags);
 #endif
 
+        DoDragDropBehavior(node);
+
         ImGui.PopStyleColor();
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
             SelectNode(node);
@@ -186,6 +191,27 @@ public class LunaDefinition : LunaProjectFile
         SelectedNode = node;
         node.IsSelected = true;
         JustInserted = true;
+    }
+
+    public unsafe void DoDragDropBehavior(TreeNode node)
+    {
+        if (ImGui.BeginDragDropSource())
+        {
+            ImGui.SetDragDropPayload("DRAG_TREE_NODE", 0, 0);
+            DraggedNode = node;
+            ImGui.Text($"Dragging node {node.NodeName}");
+            ImGui.EndDragDropSource();
+        }
+
+        if (ImGui.BeginDragDropTarget())
+        {
+            if (ImGui.AcceptDragDropPayload("DRAG_TREE_NODE").NativePtr != null && DraggedNode != null)
+            {
+                if (node.ValidateChild(DraggedNode))
+                    AddAndExecuteCommand(new DragDropCommand(DraggedNode, node));
+            }
+            ImGui.EndDragDropTarget();
+        }
     }
 
     #endregion
@@ -336,36 +362,36 @@ public class LunaDefinition : LunaProjectFile
     #endregion
     #region TreeNodes
 
-    public bool Insert(TreeNode node, bool doInvoke = true)
+    public bool Insert(TreeNode parent, TreeNode node, bool doInvoke = true)
     {
         try
         {
-            if (SelectedNode == null)
+            if (parent == null)
                 return false;
             if (node.Children.Count > 0)
                 node.IsExpanded = true;
-            TreeNode oldSelection = SelectedNode;
+            TreeNode oldSelection = parent;
             Command cmd = null;
             node.ParentDef = this;
             switch (MainWindow.InsertMode)
             {
                 case InsertMode.Before:
-                    if (SelectedNode.Parent == null || !SelectedNode.Parent.ValidateChild(node))
+                    if (oldSelection.Parent == null || !oldSelection.Parent.ValidateChild(node))
                         return false;
-                    cmd = new InsertBeforeCommand(SelectedNode, node);
+                    cmd = new InsertBeforeCommand(oldSelection, node);
                     break;
                 case InsertMode.Child:
-                    if (!SelectedNode.ValidateChild(node))
+                    if (!oldSelection.ValidateChild(node))
                         return false;
-                    cmd = new InsertChildCommand(SelectedNode, node);
+                    cmd = new InsertChildCommand(oldSelection, node);
                     break;
                 case InsertMode.After:
-                    if (SelectedNode.Parent == null || !SelectedNode.Parent.ValidateChild(node))
+                    if (oldSelection.Parent == null || !oldSelection.Parent.ValidateChild(node))
                         return false;
-                    cmd = new InsertAfterCommand(SelectedNode, node);
+                    cmd = new InsertAfterCommand(oldSelection, node);
                     break;
             }
-            if (SelectedNode.Parent == null && MainWindow.InsertMode != InsertMode.Child)
+            if (oldSelection.Parent == null && MainWindow.InsertMode != InsertMode.Child)
                 return false;
             if (AddAndExecuteCommand(cmd))
             {
@@ -383,6 +409,11 @@ public class LunaDefinition : LunaProjectFile
             Console.WriteLine(ex.ToString());
             return false;
         }
+    }
+
+    public bool Insert(TreeNode node, bool doInvoke = true)
+    {
+        return Insert(SelectedNode, node, doInvoke);
     }
 
     public void CreateInvoke(TreeNode node)

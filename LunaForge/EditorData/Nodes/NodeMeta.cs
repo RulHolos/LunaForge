@@ -44,6 +44,16 @@ public sealed class NodeMeta
     public bool IgnoreValidation { get; } = false;
 
     /// <summary>
+    /// Indicates that this node cannot be drag-dropped into another one.
+    /// </summary>
+    public bool CannotBeDragged { get; } = false;
+
+    /// <summary>
+    /// Indicates that this node cannot be the target of a drag-dropping motion.
+    /// </summary>
+    public bool CannotBeDragTarget { get; } = false;
+
+    /// <summary>
     /// Indicates that there can't be any more than one instance of this node's siblings
     /// </summary>
     public bool Unique { get; } = false;
@@ -81,17 +91,19 @@ public sealed class NodeMeta
         CannotBeDeleted = type.IsDefined(typeof(CannotBeDeletedAttribute), false);
         CannotBeBanned = type.IsDefined(typeof(CannotBeBannedAttribute), false);
         IgnoreValidation = type.IsDefined(typeof(IgnoreValidationAttribute), false);
+        CannotBeDragged = type.IsDefined(typeof(CannotBeDraggedAttribute), false);
+        CannotBeDragTarget = type.IsDefined(typeof(CannotBeDragTargetAttribute), false);
         Unique = type.IsDefined(typeof(UniqueAttribute), false);
         IsInit = type.IsDefined(typeof(IsInitAttribute), false);
 
         string pathToImage = type.GetAttributeValue((NodeIconAttribute img) => img.Path);
         Icon = $"{(string.IsNullOrEmpty(pathToImage) ? "Unknown" : pathToImage)}";
 
-        RequireParent = type.GetCustomAttribute<RequireParentAttribute>()?.ParentType;
-        RequireAncestor = type.GetCustomAttribute<RequireAncestorAttribute>()?.RequiredTypes;
+        RequireParent = type.GetCustomAttribute<RequireParentAttribute>()?.ParentType ?? [];
+        RequireAncestor = type.GetCustomAttribute<RequireAncestorAttribute>()?.RequiredTypes ?? [];
 
-        CreateInvokeId = type.GetCustomAttribute<CreateInvokeAttribute>()?.ID;
-        RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID;
+        CreateInvokeId = type.GetCustomAttribute<CreateInvokeAttribute>()?.ID ?? 0;
+        RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID ?? 0;
     }
 
     public NodeMeta(TreeNode source, Table meta)
@@ -103,6 +115,8 @@ public sealed class NodeMeta
         CannotBeDeleted = FindAttribute(meta, "CannotBeDeleted", false);
         CannotBeBanned = FindAttribute(meta, "CannotBeBanned", false);
         IgnoreValidation = FindAttribute(meta, "IgnoreValidation", false);
+        CannotBeDragged = FindAttribute(meta, "CannotBeDragged", false);
+        CannotBeDragTarget = FindAttribute(meta, "CannotBeDragTarget", false);
         Unique = FindAttribute(meta, "Unique", false);
         IsInit = FindAttribute(meta, "IsInit", false);
 

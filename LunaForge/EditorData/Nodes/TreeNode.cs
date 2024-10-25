@@ -438,11 +438,10 @@ public abstract class TreeNode : ITraceThrowable
     {
         if (toMatch == null)
             return false;
-        if (MetaData.RequireParent == null)
+        if (MetaData.RequireParent == Array.Empty<string>())
             return true;
         foreach (string type in MetaData.RequireParent)
         {
-            var fgdf = toMatch;
             if (toMatch.NodeName.Equals(type))
                 return true;
         }
@@ -480,7 +479,7 @@ public abstract class TreeNode : ITraceThrowable
     private bool CheckRequiredAncestorValidation(TreeNode Beg1, TreeNode End1, TreeNode Beg2, TreeNode End2)
     {
         string[] ts = MetaData.RequireAncestor;
-        if (ts == null)
+        if (ts == Array.Empty<string>())
             return true;
         List<string> toSatisfiedGroups = [.. ts];
         List<string> Satisfied = [];
@@ -802,6 +801,8 @@ public abstract class TreeNode : ITraceThrowable
         foreach (TreeNode tn in childrens)
             this.Children.Add(tn);
         Parent = source.Parent;
+        IsExpanded = source.IsExpanded;
+        IsBanned = source.IsBanned;
     }
 
     public void SetupMeta(Table table)
