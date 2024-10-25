@@ -24,6 +24,7 @@ using LunaForge.EditorData.InputWindows;
 using NetSparkleUpdater;
 using MoonSharp.Interpreter;
 using LunaForge.EditorData.Nodes.NodeData;
+using System.Numerics;
 
 namespace LunaForge.GUI;
 
@@ -120,6 +121,10 @@ internal static class MainWindow
     /// Should the interface be used and generated on startup? (Should ALWAYS be yes on release versions)
     /// </summary>
     public static bool UseInterface { get; } = true;
+    /// <summary>
+    /// Reponsible for displaying the "Opening File..." loading bar.
+    /// </summary>
+    public static bool IsOpeningFile { get; set; } = false;
 
     /// <summary>
     /// The plugin manager. Currently not active in alpha. See the API documentation to see how to use plugins.
@@ -167,7 +172,7 @@ internal static class MainWindow
     public static List<PresetListInfo> PresetsList { get; set; } = [];
 
     /// <summary>
-    /// Script cache for <see cref="LuaNode"/>. Item1 is <see cref="TreeNode.NodeName"/>, Item2 is <see cref="Script"/>.
+    /// Script cache for <see cref="LuaNode"/>. Key is <see cref="TreeNode.NodeName"/>, Value is <see cref="Script"/>.
     /// </summary>
     public static Dictionary<string, Script> ScriptCache = [];
 
@@ -253,7 +258,7 @@ internal static class MainWindow
                     ShortcutList.CheckKeybinds();
 
                     RenderMenu();
-                    ImGui.ShowDemoWindow();
+                    //ImGui.ShowDemoWindow();
                     Render();
 
                     if (Raylib.WindowShouldClose() || exitWindowRequested) // Will ask save files if they're unsaved then close all opened files then projects.

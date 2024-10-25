@@ -5,9 +5,11 @@ using LunaForge.GUI.Helpers;
 using LunaForge.GUI.ImGuiFileDialog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -42,6 +44,8 @@ public class FileSystemWindow : ImGuiWindow
     string newFolderName = string.Empty;
     string newFileName = string.Empty;
 
+    // TODO: Correct fucking context menus. Please.
+
     public FileSystemWindow() : base(true) { }
 
     public void InitializeProject(LunaForgeProject project)
@@ -50,6 +54,8 @@ public class FileSystemWindow : ImGuiWindow
         SetPath(BasePath);
         ProjectOpened = true;
     }
+
+    private bool IsItemPopupOpen = false;
 
     public override void Render()
     {
@@ -64,15 +70,27 @@ public class FileSystemWindow : ImGuiWindow
                 return;
             }
 
+            if (MainWindow.IsOpeningFile)
+            {
+                ImGui.ProgressBar(-1.0f * (float)ImGui.GetTime(), new Vector2(-1.0f, 0.0f), "Opening file...");
+            }
+
             RenderHeader();
             RenderContent();
-            if (ImGui.BeginPopupContextItem() || ImGui.BeginPopupContextWindow())
+            if (!IsItemPopupOpen)
             {
-                WindowContextMenu();
-                ImGui.EndPopup();
+                if (ImGui.BeginPopupContextItem() || ImGui.BeginPopupContextWindow())
+                {
+                    bool shouldClose = false;
+                    WindowContextMenu(ref shouldClose);
+                    if (shouldClose)
+                        ImGui.CloseCurrentPopup();
+                    ImGui.EndPopup();
+                }
             }
 
             End();
+            IsItemPopupOpen = false;
         }
     }
 
@@ -122,7 +140,7 @@ public class FileSystemWindow : ImGuiWindow
                     //ImGui.SetCursorPosX(ImGui.GetCursorPosX());
                 }
 
-                var click = ImGui.Button($"/{PathDecomposition[idx]}");
+                var click = ImGuiEx.DoubleClickButton($"/{PathDecomposition[idx]}");
                 ImGui.PopStyleColor();
                 ImGui.PopID();
 
@@ -151,6 +169,97 @@ public class FileSystemWindow : ImGuiWindow
     }
 
     #endregion
+    #region Context Menus
+
+    public void WindowContextMenu(ref bool shouldClose)
+    {
+        if (ImGui.Button("New Folder"))
+        {
+            ImGui.OpenPopup("Enter Folder Name");
+        }
+        if (ImGui.BeginPopup("Enter Folder Name"))
+        {
+            ImGui.Text("Enter folder name:");
+            ImGui.SetKeyboardFocusHere();
+            if (ImGui.InputText("##newFolderName", ref newFolderName, 100, ImGuiInputTextFlags.EnterReturnsTrue))
+            {
+                string p = Path.Combine(CurrentPath, newFolderName);
+                Directory.CreateDirectory(p);
+                newFolderName = string.Empty;
+                SetPath(p);
+                ImGui.CloseCurrentPopup();
+                shouldClose = true;
+            }
+            ImGui.EndPopup();
+        }
+        NewFileContext("Definition", ".lfd", ref shouldClose);
+        NewFileContext("Script", ".lua", ref shouldClose);
+        NewFileContext("Shader", ".lfs", ref shouldClose);
+    }
+
+    public void NewFileContext(string type, string ext, ref bool shouldClose)
+    {
+        if (ImGui.Button($"New {type}"))
+        {
+            ImGui.OpenPopup($"Enter {type} Name");
+        }
+        if (ImGui.BeginPopup($"Enter {type} Name"))
+        {
+            ImGui.Text("Enter file name:");
+            ImGui.SetKeyboardFocusHere();
+            if (ImGui.InputText("##newFileName", ref newFileName, 100, ImGuiInputTextFlags.EnterReturnsTrue))
+            {
+                newFileName = Path.ChangeExtension(newFileName, ext);
+                using FileStream fs = File.Create(Path.Combine(CurrentPath, newFileName));
+                newFileName = string.Empty;
+                ImGui.CloseCurrentPopup();
+                shouldClose = true;
+            }
+            ImGui.EndPopup();
+        }
+    }
+
+    public void FileContextMenu(string file, string fileName)
+    {
+        if (ImGui.BeginPopupContextItem())
+        {
+            IsItemPopupOpen = true;
+            ImGui.MenuItem(fileName, null, false, false);
+            ImGui.Separator();
+
+            if (ImGui.Selectable("Open file"))
+            {
+                OpenFile(file);
+            }
+
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGui.GetIO().KeyShift ? ImGuiCol.Text : ImGuiCol.TextDisabled));
+            if (ImGui.Selectable("Delete file") && ImGui.GetIO().KeyShift)
+            {
+                FileInfo fi = new(file);
+                fi.Delete();
+            }
+            ImGui.PopStyleColor();
+            if (!ImGui.GetIO().KeyShift && ImGui.IsItemHovered())
+                ImGui.SetTooltip("Warning: This will delete the file.\nTHIS IS NOT REVERSIBLE.\nHold SHIFT to delete.");
+
+            ImGui.Separator();
+
+            if (ImGui.Selectable("Open in file explorer"))
+            {
+                string path = Path.GetDirectoryName(file);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    Process.Start("explorer.exe", path);
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    Process.Start("open", path);
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    Process.Start("xdg-open", path);
+            }
+
+            ImGui.EndPopup();
+        }
+    }
+
+    #endregion
 
     public void RenderFileTree(string directoryPath)
     {
@@ -164,7 +273,7 @@ public class FileSystemWindow : ImGuiWindow
             {
                 string folderName = Path.GetFileName(dir);
                 ImGui.PushStyleColor(ImGuiCol.Text, dirTextColor);
-                if (ImGui.Selectable($"{FontAwesome6.Folder} {folderName}##FSWin_Folder_{i}", false, flags: ImGuiSelectableFlags.AllowDoubleClick))
+                if (ImGui.Selectable($" {FontAwesome6.Folder} {folderName}##FSWin_Folder_{i}", false, flags: ImGuiSelectableFlags.AllowDoubleClick))
                 {
                     if (ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                         AddPath(folderName);
@@ -179,34 +288,20 @@ public class FileSystemWindow : ImGuiWindow
                 string fileName = Path.GetFileName(file);
                 if (fileName.EndsWith(".lfp"))
                     continue;
-                ImGui.Selectable($"{FontAwesome6.File} {fileName}##{fileName}_{i}");
-                if (ImGui.BeginPopupContextItem())
-                {
-                    ImGui.Text(fileName);
-                    ImGui.Separator();
-
-                    if (ImGui.Selectable("Open file"))
-                    {
-                        OpenFile(file);
-                    }
-
-                    ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGui.GetIO().KeyShift ? ImGuiCol.Text : ImGuiCol.TextDisabled));
-                    if (ImGui.Selectable("Delete file") && ImGui.GetIO().KeyShift)
-                    {
-                        FileInfo fi = new(file);
-                        fi.Delete();
-                    }
-                    ImGui.PopStyleColor();
-                    if (!ImGui.GetIO().KeyShift && ImGui.IsItemHovered())
-                        ImGui.SetTooltip("Warning: This will delete the file.\nTHIS IS NOT REVERSIBLE.\nHold SHIFT to delete.");
-                    ImGui.EndPopup();
-                }
-                if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(0))
+                ImGui.Selectable($" {FontAwesome6.File} {fileName}##{fileName}_{i}");
+                FileContextMenu(file, fileName);
+                if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                 {
                     OpenFile(file);
                 }
                 j++;
             }
+        }
+        catch (DirectoryNotFoundException ex)
+        {
+            NotificationManager.AddToast("Couldn't find directory path.\nStepping back.", ToastType.Warning);
+            SetPath(Directory.GetParent(directoryPath).FullName);
+            Console.WriteLine($"Couldn't find current path, reverting to the previous one.\n{ex}");
         }
         catch(Exception ex)
         {
@@ -214,58 +309,10 @@ public class FileSystemWindow : ImGuiWindow
         }
     }
 
-    #region Context Menus
-
-    public void WindowContextMenu()
-    {
-        if (ImGui.Button("New Folder"))
-        {
-            ImGui.OpenPopup("Enter Folder Name");
-        }
-        if (ImGui.BeginPopup("Enter Folder Name"))
-        {
-            ImGui.Text("Enter folder name:");
-            if (ImGui.InputText("##newFolderName", ref newFolderName, 100, ImGuiInputTextFlags.EnterReturnsTrue))
-            {
-                string p = Path.Combine(CurrentPath, newFolderName);
-                Directory.CreateDirectory(p);
-                newFolderName = string.Empty;
-                SetPath(p);
-                ImGui.CloseCurrentPopup();
-            }
-            ImGui.EndPopup();
-        }
-        NewFileContext("Definition", ".lfd");
-        NewFileContext("Script", ".lua");
-        NewFileContext("Shader", ".lfs");
-    }
-
-    public void NewFileContext(string type, string ext)
-    {
-        if (ImGui.Button($"New {type}"))
-        {
-            ImGui.OpenPopup("Enter File Name");
-        }
-        if (ImGui.BeginPopup("Enter File Name"))
-        {
-            ImGui.Text("Enter file name:");
-            if (ImGui.InputText("##newFileName", ref newFileName, 100, ImGuiInputTextFlags.EnterReturnsTrue))
-            {
-                newFileName = Path.ChangeExtension(newFileName, ext);
-                using FileStream fs = File.Create(Path.Combine(CurrentPath, newFileName));
-                newFileName = string.Empty;
-                ImGui.CloseCurrentPopup();
-            }
-            ImGui.EndPopup();
-        }
-    }
-
-    #endregion
-
     public async Task OpenFile(string filePath)
     {
-        if (MainWindow.Workspaces.Current!.IsFileOpened(filePath))
-            return; // File already opened, don't do anything.
+        if (MainWindow.Workspaces.Current!.IsFileOpened(filePath) || MainWindow.IsOpeningFile)
+            return; // File already opened or is in the proccess of opening this or another file: Don't do anything.
 
         switch (Path.GetExtension(filePath))
         {

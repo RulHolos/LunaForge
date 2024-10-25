@@ -192,6 +192,7 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
         {
             Parent.Remove(this);
             RemoveTraces();
+            MainWindow.ScriptCache.Clear(); // TODO: Only clear the cache of this project.
             Parent.Current = null;
         }
         else
@@ -347,9 +348,11 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
         if (!File.Exists(filePath))
             return false;
 
+        MainWindow.IsOpeningFile = true;
         LunaDefinition newDef = await LunaDefinition.CreateFromFile(this, filePath);
         newDef.AllocHash(ref ProjectFileMaxHash);
         ProjectFiles.Add(newDef);
+        MainWindow.IsOpeningFile = false;
 
         return true;
     }
@@ -362,9 +365,11 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
         if (!File.Exists(filePath))
             return false;
 
+        MainWindow.IsOpeningFile = true;
         LunaScript newScript = await LunaScript.CreateFromFile(this, filePath);
         newScript.AllocHash(ref ProjectFileMaxHash);
         ProjectFiles.Add(newScript);
+        MainWindow.IsOpeningFile = false;
 
         return true;
     }
@@ -377,9 +382,11 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
         if (!File.Exists(filePath))
             return false;
 
+        MainWindow.IsOpeningFile = true;
         LunaShader newShader = await LunaShader.CreateFromFile(this, filePath);
         newShader.AllocHash(ref ProjectFileMaxHash);
         ProjectFiles.Add(newShader);
+        MainWindow.IsOpeningFile = false;
 
         return true;
     }

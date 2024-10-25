@@ -1,6 +1,8 @@
-﻿using LunaForge.EditorData.Commands;
+﻿using ImGuiNET;
+using LunaForge.EditorData.Commands;
 using LunaForge.EditorData.Nodes;
 using LunaForge.EditorData.Traces;
+using LunaForge.GUI.NodeGraphRenderer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +13,8 @@ namespace LunaForge.EditorData.Project;
 
 public class LunaShader : LunaProjectFile
 {
+    NodeGraph Graph = new();
+
     public LunaShader(LunaForgeProject parentProj, string path)
         : base(parentProj, path)
     {
@@ -21,7 +25,13 @@ public class LunaShader : LunaProjectFile
 
     public override void Render()
     {
-        return;
+        // TODO: wtf.
+        ImGui.BeginChild("CanvasWindowsRenderer");
+        if (Graph.BeginCanvas("test_canvas"))
+        {
+            Graph.EndCanvas();
+        }
+        ImGui.EndChild();
     }
 
     #endregion

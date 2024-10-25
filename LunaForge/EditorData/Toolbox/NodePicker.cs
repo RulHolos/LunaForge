@@ -113,7 +113,8 @@ public class NodePicker : IEnumerable<NodePlugin>
 
                 if (string.IsNullOrEmpty(plugin.DisplayName) || string.IsNullOrEmpty(plugin.Namespace))
                 {
-                    NotificationManager.AddToast($"Couldn't create node plugin:\nMissing displayname or namespace attributes on {Path.GetFileName(pathToData)}", ToastType.Error);
+                    NotificationManager.AddToast($"Couldn't create node plugin:\nMissing \"displayname\" or \"namespace\" " +
+                        $"attributes on {Path.GetFileName(pathToData)}", ToastType.Error);
                     return null;
                 }
 
@@ -125,10 +126,11 @@ public class NodePicker : IEnumerable<NodePlugin>
                     plugin.AddTab(nodeTab);
                 }
                 picker.AddPlugin(plugin);
+                Console.WriteLine($"Node Plugin \"{plugin.DisplayName}\" loaded successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Couldn't load node definition: {ex}");
+                Console.WriteLine($"Couldn't load node plugin definition: {ex}");
             }
         }
 

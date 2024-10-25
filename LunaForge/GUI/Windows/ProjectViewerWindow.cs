@@ -17,7 +17,7 @@ namespace LunaForge.GUI.Windows;
 
 public class ProjectViewerWindow : ImGuiWindow
 {
-    public LunaForgeProject ParentProject;
+    public LunaForgeProject ParentProject { get; set; }
     public bool JustCreated = true;
 
     public LunaProjectFile? fileToClose = null;

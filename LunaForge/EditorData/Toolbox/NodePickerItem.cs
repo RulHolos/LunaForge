@@ -68,7 +68,6 @@ public class NodePickerItem
 
         string iconName = MainWindow.LoadEditorImageFromFile(icon);
 
-        Console.WriteLine($"Node \"{name}\" loaded successfully.");
         return new($"{plugin.Namespace}-{name}", iconName, name, () =>
         {
             LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;

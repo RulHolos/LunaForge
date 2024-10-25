@@ -92,4 +92,12 @@ public static class ImGuiEx
     public static void CenterCursorForText(string text) => CenterCursorFor(ImGui.CalcTextSize(text).X);
 
     public static void CenterCursorFor(float itemWidth) => ImGui.SetCursorPosX((int)((ImGui.GetWindowWidth() - itemWidth) / 2));
+
+    public static bool DoubleClickButton(string label)
+    {
+        ImGui.Button(label);
+        if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+            return true;
+        return false;
+    }
 }
