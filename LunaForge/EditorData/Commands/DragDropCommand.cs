@@ -38,15 +38,15 @@ public class DragDropCommand : Command
 
     public override void Undo()
     {
+        // Removing cloned node
+        NodeToInsert.RaiseRemove(new() { Parent = NodeToInsert.Parent });
+        TargetNode.RemoveChild(NodeToInsert);
+
         // Adding back original node
         DraggedNode.RaiseCreate(new() { Parent = DraggedNode.Parent ?? DraggedNode });
         DraggedNode.ParentDef.DeselectAllNodes();
         DraggedNode.Parent.InsertChild(DraggedNode, OriginalIndex);
         DraggedNode.IsSelected = true;
-
-        // Removing cloned node
-        NodeToInsert.RaiseRemove(new() { Parent = NodeToInsert.Parent });
-        TargetNode.RemoveChild(NodeToInsert);
     }
 
     public override string ToString()

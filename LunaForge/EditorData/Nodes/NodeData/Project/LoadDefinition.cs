@@ -26,7 +26,7 @@ public class LoadDefinition : TreeNode
     }
 
     [JsonIgnore]
-    public override string NodeName { get => "LoadDefinition"; }
+    public override string NodeName { get => "Load Definition"; }
 
     [JsonIgnore, NodeAttribute, DefaultValue("")]
     public string PathToDefinition

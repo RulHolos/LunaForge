@@ -315,7 +315,14 @@ public class FileSystemWindow : ImGuiWindow
                 string fileName = Path.GetFileName(file);
                 if (fileName.EndsWith(".lfp"))
                     continue;
-                ImGui.Selectable($" {FontAwesome6.File} {fileName}##{fileName}_{i}");
+                string icon = Path.GetExtension(fileName) switch
+                {
+                    ".lfd" => FontAwesome6.FileLines,
+                    ".lua" => FontAwesome6.FileCode,
+                    ".lfs" => FontAwesome6.FileShield,
+                    _ => FontAwesome6.File,
+                };
+                ImGui.Selectable($" {icon} {fileName}##{fileName}_{i}");
                 FileContextMenu(file, fileName);
                 if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                 {

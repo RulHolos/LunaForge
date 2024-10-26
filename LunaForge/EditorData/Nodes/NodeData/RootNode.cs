@@ -12,6 +12,7 @@ namespace LunaForge.EditorData.Nodes.NodeData;
 
 [NodeIcon("Folder")]
 [CannotBeDeleted, CannotBeBanned]
+[CannotBeDragged]
 public class RootNode : TreeNode
 {
     public RootNode() : base() { }

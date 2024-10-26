@@ -807,7 +807,7 @@ public abstract class TreeNode : ITraceThrowable
 
     public void SetupMeta(Table table)
     {
-        MetaData = new(this, table);
+        MetaData = new(table);
     }
 
     #endregion

@@ -106,8 +106,7 @@ public sealed class NodeMeta
         RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID ?? 0;
     }
 
-    public NodeMeta(TreeNode source, Table meta)
-        : this(source)
+    public NodeMeta(Table meta)
     {
         IsFolder = FindAttribute(meta, "IsFolder", false);
         IsDefinition = FindAttribute(meta, "IsDefinition", false);

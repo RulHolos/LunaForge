@@ -52,10 +52,7 @@ public class LunaDefinition : LunaProjectFile
     public TreeNode CopyClipboard { get; set; } = null;
 
     public LunaDefinition(LunaForgeProject parentProj, string path)
-        : base(parentProj, path)
-    {
-        
-    }
+        : base(parentProj, path) { }
 
     #region Rendering
 
@@ -195,22 +192,28 @@ public class LunaDefinition : LunaProjectFile
 
     public unsafe void DoDragDropBehavior(TreeNode node)
     {
-        if (ImGui.BeginDragDropSource())
+        if (!node.MetaData.CannotBeDragged)
         {
-            ImGui.SetDragDropPayload("DRAG_TREE_NODE", 0, 0);
-            DraggedNode = node;
-            ImGui.Text($"Dragging node {node.NodeName}");
-            ImGui.EndDragDropSource();
+            if (ImGui.BeginDragDropSource())
+            {
+                ImGui.SetDragDropPayload("DRAG_TREE_NODE", 0, 0);
+                DraggedNode = node;
+                ImGui.Text($"Dragging node {node.NodeName}");
+                ImGui.EndDragDropSource();
+            }
         }
 
-        if (ImGui.BeginDragDropTarget())
+        if (!node.MetaData.CannotBeDragTarget)
         {
-            if (ImGui.AcceptDragDropPayload("DRAG_TREE_NODE").NativePtr != null && DraggedNode != null)
+            if (ImGui.BeginDragDropTarget())
             {
-                if (node.ValidateChild(DraggedNode))
-                    AddAndExecuteCommand(new DragDropCommand(DraggedNode, node));
+                if (ImGui.AcceptDragDropPayload("DRAG_TREE_NODE").NativePtr != null && DraggedNode != null)
+                {
+                    if (node.ValidateChild(DraggedNode))
+                        AddAndExecuteCommand(new DragDropCommand(DraggedNode, node));
+                }
+                ImGui.EndDragDropTarget();
             }
-            ImGui.EndDragDropTarget();
         }
     }
 

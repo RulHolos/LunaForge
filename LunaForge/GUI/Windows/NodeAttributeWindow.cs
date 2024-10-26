@@ -61,10 +61,16 @@ public class NodeAttributeWindow : ImGuiWindow
                         attr.TempAttrValue = attr.AttrValue;
                     string[] combo = InputWindowSelector.SelectComboBox(attr.EditWindow);
                     int selectedComboIndex = Array.IndexOf(combo, attr.TempAttrValue);
-                    if (ImGuiEx.ComboBox($"##{CurrentNode.Hash}_{attr.AttrName}_input", ref selectedComboIndex,
-                            ref attr.TempAttrValue, combo,
-                            Tflags))
-                        CommitEdit(attr);
+                    if (combo.Length > 0) // If the combo has items in it.
+                    {
+                        if (ImGuiEx.ComboBox($"##{CurrentNode.Hash}_{attr.AttrName}_input", ref selectedComboIndex, ref attr.TempAttrValue, combo, Tflags))
+                            CommitEdit(attr);
+                    }
+                    else // The combo doesn't have any item in it (not registered or just empty), display a normal text input instead.
+                    {
+                        if (ImGui.InputText($"##{CurrentNode.Hash}_{attr.AttrName}_input", ref attr.TempAttrValue, 5_000, ImGuiInputTextFlags.EnterReturnsTrue))
+                            CommitEdit(attr);
+                    }
                     if (ImGui.IsItemDeactivated())
                         CommitEdit(attr);
 

@@ -28,14 +28,10 @@ public abstract class LunaProjectFile : ITraceThrowable
     {
         get
         {
-            try
-            {
+            if (CommandStack.Count > 0)
                 return CommandStack.Peek() != SavedCommand;
-            }
-            catch (InvalidOperationException)
-            {
+            else
                 return SavedCommand != null;
-            }
         }
     }
 
