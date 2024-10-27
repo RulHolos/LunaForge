@@ -262,6 +262,29 @@ public class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : IT
         }
     }
 
+    public async Task SaveShaders()
+    {
+        string[] listOfShaders = Directory.GetFiles(CompileProcess.CurrentTempPath, "*.lfs", SearchOption.AllDirectories);
+        foreach (string shaderPath in listOfShaders)
+        {
+            try
+            {
+                LunaShader shader = await LunaShader.CreateFromFile(this, shaderPath);
+                string pathToTemp = Path.GetRelativePath(PathToProjectRoot, shaderPath);
+                using FileStream fs = new(Path.Combine(CompileProcess.CurrentTempPath, Path.ChangeExtension(pathToTemp, shader.FileFormat)), FileMode.Create, FileAccess.Write);
+                using (StreamWriter sw = new(fs))
+                {
+                    sw.Write("Yellow.");
+                }
+                File.Delete(shaderPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+    }
+
     public async Task SaveSCDebugCode()
     {
         string[] listOfDefinitions = Directory.GetFiles(CompileProcess.CurrentTempPath, "*.lfd", SearchOption.AllDirectories);

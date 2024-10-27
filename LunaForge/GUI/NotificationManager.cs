@@ -22,12 +22,13 @@ public struct Toast
     public ToastType Type;
     public DateTime TimeAdded;
     public float Duration;
+    public bool IsHovered;
     public Action ClickCallback;
 }
 
 internal static class NotificationManager
 {
-    private static readonly List<Toast> toasts = [];
+    private static List<Toast> toasts { get; set; } = [];
 
     /// <summary>
     /// Max number of displayed toasts at the same time.
@@ -62,7 +63,8 @@ internal static class NotificationManager
             Type = type,
             TimeAdded = DateTime.Now,
             Duration = duration,
-            ClickCallback = clickCallback
+            IsHovered = false,
+            ClickCallback = clickCallback,
         });
     }
 
@@ -94,6 +96,7 @@ internal static class NotificationManager
 
             if (toast.Duration > 0
                 && (DateTime.Now - toast.TimeAdded).TotalSeconds > MathF.Min(MaximumDuration, toast.Duration)
+                && !toast.IsHovered
             )
             {
                 DeleteToast(ref i);
@@ -104,10 +107,10 @@ internal static class NotificationManager
             ImGui.SetNextWindowSize(new Vector2(ToastSize - 10, 50));
             var bgColor = toast.Type switch
             {
-                ToastType.Info => new Vector4(0.4f, 0.4f, 0.8f, 1.0f),// Default gray for info
-                ToastType.Success => new Vector4(0.0f, 0.8f, 0.0f, 1.0f),// Green for success
-                ToastType.Warning => new Vector4(0.8f, 0.8f, 0.0f, 1.0f),// Yellow for warning
-                ToastType.Error => new Vector4(0.8f, 0.0f, 0.0f, 1.0f),// Red for error
+                ToastType.Info => new Vector4(0.4f, 0.4f, 0.8f, 1.0f), // Default gray for info
+                ToastType.Success => new Vector4(0.0f, 0.8f, 0.0f, 1.0f), // Green for success
+                ToastType.Warning => new Vector4(0.7f, 0.7f, 0.0f, 1.0f), // Yellow for warning
+                ToastType.Error => new Vector4(0.8f, 0.0f, 0.0f, 1.0f), // Red for error
                 _ => new Vector4(0f, 0f, 0f, 1f),
             };
             ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);

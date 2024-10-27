@@ -1086,10 +1086,20 @@ public abstract class TreeNode : ITraceThrowable
     public string[]? GetInitParameters()
     {
         string nameOfAttr = "Parameters";
-        TreeNode init = GetInitChild();
-        if (init.GetAttr(nameOfAttr) != null)
+        TreeNode? init = GetInitChild();
+        if (init != null)
         {
-            return init.GetAttr(nameOfAttr).AttrValue.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (init.GetAttr(nameOfAttr) != null)
+            {
+                return init.GetAttr(nameOfAttr).AttrValue.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+        else // If init child doesn't exist, assume that the parameters are in the node itself.
+        {
+            if (GetAttr(nameOfAttr) != null)
+            {
+                return GetAttr(nameOfAttr).AttrValue.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            }
         }
         return null;
     }

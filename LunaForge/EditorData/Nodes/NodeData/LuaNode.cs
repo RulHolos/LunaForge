@@ -74,6 +74,8 @@ internal class LuaNode : TreeNode
     public void CreateScript()
     {
         NodeScript.CreateScript(this);
+        if (InvalidNode)
+            return;
         if (Script?.Globals["Initialize"] != null)
             Script.Call(Script.Globals.Get("Initialize"));
     }
@@ -92,6 +94,8 @@ internal class LuaNode : TreeNode
 
     public override IEnumerable<string> ToLua(int spacing)
     {
+        if (InvalidNode)
+            yield break;
         if (Script?.Globals["ToLua"] != null)
         {
             NodeScript.SetScriptToLua(Script, this);
@@ -145,6 +149,8 @@ internal class LuaNode : TreeNode
 
     public override void ReflectAttr(NodeAttribute o, AttributeChangedEventArgs e)
     {
+        if (InvalidNode)
+            return;
         try
         {
             DynValue? func = Script?.Globals.Get("ReflectAttr");
@@ -195,18 +201,21 @@ internal class LuaNode : TreeNode
     {
         List<EditorTrace> traces = [];
         TempTraces = [];
-        try
+        if (!InvalidNode)
         {
-            DynValue? func = Script?.Globals.Get("GetTraces");
-            if (func?.Function != null)
+            try
             {
-                NodeScript.SetScriptCheckTrace(Script, this);
-                Script.Call(func);
+                DynValue? func = Script?.Globals.Get("GetTraces");
+                if (func?.Function != null)
+                {
+                    NodeScript.SetScriptCheckTrace(Script, this);
+                    Script.Call(func);
+                }
             }
-        }
-        catch (ScriptRuntimeException ex)
-        {
-            Console.WriteLine(ex.DecoratedMessage);
+            catch (ScriptRuntimeException ex)
+            {
+                Console.WriteLine(ex.DecoratedMessage);
+            }
         }
 
         if (InvalidNode)

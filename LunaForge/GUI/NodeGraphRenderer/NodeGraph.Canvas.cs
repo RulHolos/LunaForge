@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LunaForge.GUI.NodeGraphRenderer;
 
-internal enum StyleColor
+public enum StyleColor
 {
     ColCanvasLines,
     ColNodeBg,
@@ -21,7 +21,7 @@ internal enum StyleColor
     ColMax,
 }
 
-internal struct CanvasStyle()
+public struct CanvasStyle()
 {
     public float CurveThickness = 5f;
     public float ConnectionIndent = 1f;
@@ -30,32 +30,35 @@ internal struct CanvasStyle()
     public float CurveStrength = 100f;
     public float NodeRounding = 5f;
     public Vector2 NodeSpacing = new(4f, 4f);
+
+    public Vector4[] Colors = new Vector4[(int)StyleColor.ColMax];
+
+    public readonly Vector4 GetColor(StyleColor color) => Colors[(int)color];
 }
 
-internal class CanvasState
+public class CanvasState
 {
     public CanvasState()
     {
         var imGuiStyle = ImGui.GetStyle();
-        Colors[(int)StyleColor.ColCanvasLines] = imGuiStyle.Colors[(int)ImGuiCol.Separator];
-        Colors[(int)StyleColor.ColNodeBg] = imGuiStyle.Colors[(int)ImGuiCol.WindowBg];
-        Colors[(int)StyleColor.ColNodeActiveBg] = imGuiStyle.Colors[(int)ImGuiCol.FrameBgActive];
-        Colors[(int)StyleColor.ColNodeBorder] = imGuiStyle.Colors[(int)ImGuiCol.Border];
-        Colors[(int)StyleColor.ColConnection] = imGuiStyle.Colors[(int)ImGuiCol.PlotLines];
-        Colors[(int)StyleColor.ColConnectionActive] = imGuiStyle.Colors[(int)ImGuiCol.PlotLinesHovered];
-        Colors[(int)StyleColor.ColSelectBg] = imGuiStyle.Colors[(int)ImGuiCol.FrameBgActive];
-        Colors[(int)StyleColor.ColSelectBg].W = .25f;
-        Colors[(int)StyleColor.ColSelectBorder] = imGuiStyle.Colors[(int)ImGuiCol.Border];
+        Style.Colors[(int)StyleColor.ColCanvasLines] = imGuiStyle.Colors[(int)ImGuiCol.Separator];
+        Style.Colors[(int)StyleColor.ColNodeBg] = imGuiStyle.Colors[(int)ImGuiCol.WindowBg];
+        Style.Colors[(int)StyleColor.ColNodeActiveBg] = imGuiStyle.Colors[(int)ImGuiCol.FrameBgActive];
+        Style.Colors[(int)StyleColor.ColNodeBorder] = imGuiStyle.Colors[(int)ImGuiCol.Border];
+        Style.Colors[(int)StyleColor.ColConnection] = imGuiStyle.Colors[(int)ImGuiCol.PlotLines];
+        Style.Colors[(int)StyleColor.ColConnectionActive] = imGuiStyle.Colors[(int)ImGuiCol.PlotLinesHovered];
+        Style.Colors[(int)StyleColor.ColSelectBg] = imGuiStyle.Colors[(int)ImGuiCol.FrameBgActive];
+        Style.Colors[(int)StyleColor.ColSelectBg].W = .25f;
+        Style.Colors[(int)StyleColor.ColSelectBorder] = imGuiStyle.Colors[(int)ImGuiCol.Border];
     }
 
     public CanvasStyle Style = new();
+
     public float Zoom = 1.0f;
     public Vector2 Offset = Vector2.Zero;
-    public Vector4[] Colors = new Vector4[(int)StyleColor.ColMax];
-    public CanvasStateImpl Impl = new();
 }
 
-internal struct NodeData()
+public struct NodeData()
 {
     string Id = string.Empty;
     Vector2 Pos = Vector2.Zero;
@@ -63,13 +66,13 @@ internal struct NodeData()
     string ItemId = string.Empty;
 }
 
-internal struct SlotData()
+public struct SlotData()
 {
     public int Kind = 0;
     public string Title = "";
 }
 
-internal struct Connection()
+public struct Connection()
 {
     public uint? InputNode = null;
     public string? InputSlot = null;
@@ -77,10 +80,8 @@ internal struct Connection()
     public string? OutputSlot = null;
 }
 
-internal struct CanvasStateImpl()
+public class NodeGraphData
 {
-    public ImGuiStorage CachedData = new();
-
     public List<NodeData> Node = [];
     public List<SlotData> Slots = [];
     public List<Connection> Connections = [];
@@ -103,7 +104,7 @@ internal struct CanvasStateImpl()
     public uint PendingHoveredNodeId = 0;
 }
 
-internal struct IgnoreSlot()
+public struct IgnoreSlot()
 {
     public uint? NodeId = null;
     public string? SlotName = null;
@@ -121,7 +122,7 @@ internal struct IgnoreSlot()
     }
 }
 
-internal struct DragConnectionPayload()
+public struct DragConnectionPayload()
 {
     string? NodeId = null;
     string? SlotTitle = null;

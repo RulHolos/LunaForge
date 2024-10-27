@@ -11,9 +11,8 @@ using YamlDotNet.Serialization;
 
 namespace LunaForge;
 
-public struct DefaultConfig
+public struct DefaultConfig()
 {
-    public DefaultConfig() { }
 
     [DefaultValue(false)]
     public bool DefinitionsWindowOpen { get; set; } = false;
@@ -24,6 +23,8 @@ public struct DefaultConfig
     [DefaultValue("")]
     public string LastUsedPath { get; set; } = "";
 
+    public List<string> RecentlyOpened { get; set; } = [];
+
     public Dictionary<string, bool> EnabledPlugins { get; set; } = [];
 }
 
@@ -32,7 +33,6 @@ public static class Configuration
     private static string PathToConfig => Path.Combine(Directory.GetCurrentDirectory(), "Config.yaml");
 
     public static DefaultConfig Default;
-    
 
     public static bool Save()
     {

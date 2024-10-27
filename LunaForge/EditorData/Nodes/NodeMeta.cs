@@ -1,4 +1,5 @@
 ﻿using LunaForge.EditorData.Nodes.Attributes;
+using LunaForge.EditorData.Nodes.NodeData;
 using MoonSharp.Interpreter;
 using Newtonsoft.Json;
 using System;
@@ -11,6 +12,10 @@ using System.Threading.Tasks;
 
 namespace LunaForge.EditorData.Nodes;
 
+/// <summary>
+/// A node informations for checking in node children validation (mainly for inserting nodes).<br/>
+/// Some of these are used for code compilation and the Definition Cache.
+/// </summary>
 public sealed class NodeMeta
 {
     /// <summary>
@@ -74,13 +79,33 @@ public sealed class NodeMeta
     /// </summary>
     public string MetaModel { get; set; } = string.Empty;
 
+    /// <summary>
+    /// An array of <see cref="TreeNode.NodeName"/> which this node must have as parent (at least one of them) for it to be validated.
+    /// </summary>
     public string[] RequireParent { get; } = null;
+    /// <summary>
+    /// An array of <see cref="TreeNode.NodeName"/> which this node must have as ancestors (at least one of them) for it to be validated.
+    /// </summary>
     public string[] RequireAncestor { get; } = null;
 
+    /// <summary>
+    /// Will open an Input Window targeted on the specified <see cref="NodeAttribute"/> ID on node creation.
+    /// </summary>
     public int? CreateInvokeId { get; } = null;
+    /// <summary>
+    /// Will open an Input Window targeted on the specified <see cref="NodeAttribute"/> ID when clicking "..." on the node attribute window.
+    /// </summary>
     public int? RCInvokeId { get; } = null;
+    /// <summary>
+    /// Compilation priority (for things such as if then/else/elseif).<br/>
+    /// Does not affect the rending of the TreeNode's item priority.
+    /// </summary>
     public int? Priority { get; } = null;
 
+    /// <summary>
+    /// Construct MetaData from node attributes generated at compile time.
+    /// </summary>
+    /// <param name="node">The source node.</param>
     public NodeMeta(TreeNode node)
     {
         Type type = node.GetType();
@@ -102,10 +127,14 @@ public sealed class NodeMeta
         RequireParent = type.GetCustomAttribute<RequireParentAttribute>()?.ParentType ?? [];
         RequireAncestor = type.GetCustomAttribute<RequireAncestorAttribute>()?.RequiredTypes ?? [];
 
-        CreateInvokeId = type.GetCustomAttribute<CreateInvokeAttribute>()?.ID ?? 0;
-        RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID ?? 0;
+        CreateInvokeId = type.GetCustomAttribute<CreateInvokeAttribute>()?.ID;
+        RCInvokeId = type.GetCustomAttribute<RCInvokeAttribute>()?.ID;
     }
 
+    /// <summary>
+    /// Construct MetaData from a <see cref="LuaNode"/> script's <see cref="TreeNode.SetupMeta(Table)"/> call.
+    /// </summary>
+    /// <param name="meta">The table meta registered in the node script.</param>
     public NodeMeta(Table meta)
     {
         IsFolder = FindAttribute(meta, "IsFolder", false);
@@ -125,9 +154,12 @@ public sealed class NodeMeta
         RequireParent = FindAttribute(meta, "RequireParent", Array.Empty<string>());
         RequireAncestor = FindAttribute(meta, "RequireAncestor", Array.Empty<string>());
 
-        Priority = FindAttribute(meta, "Priority", 0);
-        CreateInvokeId = FindAttribute(meta, "InvokeID", 0);
-        RCInvokeId = FindAttribute(meta, "RCInvoke", 0);
+        int priority = FindAttribute(meta, "Priority", -1);
+        Priority = priority == -1 ? null : priority;
+        int createInvokeId = FindAttribute(meta, "InvokeID", -1);
+        CreateInvokeId = createInvokeId == -1 ? null : createInvokeId;
+        int rcInvokeId = FindAttribute(meta, "RCInvoke", -1);
+        RCInvokeId = rcInvokeId == -1 ? null : rcInvokeId;
     }
 
     #region From Lua

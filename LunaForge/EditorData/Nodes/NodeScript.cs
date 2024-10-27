@@ -48,10 +48,10 @@ internal static class NodeScript
             }
             catch (InterpreterException ex)
             {
-                context.CheckTrace();
                 NotificationManager.AddToast($"Cannot load node: {Path.GetFileName(context.PathToLuaRelative)}.\nCheck console for more infos.", ToastType.Error);
                 Console.WriteLine($"Problem with loading lua script: {ex.DecoratedMessage}");
                 context.InvalidNode = true;
+                context.CheckTrace();
             }
 
             return script;

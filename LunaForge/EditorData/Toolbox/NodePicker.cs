@@ -130,6 +130,7 @@ public class NodePicker : IEnumerable<NodePlugin>
             }
             catch (Exception ex)
             {
+                NotificationManager.AddToast("Couldn't load plugin definition.\nSee the console for more informations.", ToastType.Warning);
                 Console.WriteLine($"Couldn't load node plugin definition: {ex}");
             }
         }

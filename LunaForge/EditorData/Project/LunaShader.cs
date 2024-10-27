@@ -3,9 +3,12 @@ using LunaForge.EditorData.Commands;
 using LunaForge.EditorData.Nodes;
 using LunaForge.EditorData.Traces;
 using LunaForge.GUI.NodeGraphRenderer;
+using LunaForge.EditorData.GraphNodes;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,12 +16,16 @@ namespace LunaForge.EditorData.Project;
 
 public class LunaShader : LunaProjectFile
 {
-    NodeGraph Graph = new();
+    public NodeGraph Graph { get; set; } = new();
+    public List<GraphNode> GraphNodes { get; set; } = [];
+
+    // TODO: support GLSL format too.
+    public string FileFormat { get; set; } = ".hlsl";
 
     public LunaShader(LunaForgeProject parentProj, string path)
         : base(parentProj, path)
     {
-
+        
     }
 
     #region Rendering
@@ -26,12 +33,22 @@ public class LunaShader : LunaProjectFile
     public override void Render()
     {
         // TODO: wtf.
-        ImGui.BeginChild("CanvasWindowsRenderer");
-        if (Graph.BeginCanvas("test_canvas"))
+        using (Graph.DoCanvas($"ShaderCanvas_{FileName}"))
         {
-            Graph.EndCanvas();
+            foreach (GraphNode node in GraphNodes)
+            {
+
+            }
+
+#if DEBUG
+            RenderDebug();
+#endif
         }
-        ImGui.EndChild();
+    }
+
+    private void RenderDebug()
+    {
+        ImGui.GetWindowDrawList().AddText(ImGui.GetMousePos() + new Vector2(20), ImGui.GetColorU32(ImGuiCol.Text), Graph.ScreenToGrid(ImGui.GetMousePos()).ToString());
     }
 
     #endregion

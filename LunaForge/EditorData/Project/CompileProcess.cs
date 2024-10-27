@@ -131,6 +131,7 @@ public class CompileProcess
         if (SCDebug)
         {
             await Source.SaveSCDebugCode();
+            await Source.SaveShaders();
         }
         else if (StageDebug)
         {
@@ -139,6 +140,7 @@ public class CompileProcess
         else
         {
             await Source.SaveCode();
+            await Source.SaveShaders();
         }
     }
 

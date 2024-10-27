@@ -168,6 +168,7 @@ internal static class MainWindow
     /// The list of currently opened <see cref="LunaForgeProject"/>s.
     /// </summary>
     public static ProjectCollection Workspaces;
+    public static LunaForgeProject? GetCurrentProject() => Workspaces.Current;
 
     public static List<PresetListInfo> PresetsList { get; set; } = [];
 
@@ -175,6 +176,8 @@ internal static class MainWindow
     /// Script cache for <see cref="LuaNode"/>. Key is <see cref="TreeNode.NodeName"/>, Value is <see cref="Script"/>.
     /// </summary>
     public static Dictionary<string, Script> ScriptCache = [];
+
+    public static List<string> RecentlyOpened { get; private set; } = [];
 
     #endregion
 
@@ -224,6 +227,7 @@ internal static class MainWindow
         UserData.RegisterType<TreeNode>();
 
         GetPresets();
+        GetRecentOpens();
 
         // Define the interface only if UseInterface is true. Should always be the case in release.
         if (UseInterface)
@@ -257,9 +261,12 @@ internal static class MainWindow
                     ImGui.DockSpaceOverViewport();
                     ShortcutList.CheckKeybinds();
 
+                    // Remove this? Idk.
+                    ImGui.BeginDisabled(IsOpeningFile); // Disable every interaction if a file is opening.
                     RenderMenu();
                     //ImGui.ShowDemoWindow();
                     Render();
+                    ImGui.EndDisabled();
 
                     if (Raylib.WindowShouldClose() || exitWindowRequested) // Will ask save files if they're unsaved then close all opened files then projects.
                     {
@@ -343,10 +350,29 @@ internal static class MainWindow
         {
             if (ImGui.BeginMenu("File"))
             {
-                if (ImGui.MenuItem("New", "Ctrl+N"))
+                if (ImGui.MenuItem("New Project", "Ctrl+N"))
                     NewProj();
-                if (ImGui.MenuItem("Open", "Ctrl+O"))
+                if (ImGui.MenuItem("Open Project", "Ctrl+O"))
                     OpenProj();
+                if (ImGui.BeginMenu("Open Recent"))
+                {
+                    if (RecentlyOpened.Count > 0)
+                    {
+                        foreach (string path in RecentlyOpened)
+                        {
+                            if (ImGui.MenuItem(path))
+                                OpenProjectFromPath(path);
+                        }
+                    }
+                    else
+                        ImGui.MenuItem("No recently opened projects.", null, false, false);
+                    ImGui.Separator();
+                    if (ImGui.MenuItem("Clear Recently Opened..."))
+                    {
+                        ClearRecentOpen();
+                    }
+                    ImGui.EndMenu();
+                }
                 ImGui.Separator();
                 if (ImGui.MenuItem("Save", "Ctrl+S", false, SaveActiveProjectFile_CanExecute()))
                     SaveActiveProjectFile();
@@ -672,6 +698,7 @@ internal static class MainWindow
             LunaForgeProject proj = LunaForgeProject.CreateFromFile(path);
             Workspaces.Add(proj);
             proj.CheckTrace();
+            AddRecentOpen(path);
             return proj;
         }
         catch (JsonException ex)
@@ -1021,6 +1048,26 @@ internal static class MainWindow
             Console.WriteLine(ex.ToString());
             return false;
         }
+    }
+
+    public static void GetRecentOpens()
+    {
+        RecentlyOpened = Configuration.Default.RecentlyOpened ?? [];
+    }
+
+    // No save on both of these, since the editor will save everything when closing.
+    public static void AddRecentOpen(string path)
+    {
+        if (RecentlyOpened.Any(x => x == path))
+            return;
+        RecentlyOpened.Add(path);
+        //Configuration.Save();
+    }
+
+    public static void ClearRecentOpen()
+    {
+        RecentlyOpened.Clear();
+        //Configuration.Save();
     }
 
     #endregion

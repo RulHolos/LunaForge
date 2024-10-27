@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LunaForge.GUI.NodeGraphRenderer;
 
-internal enum NodeGraphState
+public enum NodeGraphState
 {
     None,
     Drag,
@@ -16,21 +16,25 @@ internal enum NodeGraphState
 }
 
 [Flags]
-internal enum NodeGraphFlags
+public enum NodeGraphFlags
 {
     None,
     HideGrid,
+    HideControls,
 }
 
-internal partial class NodeGraph
+public partial class NodeGraph()
 {
     private NodeGraphFlags Flags = NodeGraphFlags.None;
-    private CanvasState? Canvas;
+    public CanvasState Canvas = new();
+    public NodeGraphData Data = new();
 
-    public bool BeginCanvas(string label, NodeGraphFlags flags = NodeGraphFlags.None)
+    #region Rendering pipeline
+
+    public void BeginCanvas(string label, NodeGraphFlags flags = NodeGraphFlags.None)
     {
-        Canvas ??= new();
         Flags = flags;
+        ImGui.BeginChild($"{label}_ChildWindow");
         ImGui.PushID(label);
 
         ImDrawListPtr drawList = ImGui.GetWindowDrawList();
@@ -70,7 +74,7 @@ internal partial class NodeGraph
 
         if (!Flags.HasFlag(NodeGraphFlags.HideGrid))
         {
-            uint gridColor = ImGui.GetColorU32(Canvas.Colors[(int)StyleColor.ColCanvasLines]);
+            uint gridColor = ImGui.GetColorU32(Canvas.Style.Colors[(int)StyleColor.ColCanvasLines]);
             for (float x = MathF.IEEERemainder(Canvas.Offset.X, grid); x < size.X; x += grid)
             {
                 drawList.AddLine(new Vector2(x, 0) + pos, new Vector2(x, size.Y) + pos, gridColor);
@@ -83,9 +87,8 @@ internal partial class NodeGraph
 
         ImGui.SetWindowFontScale(Canvas.Zoom);
 
-        Canvas.Impl.PrevSelectCount = Canvas.Impl.CurrSelectCount;
-        Canvas.Impl.CurrSelectCount = 0;
-        return true;
+        Data.PrevSelectCount = Data.CurrSelectCount;
+        Data.CurrSelectCount = 0;
     }
 
     public void EndCanvas()
@@ -95,15 +98,13 @@ internal partial class NodeGraph
 
         ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 
-        
+        if (Data.DoSelectionFrame <= ImGui.GetFrameCount())
+            Data.SingleSelectedNode = null;
 
-        if (Canvas.Impl.DoSelectionFrame <= ImGui.GetFrameCount())
-            Canvas.Impl.SingleSelectedNode = null;
-
-        switch (Canvas.Impl.State)
+        switch (Data.State)
         {
             case NodeGraphState.None:
-                Canvas.Impl.HoveredNodeId = Canvas.Impl.PendingHoveredNodeId;
+                Data.HoveredNodeId = Data.PendingHoveredNodeId;
 
                 if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && ImGui.IsWindowHovered())
                 {
@@ -115,8 +116,8 @@ internal partial class NodeGraph
                         ImGuiIOPtr io = ImGui.GetIO();
                         if (!io.KeyCtrl && !io.KeyShift)
                         {
-                            Canvas.Impl.SingleSelectedNode = null;
-                            Canvas.Impl.DoSelectionFrame = ImGui.GetFrameCount() + 1;
+                            Data.SingleSelectedNode = null;
+                            Data.DoSelectionFrame = ImGui.GetFrameCount() + 1;
                         }
                     }
                 }
@@ -124,26 +125,62 @@ internal partial class NodeGraph
             case NodeGraphState.Drag:
                 if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 {
-                    Canvas.Impl.State = NodeGraphState.None;
-                    Canvas.Impl.DragNode = null;
+                    Data.State = NodeGraphState.None;
+                    Data.DragNode = null;
                 }
                 break;
             case NodeGraphState.Select:
                 if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 {
-                    drawList.AddRectFilled(Canvas.Impl.SelectionStart, ImGui.GetMousePos(), ImGui.GetColorU32(Canvas.Colors[(int)StyleColor.ColSelectBg]));
-                    drawList.AddRect(Canvas.Impl.SelectionStart, ImGui.GetMousePos(), ImGui.GetColorU32(Canvas.Colors[(int)StyleColor.ColSelectBorder]));
+                    drawList.AddRectFilled(Data.SelectionStart, ImGui.GetMousePos(), ImGui.GetColorU32(Canvas.Style.GetColor(StyleColor.ColSelectBg)));
+                    drawList.AddRect(Data.SelectionStart, ImGui.GetMousePos(), ImGui.GetColorU32(Canvas.Style.GetColor(StyleColor.ColSelectBorder)));
                 }
                 else
                 {
-                    Canvas.Impl.State = NodeGraphState.None;
+                    Data.State = NodeGraphState.None;
                 }
                 break;
         }
 
-        Canvas.Impl.PendingHoveredNodeId = 0;
+        Data.PendingHoveredNodeId = 0;
 
         ImGui.SetWindowFontScale(1f);
+        ImGui.EndChild();
         ImGui.PopID();
     }
+
+    public readonly struct CanvasScope : IDisposable
+    {
+        private readonly NodeGraph _manager;
+
+        public CanvasScope(NodeGraph graph, string label, NodeGraphFlags flags = NodeGraphFlags.None)
+        {
+            _manager = graph;
+            _manager.BeginCanvas(label, flags);
+        }
+
+        public void Dispose()
+        {
+            _manager.EndCanvas();
+        }
+    }
+
+    public CanvasScope DoCanvas(string label, NodeGraphFlags flags = NodeGraphFlags.None) => new(this, label, flags);
+
+    public Vector2 RelativeToGrid(Vector2 position)
+    {
+        return Canvas.Offset + position;
+    }
+
+    public Vector2 ScreenToGrid(Vector2 screenPosition)
+    {
+        return screenPosition - Canvas.Offset;
+    }
+
+    #endregion
+    #region Oui
+
+
+
+    #endregion
 }
