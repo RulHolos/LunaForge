@@ -229,7 +229,7 @@ internal static class MainWindow
         GetPresets();
         GetRecentOpens();
 
-        // Define the interface only if UseInterface is true. Should always be the case in release.
+        // Define the interface only if UseInterface is true. Should always be the case in release versions.
         if (UseInterface)
         {
             Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.HighDpiWindow | ConfigFlags.VSyncHint | ConfigFlags.ResizableWindow);

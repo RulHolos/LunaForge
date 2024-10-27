@@ -18,7 +18,7 @@ public abstract class LunaProjectFile : ITraceThrowable
     public string FileName { get; set; }
 
     public bool IsOpened = true;
-    public bool ForceClose = false; // Only set to true when the file is opened on the software closing process or bulk closing.
+    public bool ForceClose = false; // Only set to true when the file is open while the editor is on the closing process or if bulk closing.
 
     public Stack<Command> CommandStack { get; set; } = [];
     public Stack<Command> UndoCommandStack { get; set; } = [];

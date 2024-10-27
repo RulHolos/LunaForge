@@ -23,7 +23,7 @@ public struct Toast
     public DateTime TimeAdded;
     public float Duration;
     public bool IsHovered;
-    public Action ClickCallback;
+    public Action<Toast> ClickCallback;
 }
 
 internal static class NotificationManager
@@ -44,15 +44,15 @@ internal static class NotificationManager
     /// <summary>
     /// Adds a new notification toast to be displayed.
     /// </summary>
-    /// <param name="message"></param>
-    /// <param name="type"></param>
+    /// <param name="message">The message displayed on the toast. Can have multiple lines. Will be wrapped.</param>
+    /// <param name="type">The severity of the notification.</param>
     /// <param name="duration">Duration in seconds. Negative numbers means that the toast won't expire with time.</param>
     /// <param name="clickCallback">If null, clicking the toast will close it.</param>
     public static void AddToast(
         string message,
         ToastType type = ToastType.Info,
         float duration = 5f,
-        Action clickCallback = null)
+        Action<Toast> clickCallback = null)
     {
         if (toasts.Count >= MaxToasts)
             toasts.RemoveAt(0); // Remove oldest if limit is reached.
@@ -119,19 +119,25 @@ internal static class NotificationManager
                 | ImGuiWindowFlags.NoResize
                 | ImGuiWindowFlags.AlwaysAutoResize
                 | ImGuiWindowFlags.NoMove
-                | ImGuiWindowFlags.NoScrollbar))
+                | ImGuiWindowFlags.NoScrollbar
+                | ImGuiWindowFlags.NoCollapse))
             {
                 ImGui.TextWrapped(toast.Message);
 
                 if (ImGui.IsWindowHovered())
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    toast.IsHovered = true;
+                }
+                else
+                {
+                    toast.IsHovered = false;
                 }
                 if (ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
                     if (toast.ClickCallback != null)
                     {
-                        toast.ClickCallback();
+                        toast.ClickCallback(toast);
                     }
                     else
                     {
@@ -145,6 +151,7 @@ internal static class NotificationManager
             ImGui.PopStyleColor();
 
             pos.Y += 60;
+            toasts[i] = toast; // Update the toast, since it's a copy, not the actual reference(?).
         }
     }
 }
