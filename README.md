@@ -16,6 +16,9 @@
 
 **LunaForge** is a code editor and generator targeting the LuaSTG engine (all main branches) based on THlib.
 
+The goal of LunaForge is to be a kind of "all-in-one" editor: It can compile plain lua script, compile nodes to lua, and shaders.
+There is more to come~
+
 ## Usage
 
 Placeholder

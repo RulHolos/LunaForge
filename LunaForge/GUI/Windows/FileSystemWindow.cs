@@ -246,6 +246,19 @@ public class FileSystemWindow : ImGuiWindow
         }
     }
 
+    public void FolderContextMenu(string folder, string folderName)
+    {
+        if (ImGui.BeginPopupContextItem())
+        {
+            IsItemPopupOpen = true;
+            ImGui.MenuItem(folderName, null, false, false);
+            ImGui.Separator();
+
+            OpenInFileExplorer(folder);
+            ImGui.EndPopup();
+        }
+    }
+
     public void FileContextMenu(string file, string fileName)
     {
         if (ImGui.BeginPopupContextItem())
@@ -271,18 +284,23 @@ public class FileSystemWindow : ImGuiWindow
 
             ImGui.Separator();
 
-            if (ImGui.Selectable("Open in file explorer"))
-            {
-                string path = Path.GetDirectoryName(file);
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    Process.Start("explorer.exe", path);
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    Process.Start("open", path);
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    Process.Start("xdg-open", path);
-            }
+            OpenInFileExplorer(file);
 
             ImGui.EndPopup();
+        }
+    }
+
+    private void OpenInFileExplorer(string folderPath)
+    {
+        if (ImGui.Selectable("Open in file explorer"))
+        {
+            string path = Path.GetDirectoryName(folderPath);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Process.Start("explorer.exe", path);
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                Process.Start("open", path);
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                Process.Start("xdg-open", path);
         }
     }
 
@@ -306,6 +324,7 @@ public class FileSystemWindow : ImGuiWindow
                         AddPath(folderName);
                 }
                 ImGui.PopStyleColor();
+                FolderContextMenu(dir, folderName);
                 i++;
             }
 

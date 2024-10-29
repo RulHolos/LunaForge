@@ -40,6 +40,7 @@ public partial class LunaForgeProject
         c.CurrentTempPath = tempPath;
         c.Source = this;
         // TODO: Be able to set a root code in the settings.
+        // Or make the root directly a lua script change make it the entry point?
         c.RootCode = $"require(\'THlib.lua\')\nrequire(\'{Path.ChangeExtension(EntryPointRelative, ".lua")}\')";
 
         CompileProcess = c;
