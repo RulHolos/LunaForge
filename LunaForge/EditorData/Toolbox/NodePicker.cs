@@ -27,6 +27,7 @@ public class NodePlugin
     public string PathToXml { get; set; } = string.Empty;
     public string Version { get; set; } = "1.0.0.0";
     public string LowestCompatibleVersion { get; set; } = "1.0.0.0";
+    public Dictionary<string, string[]> NodeNameGroups { get; set; } = [];
 
     public List<NodePickerTab> NodePickerTabs { get; set; } = [];
 
@@ -54,6 +55,16 @@ public class NodePicker : IEnumerable<NodePlugin>
     public List<NodePlugin> Plugins { get; set; } = [];
 
     public Dictionary<string, string> NameLookup { get; set; } = [];
+
+    public string[] FindGroup(string index)
+    {
+        foreach (NodePlugin plugin in Plugins)
+        {
+            if (plugin.NodeNameGroups.TryGetValue(index, out string[] value))
+                return value;
+        }
+        return Array.Empty<string>();
+    }
 
     public NodePicker() { }
 
@@ -103,6 +114,20 @@ public class NodePicker : IEnumerable<NodePlugin>
                 plugin.Authors = pluginDoc.Attributes["authors"]?.Value ?? "";
                 plugin.PathToXml = path;
                 plugin.PathToPlugin = pathToData;
+                XmlNode groupNode = pluginDoc.SelectSingleNode("/plugin/group") ?? null;
+
+                if (groupNode != null)
+                {
+                    List<string> names = [];
+                    foreach (XmlNode node in groupNode.ChildNodes)
+                    {
+                        string name = node.Attributes["name"]?.Value ?? "";
+                        if (!string.IsNullOrEmpty(name))
+                            names.Add(name);
+                    }
+
+                    plugin.NodeNameGroups.TryAdd(groupNode.Attributes["name"]?.Value, [.. names]);
+                }
 
                 if (parentProj.DisabledNodePlugins.Contains(Path.GetRelativePath(parentProj.PathToProjectRoot, path)))
                 {

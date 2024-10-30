@@ -478,66 +478,30 @@ public abstract class TreeNode : ITraceThrowable
 
     private bool CheckRequiredAncestorValidation(TreeNode Beg1, TreeNode End1, TreeNode Beg2, TreeNode End2)
     {
-        string[] ts = MetaData.RequireAncestor;
-        if (ts == Array.Empty<string>())
+        string[] requiredAncestors = MetaData.RequireAncestor;
+        if (requiredAncestors == Array.Empty<string>())
             return true;
-        List<string> toSatisfiedGroups = [.. ts];
-        List<string> Satisfied = [];
-        List<string> toRemove = [];
+
         while (Beg1 != End1)
         {
             if (Beg1.MetaData.IgnoreValidation)
                 return true;
-            foreach (string t1 in ts)
-            {
-                if (Beg1.NodeName.Equals(t1))
-                    Satisfied.Add(t1);
-            }
-            foreach (string t1 in toSatisfiedGroups)
-            {
-                foreach (string t2 in Satisfied)
-                {
-                    if (t1 == t2 && !toRemove.Contains(t1))
-                        toRemove.Add(t1);
-                }
-            }
-            foreach (string t1 in toRemove)
-            {
-                toSatisfiedGroups.Remove(t1);
-            }
-            if (toSatisfiedGroups.Count == 0)
+            if (Array.Exists(requiredAncestors, ancestor => ancestor == Beg1.NodeName))
                 return true;
-            Satisfied.Clear();
-            toRemove.Clear();
+
             Beg1 = Beg1.Parent;
         }
         while (Beg2 != End2)
         {
             if (Beg2.MetaData.IgnoreValidation)
                 return true;
-            foreach (string t1 in ts)
-            {
-                if (Beg2.NodeName.Equals(t1))
-                    Satisfied.Add(t1);
-            }
-            foreach (string t1 in toSatisfiedGroups)
-            {
-                foreach (string t2 in Satisfied)
-                {
-                    if (t1 == t2 && !toRemove.Contains(t1))
-                        toRemove.Add(t1);
-                }
-            }
-            foreach (string t1 in toRemove)
-            {
-                toSatisfiedGroups.Remove(t1);
-            }
-            if (toSatisfiedGroups.Count == 0)
+
+            if (Array.Exists(requiredAncestors, ancestor => ancestor == Beg2.NodeName))
                 return true;
-            Satisfied.Clear();
-            toRemove.Clear();
+
             Beg2 = Beg2.Parent;
         }
+
         return false;
     }
 

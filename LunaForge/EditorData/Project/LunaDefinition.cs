@@ -162,7 +162,7 @@ public class LunaDefinition : LunaProjectFile
             SelectedNode!.IsSelected = false;
         SelectedNode = node;
         node.IsSelected = true;
-        ImGui.SetScrollHereY();
+        //ImGui.SetScrollHereY(); // No.
     }
 
     public void DeselectAllNodes()

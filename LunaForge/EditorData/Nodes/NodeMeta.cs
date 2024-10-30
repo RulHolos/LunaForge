@@ -1,5 +1,6 @@
 ﻿using LunaForge.EditorData.Nodes.Attributes;
 using LunaForge.EditorData.Nodes.NodeData;
+using LunaForge.GUI;
 using MoonSharp.Interpreter;
 using Newtonsoft.Json;
 using System;
@@ -152,7 +153,11 @@ public sealed class NodeMeta
 
         MetaModel = FindAttribute(meta, "MetaModel", "None");
         RequireParent = FindAttribute(meta, "RequireParent", Array.Empty<string>());
+        if (RequireParent == Array.Empty<string>())
+            RequireParent = TryFindGroup(meta, "RequireParent");
         RequireAncestor = FindAttribute(meta, "RequireAncestor", Array.Empty<string>());
+        if (RequireAncestor == Array.Empty<string>())
+            RequireAncestor = TryFindGroup(meta, "RequireAncestor");
 
         int priority = FindAttribute(meta, "Priority", -1);
         Priority = priority == -1 ? null : priority;
@@ -237,6 +242,18 @@ public sealed class NodeMeta
     }
 
     #endregion
+
+    /// <summary>
+    /// Tries to find the corresponding group name in the node plugin declaration.
+    /// </summary>
+    /// <returns>An array of node names if the name is found; otherwise, <see cref="Array.Empty{T}"/></returns>
+    public string[] TryFindGroup(Table meta, string name)
+    {
+        string res = FindAttribute(meta, name, "");
+        if (!string.IsNullOrEmpty(res))
+            return MainWindow.Workspaces.Current?.Toolbox.FindGroup(res);
+        return Array.Empty<string>();
+    }
 }
 
 public static class AttributeExtensions

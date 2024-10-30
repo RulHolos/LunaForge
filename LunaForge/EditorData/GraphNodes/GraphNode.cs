@@ -30,7 +30,17 @@ public struct GraphNodeSlot(string id, GraphNodeSlotKind kind = GraphNodeSlotKin
     public string ImGUIID = id;
     public GraphNodeSlotKind Kind = kind;
     public int Order = 0;
+    public string Data = null;
 }
+
+
+/*
+ * Design:
+ * Variable node with no input, only outputs
+ * 
+ * GraphNodeSlot:
+ * Have "Data" which can be a variable name or a string with the data value
+ */
 
 public abstract class GraphNode
 {
@@ -76,6 +86,8 @@ public abstract class GraphNode
     {
         ImDrawListPtr drawList = ImGui.GetWindowDrawList();
         ImGuiIOPtr io = ImGui.GetIO();
+
+        bool activate = false;
 
         ImGui.EndGroup();
 

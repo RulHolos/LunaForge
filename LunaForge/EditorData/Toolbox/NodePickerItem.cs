@@ -73,7 +73,8 @@ public class NodePickerItem
         return new($"{plugin.Namespace}-{name}", iconName, name, () =>
         {
             LunaDefinition parentDef = MainWindow.Workspaces.Current.CurrentProjectFile as LunaDefinition;
-            TreeNode node = new LuaNode(parentDef, path) { NodeName = name };
+            LuaNode node = new(parentDef, path) { NodeName = name };
+            node.CreateScript();
             foreach (Tuple<string, string> child in childNodes)
             {
                 node.AddChild(new LuaNode(parentDef, child.Item2) { NodeName = child.Item1 });

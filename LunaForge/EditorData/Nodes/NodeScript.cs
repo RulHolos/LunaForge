@@ -67,6 +67,8 @@ internal static class NodeScript
         script.Globals["GetAttribute"] = (Func<string, string>)context.GetAttribute;
         script.Globals["GetAttributeInt"] = (Func<int, string>)context.GetAttribute;
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
+        script.Globals["Split"] = (Func<string, string, string[]>)((str, separator)
+            => { return str.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); });
     }
 
     public static void SetScriptInitial(Script script, LuaNode context)
@@ -90,6 +92,8 @@ internal static class NodeScript
         script.Globals["HideAttribute"] = (Action<int>)context.HideAttribute;
         script.Globals["GetUsedAttrCount"] = (Func<int>)context.GetUsedAttrCount;
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
+        script.Globals["Split"] = (Func<string, string, string[]>)((str, separator)
+            => { return str.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); });
         script.Globals["GetDefinitionName"] = (Func<string>)context.GetParentDefinitionClassName;
     }
 
@@ -103,6 +107,8 @@ internal static class NodeScript
         script.Globals["HideAttribute"] = (Action<int>)context.HideAttribute;
         script.Globals["GetUsedAttrCount"] = (Func<int>)context.GetUsedAttrCount;
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
+        script.Globals["Split"] = (Func<string, string, string[]>)((str, separator)
+            => { return str.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); });
     }
 
     public static void SetScriptCheckTrace(Script script, LuaNode context)
@@ -113,5 +119,7 @@ internal static class NodeScript
         script.Globals["ERROR"] = TraceSeverity.Error;
         script.Globals["AddTrace"] = (Action<bool, string, string>)context.AddTrace;
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
+        script.Globals["Split"] = (Func<string, string, string[]>)((str, separator)
+            => { return str.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); });
     }
 }
