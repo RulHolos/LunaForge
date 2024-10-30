@@ -247,6 +247,7 @@ public class ProjectViewerWindow : ImGuiWindow
                     ImGui.Spacing();
                     ImGui.Checkbox("Enable log window (LuaSTG Sub only)", ref TempLogWindowSub);
                     ImGui.Separator();
+
                     ImGui.EndTabItem();
                 }
                 if (ImGui.BeginTabItem("Nodes & Plugins"))
@@ -257,6 +258,7 @@ public class ProjectViewerWindow : ImGuiWindow
                     ImGui.Separator();
 
                     RenderDifficultiesList();
+                    ImGui.EndTabItem();
                 }
 
                 ImGui.EndTabBar();
@@ -475,7 +477,7 @@ public class ProjectViewerWindow : ImGuiWindow
     {
         void SelectPath(bool success, List<string> paths)
         {
-            if (!success)
+            if (success)
                 TempPathToLuaSTGExecutable = paths[0];
             ShouldOpenSettings = true;
         }

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using YamlDotNet;
 using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
+using ImGuiNET;
+using System.Numerics;
+using LunaForge.GUI;
 
 namespace LunaForge;
 
@@ -26,6 +29,11 @@ public struct DefaultConfig()
     public List<string> RecentlyOpened { get; set; } = [];
 
     public Dictionary<string, bool> EnabledPlugins { get; set; } = [];
+
+    public List<ThemeProfile> ThemeProfiles { get; set; } = [];
+
+    [DefaultValue("")]
+    public string CurrentThemeProfile { get; set; } = string.Empty;
 }
 
 public static class Configuration
@@ -33,6 +41,14 @@ public static class Configuration
     private static string PathToConfig => Path.Combine(Directory.GetCurrentDirectory(), "Config.yaml");
 
     public static DefaultConfig Default;
+    public static Vector4[] DefaultStyle;
+
+    public static ThemeProfile GetCurrentTheme()
+    {
+        if (Default.ThemeProfiles.Any(p => p.Name == Default.CurrentThemeProfile))
+            return Default.ThemeProfiles.First(p => p.Name == Default.CurrentThemeProfile);
+        return null;
+    }
 
     public static bool Save()
     {

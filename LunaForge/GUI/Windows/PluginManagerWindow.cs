@@ -30,7 +30,7 @@ internal class PluginManagerWindow : ImGuiWindow
             ImGui.OpenPopup("Plugin Manager");
         }
 
-        SetModalToCenter();
+        SetModalToCenter(ModalSize);
         if (ImGui.BeginPopupModal("Plugin Manager", ref ShowWindow, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDocking))
         {
             ImGui.BeginGroup();
@@ -80,14 +80,8 @@ internal class PluginManagerWindow : ImGuiWindow
                 }
             }
             ImGui.EndGroup();
+            ImGui.EndPopup();
         }
-    }
-
-    protected void SetModalToCenter()
-    {
-        Vector2 renderSize = new(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
-        ImGui.SetNextWindowSize(ModalSize);
-        ImGui.SetNextWindowPos(renderSize / 2 - (ModalSize / 2));
     }
 
     protected void RenderModalButtons()

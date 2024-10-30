@@ -149,6 +149,7 @@ internal static class MainWindow
     public static ViewCodeWindow ViewCodeWin;
     public static SparkleWindow SparkleWin;
     public static PluginManagerWindow PluginManagerWin;
+    public static EditorSettingsWindow EditorSettingsWin;
 
     #endregion
     #region Properties
@@ -179,6 +180,9 @@ internal static class MainWindow
 
     public static List<string> RecentlyOpened { get; private set; } = [];
 
+    public static ImFontPtr FontPtr { get; set; }
+    public static bool FontLoaded { get; set; } = false;
+
     #endregion
 
     /// <summary>
@@ -194,7 +198,7 @@ internal static class MainWindow
     /// <summary>
     /// Raylib/ImGui window initialization and main rendering loop of the editor.
     /// </summary>
-    public static void Initialize()
+    public static unsafe void Initialize()
     {
         Configuration.Load();
 
@@ -208,6 +212,7 @@ internal static class MainWindow
         ViewCodeWin = new();
         SparkleWin = new();
         PluginManagerWin = new();
+        EditorSettingsWin = new();
 
         Workspaces = [];
 
@@ -244,6 +249,8 @@ internal static class MainWindow
             rlImGui.Setup(true, true);
             ImGui.GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 
+            SetupStyle();
+
             ShortcutList.RegisterShortcuts();
 
             bool exitWindow = false;
@@ -253,6 +260,10 @@ internal static class MainWindow
             {
                 try
                 {
+                    bool customFont = true;
+                    if (FontLoaded)
+                        customFont = true;
+
                     Raylib.BeginDrawing();
                     Raylib.ClearBackground(Color.Black);
 
@@ -261,6 +272,8 @@ internal static class MainWindow
                     ImGui.DockSpaceOverViewport();
                     ShortcutList.CheckKeybinds();
 
+                    if (customFont)
+                        ImGui.PushFont(FontPtr);
                     // Remove this? Idk.
                     ImGui.BeginDisabled(IsOpeningFile); // Disable every interaction if a file is opening.
                     RenderMenu();
@@ -274,6 +287,8 @@ internal static class MainWindow
                         exitWindow = RenderCloseOpenedProjects();
                     }
 
+                    if (customFont)
+                        ImGui.PopFont();
                     rlImGui.End();
 
                     Raylib.EndDrawing();
@@ -307,6 +322,7 @@ internal static class MainWindow
         ViewCodeWin.Render();
         SparkleWin.Render();
         PluginManagerWin.Render();
+        EditorSettingsWin.Render();
 
         foreach (ImGuiWindow window in Windows)
             window?.Render();
@@ -334,11 +350,46 @@ internal static class MainWindow
             return true;
     }
 
+    public static unsafe bool LoadTTF(string pathToTTF, float size)
+    {
+        try
+        {
+            if (!File.Exists(pathToTTF))
+                return false;
+            ImGuiIOPtr io = ImGui.GetIO();
+            ImFontPtr font = io.Fonts.AddFontFromFileTTF(pathToTTF, size);
+            FontPtr = font;
+            FontLoaded = true;
+            rlImGui.ReloadFonts();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading font \"{pathToTTF}\":\n{ex}");
+            FontLoaded = false;
+            return false;
+        }
+    }
+
     #region Init
 
     public static void SetupDiscordRpc()
     {
 
+    }
+
+    public static void SetupStyle()
+    {
+        Configuration.DefaultStyle = ImGui.GetStyle().Colors.ConvertToArray();
+        if (!string.IsNullOrEmpty(Configuration.GetCurrentTheme().FontPath))
+            LoadTTF(Configuration.GetCurrentTheme().FontPath, Configuration.GetCurrentTheme().FontSize);
+        if (Configuration.GetCurrentTheme() != null)
+        {
+            for (int i = 0; i < (int)ImGuiCol.COUNT; i++)
+            {
+                ImGui.GetStyle().Colors[i] = Configuration.GetCurrentTheme().Colors[i];
+            }
+        }
     }
 
     #endregion
@@ -436,19 +487,15 @@ internal static class MainWindow
                     PackProject();
                 ImGui.EndMenu();
             }
+            /*
             if (ImGui.BeginMenu("View"))
             {
                 ImGui.MenuItem("Object Definitions", string.Empty, ref DefinitionsWin.ShowWindow);
                 ImGui.EndMenu();
             }
+            */
             ImGui.MenuItem("Plugins", string.Empty, ref PluginManagerWin.ShowWindow);
-            if (ImGui.BeginMenu("Settings"))
-            {
-                ImGui.MenuItem("General settings");
-                ImGui.MenuItem("Compiler settings");
-                ImGui.MenuItem("Editor settings");
-                ImGui.EndMenu();
-            }
+            ImGui.MenuItem("Settings", string.Empty, ref EditorSettingsWin.ShowWindow);
             if (ImGui.BeginMenu("Help"))
             {
                 if (ImGui.MenuItem("Documentation"))

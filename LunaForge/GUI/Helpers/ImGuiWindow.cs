@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using Raylib_cs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,5 +82,12 @@ public abstract class ImGuiWindow(bool showByDefault)
     public static void VerticalSeparator(float size = 20.0f)
     {
         ImGui.SameLine(0, size);
+    }
+
+    protected void SetModalToCenter(Vector2 modalSize)
+    {
+        Vector2 renderSize = new(Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
+        ImGui.SetNextWindowSize(modalSize);
+        ImGui.SetNextWindowPos(renderSize / 2 - (modalSize / 2));
     }
 }
