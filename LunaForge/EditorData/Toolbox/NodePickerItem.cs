@@ -58,12 +58,14 @@ public class NodePickerItem
                 continue;
             string childName = childNode.Attributes["name"]?.Value ?? "no-name";
             string relativeChildPath = Path.Combine(plugin.Namespace, childNode.Attributes["path"]?.Value ?? "").Replace('/', Path.DirectorySeparatorChar);
+            string childIcon = Path.Combine(plugin.PathToPlugin, plugin.Namespace, childNode.Attributes["icon"]?.Value ?? "");
             string childPath = Path.Combine(plugin.PathToPlugin, relativeChildPath);
             if (File.Exists(childPath))
             {
                 childNodes.Add(new(childName, childPath));
                 picker.NameLookup.TryAdd(childName, relativeChildPath);
             }
+            MainWindow.LoadEditorImageFromFile(childIcon);
         }
 
         string iconName = MainWindow.LoadEditorImageFromFile(icon);

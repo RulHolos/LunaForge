@@ -19,6 +19,8 @@
 The goal of LunaForge is to be a kind of "all-in-one" editor: It can compile plain lua script, compile nodes to lua, and shaders.
 There is more to come~
 
+If you find any issues, [please report it](https://github.com/RulHolos/LunaForge/issues/new) as this editor is still in very early stages.
+
 ## Usage
 
 Placeholder
@@ -48,6 +50,8 @@ Note: Only the .lunalorge invisible folder (and its contents) and the Project.lf
 
 Linux version is **NOT** stable.
 
+No testing has been made yet.
+
 Please install [xsel](https://github.com/kfish/xsel) and make it callable.
 
 ## For MacOS
@@ -59,11 +63,16 @@ No testing has been made yet.
 ## Plugins
 
 LunaForge supports user-made plugins.
-Plugins allow for modifying/adding features to the editor. Their most important use is for adding nodes to the editor.
-
-Plugins comes in two types: `Editor Plugins` (which are loaded globally) and `Project Plugins` (which are loaded on a per-project basis).
+Plugins allow for modifying/adding features to the editor.
 
 See the [plugin documentation](https://rulholos.github.io/LunaForge/plugins.html) to see how to create your editor plugins.
+
+## Nodes
+
+LunaForge supports user-made nodes.
+Those are created in lua.
+
+See the [node documentation](https://rulholos.github.io/LunaForge/nodes.html) to see how to create your nodes.
 
 ## Credits
 
