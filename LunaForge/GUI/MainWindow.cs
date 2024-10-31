@@ -25,6 +25,8 @@ using NetSparkleUpdater;
 using MoonSharp.Interpreter;
 using LunaForge.EditorData.Nodes.NodeData;
 using System.Numerics;
+using DiscordRPC;
+using DiscordRPC.Logging;
 
 namespace LunaForge.GUI;
 
@@ -76,8 +78,9 @@ namespace LunaForge.GUI;
  * 
  * 
  * Structure:
- * .LunaForge invisible folder in the root of the project. Contains the defcache.yaml, meta.dat, and other files. Doesn't get included in the templates
- * and is instead generated at runtime on a project on which it's missing.
+ * .LunaForge invisible folder in the root of the project. Contains the defcache.yaml, meta.dat, and other files.
+ * Generated if missing.
+ * Included in templates.
  * 
  * defcache.yaml : data of all definitions on the project: The file, the object type and optional params and its scope (cf: loaded by another definition)
  * This Definition cache is updated every time a .lfd file is saved.
@@ -134,6 +137,7 @@ internal static class MainWindow
     public static FileDialogManager FileDialogManager { get; set; } = new();
 
     public static SparkleUpdater Sparkle;
+    public static DiscordRpcClient? Discord { get; set; } = null;
 
     #region Windows
 
@@ -193,6 +197,8 @@ internal static class MainWindow
         foreach (Texture2D texture in EditorImages.Values)
             Raylib.UnloadTexture(texture);
         Raylib.UnloadImage(EditorIcon);
+
+        Discord?.Dispose();
     }
 
     /// <summary>
@@ -233,6 +239,7 @@ internal static class MainWindow
 
         GetPresets();
         GetRecentOpens();
+        SetupDiscordRpc();
 
         // Define the interface only if UseInterface is true. Should always be the case in release versions.
         if (UseInterface)
@@ -371,11 +378,48 @@ internal static class MainWindow
         }
     }
 
-    #region Init
+    #region Discord RPC
 
     public static void SetupDiscordRpc()
     {
+        if (!Configuration.Default.UseDiscordRPC || Discord != null)
+            return;
 
+        Discord = new("1301550302683725916")
+        {
+            Logger = new ConsoleLogger() { Level = LogLevel.Warning }
+        };
+
+        Discord.Initialize();
+
+        ResetRPC();
+    }
+
+    public static void ResetRPC()
+    {
+        Discord?.SetPresence(new RichPresence()
+        {
+            Details = "Idle",
+            Timestamps = Timestamps.Now,
+            Assets = new()
+            {
+                LargeImageKey = "lunaforgeicon",
+                LargeImageText = "No Project Open"
+            }
+        });
+    }
+
+    public static void ResetRPCState(bool isOn)
+    {
+        if (isOn)
+        {
+            SetupDiscordRpc();
+        }
+        else
+        {
+            Discord?.Dispose();
+            Discord = null;
+        } 
     }
 
     public static void SetupStyle()

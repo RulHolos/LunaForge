@@ -74,6 +74,7 @@ public class ProjectViewerWindow : ImGuiWindow
                         if (ParentProject.CurrentProjectFile == null || ParentProject.CurrentProjectFile != file)
                         {
                             ParentProject.CurrentProjectFile = file;
+                            ParentProject.UpdateRPC();
 #if DEBUG
                             Console.WriteLine($"Current ProjectFile: {file.FileName}");
 #endif
@@ -114,6 +115,7 @@ public class ProjectViewerWindow : ImGuiWindow
                 if (fileToClose != null)
                 {
                     fileToClose?.Close();
+                    ParentProject.UpdateRPC();
                     fileToClose = null;
                 }
                 
@@ -164,6 +166,7 @@ public class ProjectViewerWindow : ImGuiWindow
         {
             ParentProject.Parent.Current = ParentProject;
             MainWindow.FSWin.InitializeProject(ParentProject);
+            ParentProject.RaiseUpdateSelected();
 #if DEBUG
             Console.WriteLine($"Current Project: {ParentProject.ProjectName}");
 #endif

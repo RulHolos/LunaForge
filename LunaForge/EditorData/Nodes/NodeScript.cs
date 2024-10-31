@@ -58,7 +58,7 @@ internal static class NodeScript
         }
     }
 
-    // TODO: Argument exception, key was already set.
+    // TODO: Put all of these in a single method, that's way too complex and not necessary.
 
     public static void SetScriptToString(Script script, LuaNode context)
     {
@@ -69,6 +69,11 @@ internal static class NodeScript
         script.Globals["IsNullOrEmpty"] = (Func<string, bool>)((str) => { return string.IsNullOrEmpty(str); });
         script.Globals["Split"] = (Func<string, string, string[]>)((str, separator)
             => { return str.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries); });
+    }
+
+    public static void ResetScriptGlobals(Script script, LuaNode context)
+    {
+        SetScriptInitial(script, context);
     }
 
     public static void SetScriptInitial(Script script, LuaNode context)

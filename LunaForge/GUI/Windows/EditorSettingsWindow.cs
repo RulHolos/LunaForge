@@ -45,7 +45,8 @@ internal class EditorSettingsWindow : ImGuiWindow
             {
                 if (ImGui.BeginTabItem("General"))
                 {
-                    // TODO
+                    RenderDiscordRPC();
+                    RenderAutoBackup();
 
                     ImGui.EndTabItem();
                 }
@@ -87,12 +88,21 @@ internal class EditorSettingsWindow : ImGuiWindow
     public int CurrentlyActiveTheme = 0;
     public string TempActiveTheme = "";
 
+    public bool TempUseDiscordRPC = true;
+    public bool TempAutoBackup = true;
+    public int TempAutoBackupFreq = 1;
+    public int TempBackupCountLimit = 5;
+
     #endregion
 
     public void GetSettings()
     {
         TempActiveTheme = Configuration.Default.CurrentThemeProfile ?? "";
         CurrentlyActiveTheme = Configuration.Default.ThemeProfiles.IndexOf(Configuration.GetCurrentTheme());
+        TempUseDiscordRPC = Configuration.Default.UseDiscordRPC;
+        TempAutoBackup = Configuration.Default.AutoBackup;
+        TempAutoBackupFreq = Configuration.Default.AutoBackupFreq;
+        TempBackupCountLimit = Configuration.Default.BackupCountLimit;
 
         foreach (ThemeProfile profile in Configuration.Default.ThemeProfiles)
         {
@@ -108,6 +118,12 @@ internal class EditorSettingsWindow : ImGuiWindow
     public void ApplySettings(bool quitPopup = false)
     {
         Configuration.Default.CurrentThemeProfile = TempActiveTheme;
+        Configuration.Default.UseDiscordRPC = TempUseDiscordRPC;
+        Configuration.Default.AutoBackup = TempAutoBackup;
+        Configuration.Default.AutoBackupFreq = TempAutoBackupFreq;
+        Configuration.Default.BackupCountLimit = TempBackupCountLimit;
+
+        MainWindow.ResetRPCState(TempUseDiscordRPC);
 
         foreach (ThemeProfile profile in Configuration.Default.ThemeProfiles)
         {
@@ -134,7 +150,39 @@ internal class EditorSettingsWindow : ImGuiWindow
     }
 
     #endregion
-    #region Render Settings Part
+    #region Render General Settings Part
+    
+    private void RenderDiscordRPC()
+    {
+        ImGui.Spacing();
+        ImGui.SeparatorText("Discord Rich Presence");
+
+        ImGui.Checkbox("Use Discord RPC", ref TempUseDiscordRPC);
+    }
+
+    private void RenderAutoBackup()
+    {
+        ImGui.Spacing();
+        ImGui.SeparatorText("Automatic Backups");
+
+        ImGui.Checkbox("Auto Backup", ref TempAutoBackup);
+
+        ImGui.Text("Auto Backup Frequency (in minutes)");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(150);
+        ImGui.InputInt("##AutoBackupFrequency", ref TempAutoBackupFreq, 1, 10);
+        TempAutoBackupFreq = Math.Max(TempAutoBackupFreq, 1);
+
+        ImGui.Text("Backup retain count");
+        ImGuiEx.Tooltip("How many backups will be kept in the backups folder.\nThe oldest ones will be overwritten if the limit is reached.");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(150);
+        ImGui.InputInt("##AutoBackupLimit", ref TempBackupCountLimit, 1, 2);
+        TempBackupCountLimit = Math.Max(TempBackupCountLimit, 1);
+    }
+
+    #endregion
+    #region Render Theme Settings Part
 
     private void RenderThemeContent()
     {

@@ -106,4 +106,10 @@ public static class ImGuiEx
             return true;
         return false;
     }
+
+    public static void Tooltip(string text)
+    {
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(text);
+    }
 }

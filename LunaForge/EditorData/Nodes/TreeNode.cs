@@ -440,12 +440,7 @@ public abstract class TreeNode : ITraceThrowable
             return false;
         if (MetaData.RequireParent == Array.Empty<string>())
             return true;
-        foreach (string type in MetaData.RequireParent)
-        {
-            if (toMatch.NodeName.Equals(type))
-                return true;
-        }
-        return false;
+        return Array.Exists(MetaData.RequireParent, parent => parent == toMatch.NodeName);
     }
 
     private static bool MatchClassNode(TreeNode beg, TreeNode end)

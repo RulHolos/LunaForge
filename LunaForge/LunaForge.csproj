@@ -71,6 +71,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageReference Include="ICSharpCode.SharpZipLib.dll" Version="0.85.4.369" />
     <PackageReference Include="ImGui.NET" Version="1.91.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />

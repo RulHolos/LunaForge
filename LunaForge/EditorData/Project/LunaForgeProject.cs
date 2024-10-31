@@ -16,24 +16,28 @@ using LunaForge.EditorData.Traces;
 using LunaForge.EditorData.Traces.EditorTraces;
 using LunaForge.GUI.Helpers;
 using LunaForge.EditorData.Toolbox;
+using DiscordRPC;
 
 namespace LunaForge.EditorData.Project;
 
-public partial class LunaForgeProject(NewProjWindow? newProjWin, string rootFolder) : ITraceThrowable
+public delegate void UpdateSelectedProjectEventHandler();
+public delegate void UnloadProjectEventHandler();
+
+public partial class LunaForgeProject : ITraceThrowable
 {
     #region Configuration
 
     [DefaultValue("")]
-    public string AuthorName { get; set; } = newProjWin?.Author;
+    public string AuthorName { get; set; }
 
     [DefaultValue("")]
-    public string ProjectName { get; set; } = newProjWin?.ProjectName;
+    public string ProjectName { get; set; }
 
     [DefaultValue(false)]
-    public bool AllowPr { get; set; } = newProjWin?.AllowPr ?? false;
+    public bool AllowPr { get; set; }
 
     [DefaultValue(false)]
-    public bool AllowScPr { get; set; } = newProjWin?.AllowScPr ?? false;
+    public bool AllowScPr { get; set; }
 
     [DefaultValue("")]
     public string PathToLuaSTGExecutable = string.Empty;
@@ -91,7 +95,7 @@ public partial class LunaForgeProject(NewProjWindow? newProjWin, string rootFold
     public List<EditorTrace> Traces { get; private set; } = [];
 
     [YamlIgnore]
-    public string PathToProjectRoot { get; set; } = rootFolder;
+    public string PathToProjectRoot { get; set; }
     [YamlIgnore]
     public string PathToLFP => Path.Combine(PathToProjectRoot, "Project.lfp");
     [YamlIgnore]
@@ -130,6 +134,12 @@ public partial class LunaForgeProject(NewProjWindow? newProjWin, string rootFold
     [YamlIgnore]
     public NodePicker Toolbox { get; private set; }
 
+    [YamlIgnore]
+    public DateTime StartedTimestamp { get; private set; }
+
+    [YamlIgnore]
+    public AutoBackup Backups { get; private set; }
+
     /* This fucking line took 1 hour of my life for nothing.
      * YamlDotNet, please make your fucking Exceptions more precise. How the fuck was I supposed to know that
      * "(Line: 1, Col: 1, Idx: 0) - (Line: 1, Col: 1, Idx: 0): Exception during deserialization"
@@ -137,6 +147,27 @@ public partial class LunaForgeProject(NewProjWindow? newProjWin, string rootFold
      * Please.
      */
     public LunaForgeProject() : this(null, string.Empty) { }
+
+    public LunaForgeProject(NewProjWindow? newProjWin, string rootFolder)
+    {
+        AuthorName = newProjWin?.Author;
+        ProjectName = newProjWin?.ProjectName;
+        AllowPr = newProjWin?.AllowPr ?? false;
+        AllowScPr = newProjWin?.AllowScPr ?? false;
+        PathToProjectRoot = rootFolder;
+
+        if (Configuration.Default.AutoBackup)
+        {
+            Backups = new();
+            Backups.Setup(this, Configuration.Default.AutoBackupFreq);
+        }
+
+        StartedTimestamp = DateTime.UtcNow;
+
+        OnUpdateSelectedProject += UpdateRPC;
+        OnUnloadProject += MainWindow.ResetRPC;
+        OnUnloadProject += Backups.Stop;
+    }
 
     #region IO
 
@@ -185,6 +216,7 @@ public partial class LunaForgeProject(NewProjWindow? newProjWin, string rootFold
             Parent.Remove(this);
             RemoveTraces();
             MainWindow.ScriptCache.Clear(); // TODO: Only clear the cache of this project.
+            RaiseUnloaded();
             Parent.Current = null;
         }
         else
@@ -324,6 +356,42 @@ public partial class LunaForgeProject(NewProjWindow? newProjWin, string rootFold
         foreach (EditorTrace trace in traces)
             Traces.Add(trace);
         EditorTraceContainer.UpdateTraces(this);
+    }
+
+    #endregion
+    #region Discord
+
+    public void UpdateRPC()
+    {
+        MainWindow.Discord?.SetPresence(new RichPresence()
+        {
+            Details = ProjectName,
+            State = CurrentProjectFile?.FileName ?? "No File Open",
+            Timestamps = new Timestamps(StartedTimestamp),
+            Assets = new Assets()
+            {
+                LargeImageKey = "lunaforgeicon",
+                LargeImageText = ProjectName,
+                SmallImageKey = "fileicon",
+                SmallImageText = ProjectName,
+            }
+        });
+    }
+
+    #endregion
+    #region Events
+
+    public UpdateSelectedProjectEventHandler OnUpdateSelectedProject;
+    public UnloadProjectEventHandler OnUnloadProject;
+
+    public void RaiseUpdateSelected()
+    {
+        OnUpdateSelectedProject?.Invoke();
+    }
+
+    public void RaiseUnloaded()
+    {
+        OnUnloadProject?.Invoke();
     }
 
     #endregion

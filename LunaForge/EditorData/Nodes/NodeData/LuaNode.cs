@@ -35,16 +35,6 @@ internal class LuaNode : TreeNode
 
     public string GetRelativePathToLua(string fullPath) => Path.GetRelativePath(ParentDef.ParentProject.PathToNodeData, fullPath);
 
-    /*
-     * TODO:
-     * Proper error handling (ToString, ToLua traced error, ReflectAttr) - Check
-     * RequireParent & RequireAncestor - Check
-     * Throw traces.
-     * Allow node plugins to be turned on and off. - Check
-     * 
-     * Put PathToLua to be relative to the project root.
-     */
-
     public Script GetScript()
     {
         return NodeScript.CreateScript(this);

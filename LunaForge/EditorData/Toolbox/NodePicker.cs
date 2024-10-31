@@ -114,19 +114,22 @@ public class NodePicker : IEnumerable<NodePlugin>
                 plugin.Authors = pluginDoc.Attributes["authors"]?.Value ?? "";
                 plugin.PathToXml = path;
                 plugin.PathToPlugin = pathToData;
-                XmlNode groupNode = pluginDoc.SelectSingleNode("/plugin/group") ?? null;
+                XmlNodeList groupNode = pluginDoc.SelectNodes("/plugin/group") ?? null;
 
                 if (groupNode != null)
                 {
                     List<string> names = [];
-                    foreach (XmlNode node in groupNode.ChildNodes)
+                    foreach (XmlNode node in groupNode)
                     {
-                        string name = node.Attributes["name"]?.Value ?? "";
-                        if (!string.IsNullOrEmpty(name))
-                            names.Add(name);
-                    }
+                        foreach (XmlNode node2 in node.ChildNodes)
+                        {
+                            string name = node2.InnerText ?? "";
+                            if (!string.IsNullOrEmpty(name))
+                                names.Add(name);
+                        }
 
-                    plugin.NodeNameGroups.TryAdd(groupNode.Attributes["name"]?.Value, [.. names]);
+                        plugin.NodeNameGroups.TryAdd(node.Attributes["name"]?.Value, [.. names]);
+                    }
                 }
 
                 if (parentProj.DisabledNodePlugins.Contains(Path.GetRelativePath(parentProj.PathToProjectRoot, path)))
