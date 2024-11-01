@@ -12,10 +12,12 @@ public class AutoBackup
     private Timer backupTimer = null;
     private LunaForgeProject project;
     private Dictionary<string, string> fileHashes = [];
+    private bool firstTimeFiring = true;
 
     public void Setup(LunaForgeProject proj, int intervalMinutes)
     {
         project = proj;
+        firstTimeFiring = true;
         backupTimer = new(BackupProject, null, TimeSpan.Zero, TimeSpan.FromMinutes(intervalMinutes));
     }
 
@@ -27,6 +29,22 @@ public class AutoBackup
 
     private async void BackupProject(object state)
     {
+        await BackupProject(state, false);
+    }
+
+    /// <summary>
+    /// Backups the whole project files after 5 seconds of delay.
+    /// </summary>
+    /// <param name="state">Unused but needed for the callback.</param>
+    /// <param name="manualCall">This function is called manually.</param>
+    /// <returns>An empty task.</returns>
+    private async Task BackupProject(object state, bool manualCall = true)
+    {
+        if (firstTimeFiring && !manualCall)
+        {
+            firstTimeFiring = false;
+            return;
+        }
         NotificationManager.AddToast("Starting auto backup in 5 seconds...");
 
         await Task.Delay(TimeSpan.FromSeconds(5));

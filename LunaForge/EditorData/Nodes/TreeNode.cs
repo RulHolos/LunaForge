@@ -392,6 +392,8 @@ public abstract class TreeNode : ITraceThrowable
 
     public bool ValidateChild(TreeNode nodeToValidate, TreeNode sourceNode)
     {
+        if (nodeToValidate is LuaNode)
+            (nodeToValidate as LuaNode).CreateScript();
         if (sourceNode.MetaData.IsLeafNode)
             return false;
         if (nodeToValidate is LuaNode)

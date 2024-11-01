@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "Éléments de solution", "{7B7B260E-E2F8-46BF-AE47-C355C76C2DEE}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		AppCast.xaml = AppCast.xaml
 		docfx.json = docfx.json
 		index.md = index.md
 		README.md = README.md

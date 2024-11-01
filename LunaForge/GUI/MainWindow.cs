@@ -27,6 +27,10 @@ using LunaForge.EditorData.Nodes.NodeData;
 using System.Numerics;
 using DiscordRPC;
 using DiscordRPC.Logging;
+using NetSparkleUpdater.SignatureVerifiers;
+using NetSparkleUpdater.Events;
+using NetSparkleUpdater.Enums;
+using LunaForge.GUI.SparkleGUI;
 
 namespace LunaForge.GUI;
 
@@ -136,7 +140,7 @@ internal static class MainWindow
 
     public static FileDialogManager FileDialogManager { get; set; } = new();
 
-    public static SparkleUpdater Sparkle;
+    public static SparkleManager Sparkle { get; set; } = null;
     public static DiscordRpcClient? Discord { get; set; } = null;
 
     #region Windows
@@ -240,6 +244,7 @@ internal static class MainWindow
         GetPresets();
         GetRecentOpens();
         SetupDiscordRpc();
+        SetupSparkle();
 
         // Define the interface only if UseInterface is true. Should always be the case in release versions.
         if (UseInterface)
@@ -336,6 +341,9 @@ internal static class MainWindow
 
         InputWindowSelector.CurrentInputWindow?.Render();
         FileDialogManager.Draw();
+
+        Sparkle.Render();
+
         NotificationManager.Render();
     }
 
@@ -378,6 +386,20 @@ internal static class MainWindow
         }
     }
 
+    #region Sparkle
+
+    private static void SetupSparkle()
+    {
+        // TODO: return if not enabled in the settings.
+
+        Sparkle = new()
+        {
+            RelaunchAfterUpdate = true,
+            CheckServerFileName = false,
+        };
+    }
+
+    #endregion
     #region Discord RPC
 
     public static void SetupDiscordRpc()

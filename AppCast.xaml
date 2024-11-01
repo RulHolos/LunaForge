@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>LunaForge</title>
+        <link>https://raw.githubusercontent.com/RulHolos/LunaForge/main/AppCast.xaml</link>
+        <description>LunaForge is a multipurpose LuaSTG code editor.</description>
+        <language>en</language>
+        <item>
+            <title>Version 1.0.0.0</title>
+            <sparkle:releaseNotesLink>
+				https://raw.githubusercontent.com/RulHolos/LunaForge/main/Changelogs/1.0.0.0_changelog.md
+			</sparkle:releaseNotesLink>
+            <pubDate>Thu, 10 Oct 2024 00:00:00 +0000</pubDate>
+            <enclosure url="https://github.com/RulHolos/LunaForge/releases/download/1.0.0.0/LunaForge.1.0.0.0.exe"
+                       sparkle:version="1.0.0.0"
+                       sparkle:os="windows"
+                       type="application/octet-stream"/>
+        </item>
+    </channel>
+</rss>

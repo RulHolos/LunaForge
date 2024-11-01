@@ -16,9 +16,13 @@ public enum ToastType
     Error
 }
 
-public struct Toast
+// TODO: View and dismiss button.
+// And progress bar for "how many milliseconds the toast lasts".
+
+public struct Toast()
 {
     public string Message;
+    public string ViewButtonMessage = "View";
     public ToastType Type;
     public DateTime TimeAdded;
     public float Duration;
@@ -68,6 +72,25 @@ internal static class NotificationManager
         });
     }
 
+    public static void AddToast(
+        string message,
+        string viewMessage,
+        ToastType type = ToastType.Info,
+        float duration = 5f,
+        Action<Toast> clickCallback = null)
+    {
+        AddToast(new Toast
+        {
+            Message = message,
+            ViewButtonMessage = viewMessage,
+            Type = type,
+            TimeAdded = DateTime.Now,
+            Duration = duration,
+            IsHovered = false,
+            ClickCallback = clickCallback,
+        });
+    }
+
     public static void AddToast(Toast toast)
     {
         if (toasts.Count >= MaxToasts)
@@ -93,18 +116,21 @@ internal static class NotificationManager
         for (int i = 0; i < toasts.Count; i++)
         {
             var toast = toasts[i];
+            bool deleteToast = false;
 
             if (toast.Duration > 0
                 && (DateTime.Now - toast.TimeAdded).TotalSeconds > MathF.Min(MaximumDuration, toast.Duration)
-                && !toast.IsHovered
             )
             {
                 DeleteToast(ref i);
                 continue;
             }
 
+            Vector2 textSize = ImGui.CalcTextSize(toast.Message);
+            float finalSize = textSize.Y + 40f;
+
             ImGui.SetNextWindowPos(pos);
-            ImGui.SetNextWindowSize(new Vector2(ToastSize - 10, 50));
+            ImGui.SetNextWindowSize(new Vector2(ToastSize - 10, finalSize));
             var bgColor = toast.Type switch
             {
                 ToastType.Info => new Vector4(0.4f, 0.4f, 0.8f, 1.0f), // Default gray for info
@@ -124,14 +150,26 @@ internal static class NotificationManager
             {
                 ImGui.TextWrapped(toast.Message);
 
+                /*float availableHeight = ImGui.GetWindowHeight() - ImGui.GetCursorPosY();
+                float buttonHeight = ImGui.CalcTextSize("Dimiss").Y + ImGui.GetStyle().FramePadding.Y * 2;
+                float spacing = ImGui.GetStyle().ItemSpacing.Y + 4;*/
+                //ImGui.SetCursorPosY(ImGui.GetCursorPosY() + availableHeight - buttonHeight - spacing);
+
+                if (toast.ClickCallback != null)
+                {
+                    if (ImGui.Button(toast.ViewButtonMessage))
+                    {
+                        toast.ClickCallback(toast);
+                        ImGui.SameLine();
+                    }
+                }
+                if (ImGui.Button("Dismiss"))
+                    deleteToast = true;
+
                 if (ImGui.IsWindowHovered())
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                    toast.IsHovered = true;
-                }
-                else
-                {
-                    toast.IsHovered = false;
+                    toast.TimeAdded = DateTime.Now;
                 }
                 if (ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
@@ -141,17 +179,29 @@ internal static class NotificationManager
                     }
                     else
                     {
-                        DeleteToast(ref i);
+                        deleteToast = true;
                     }
                 }
+
+                int barHeight = 3;
+                ImGui.SetCursorPosX(0f);
+                ImGui.SetCursorPosY(ImGui.GetWindowHeight() - barHeight);
+                Vector2 size = new(ImGui.GetWindowWidth(), barHeight);
+
+                double duration = toast.Duration;
+                double elapsedMilliseconds = (DateTime.Now - toast.TimeAdded).TotalSeconds;
+                float progress = Math.Clamp((float)(1 - (elapsedMilliseconds / duration)), 0, 1);
+                ImGui.ProgressBar(progress, size, string.Empty);
 
                 ImGui.End();
             }
             
             ImGui.PopStyleColor();
 
-            pos.Y += 60;
+            pos.Y += finalSize + 10;
             toasts[i] = toast; // Update the toast, since it's a copy, not the actual reference(?).
+            if (deleteToast)
+                DeleteToast(ref i);
         }
     }
 }
