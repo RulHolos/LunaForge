@@ -14,14 +14,19 @@ namespace LunaForge.GUI.SparkleGUI;
 internal partial class SparkleManager : SparkleUpdater
 {
     public SparkleManager()
-        : base("temp", new Ed25519Checker(SecurityMode.Unsafe))
+        : base("https://raw.githubusercontent.com/RulHolos/LunaForge/refs/heads/main/AppCast.xaml", new Ed25519Checker(SecurityMode.Unsafe))
     {
+        UIFactory = new ImSparkle();
+        RelaunchAfterUpdate = true;
+        CheckServerFileName = false;
+        SecurityProtocolType = System.Net.SecurityProtocolType.Tls12;
+
         UpdateCheckStarted += SparkleManager_UpdateCheckStarted;
         UpdateDetected += SparkleManager_UpdateDetected;
 
         CloseApplicationAsync += SparkleManager_CloseApplicationAsync;
 
-        StartLoop(true, true); // TODO: Replace this with Settings auto update.
+        StartLoop(true, true, TimeSpan.FromHours(1)); // TODO: Replace this with Settings auto update.
     }
 
     public void Render()

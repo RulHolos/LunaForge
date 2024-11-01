@@ -392,11 +392,7 @@ internal static class MainWindow
     {
         // TODO: return if not enabled in the settings.
 
-        Sparkle = new()
-        {
-            RelaunchAfterUpdate = true,
-            CheckServerFileName = false,
-        };
+        Sparkle = new();
     }
 
     #endregion

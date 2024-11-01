@@ -6,13 +6,13 @@
         <description>LunaForge is a multipurpose LuaSTG code editor.</description>
         <language>en</language>
         <item>
-            <title>Version 1.0.0.0</title>
+            <title>Version 1.0.0.1</title>
             <sparkle:releaseNotesLink>
 				https://raw.githubusercontent.com/RulHolos/LunaForge/main/Changelogs/1.0.0.0_changelog.md
 			</sparkle:releaseNotesLink>
             <pubDate>Thu, 10 Oct 2024 00:00:00 +0000</pubDate>
-            <enclosure url="https://github.com/RulHolos/LunaForge/releases/download/1.0.0.0/LunaForge.1.0.0.0.exe"
-                       sparkle:version="1.0.0.0"
+            <enclosure url="https://github.com/RulHolos/LunaForge/releases/download/1.0.0.0/LunaForge_win_1_0_0_0.exe"
+                       sparkle:version="1.0.0.1"
                        sparkle:os="windows"
                        type="application/octet-stream"/>
         </item>
