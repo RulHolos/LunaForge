@@ -14,14 +14,14 @@ namespace LunaForge.GUI.SparkleGUI;
 internal partial class SparkleManager : SparkleUpdater
 {
     public SparkleManager()
-        : base("https://raw.githubusercontent.com/RulHolos/LunaForge/refs/heads/main/AppCast.xaml", new Ed25519Checker(SecurityMode.Unsafe))
+        : base("https://raw.githubusercontent.com/RulHolos/LunaForge/main/AppCast.xaml", new Ed25519Checker(SecurityMode.Unsafe))
     {
-        UIFactory = new ImSparkle();
+        // TODO: Remove the UI Factory, just handle the events manually, since I need to have to Render method eitherway.
+
         RelaunchAfterUpdate = true;
         CheckServerFileName = false;
         SecurityProtocolType = System.Net.SecurityProtocolType.Tls12;
 
-        UpdateCheckStarted += SparkleManager_UpdateCheckStarted;
         UpdateDetected += SparkleManager_UpdateDetected;
 
         CloseApplicationAsync += SparkleManager_CloseApplicationAsync;
@@ -29,26 +29,24 @@ internal partial class SparkleManager : SparkleUpdater
         StartLoop(true, true, TimeSpan.FromHours(1)); // TODO: Replace this with Settings auto update.
     }
 
+    #region Main Rendering
+
     public void Render()
     {
-        
+
     }
 
+    #endregion
     #region Events
-
-    private void SparkleManager_UpdateCheckStarted(object sender)
-    {
-        NotificationManager.AddToast("Running Update Check...", ToastType.Info);
-    }
 
     private void SparkleManager_UpdateDetected(object sender, UpdateDetectedEventArgs e)
     {
-        void InstallUpdate(Toast sourceToast)
+        void InstallCallback(Toast toast)
         {
-
+            NotificationManager.AddToast("Installed");
         }
 
-        NotificationManager.AddToast("Update found.\nClick to update.", ToastType.Info, clickCallback: InstallUpdate);
+        NotificationManager.AddToast("Update Found!\nClick to install.", "Install", duration: 10f, clickCallback: InstallCallback);
     }
 
     private Task SparkleManager_CloseApplicationAsync()

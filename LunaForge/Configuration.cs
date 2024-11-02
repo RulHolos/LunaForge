@@ -46,6 +46,15 @@ public struct DefaultConfig()
 
     [DefaultValue(5)]
     public int BackupCountLimit = 5;
+
+    [DefaultValue(true)]
+    public bool UseAutoUpdates = true;
+
+    [DefaultValue(true)]
+    public bool CheckUpdatesAtStartup = true;
+
+    [DefaultValue(30)]
+    public int CheckUpdateFrequency = 30;
 }
 
 public static class Configuration

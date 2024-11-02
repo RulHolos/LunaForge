@@ -41,7 +41,7 @@ internal static class NotificationManager
     /// <summary>
     /// Maximum display time for a toast (in seconds).
     /// </summary>
-    public static float MaximumDuration { get; set; } = 5.0f;
+    public static float MaximumDuration { get; set; } = 60f; // 1 minute.
 
     public static int ToastSize { get; set; } = 300;
 
@@ -66,7 +66,7 @@ internal static class NotificationManager
             Message = message,
             Type = type,
             TimeAdded = DateTime.Now,
-            Duration = duration,
+            Duration = Math.Min(duration, MaximumDuration),
             IsHovered = false,
             ClickCallback = clickCallback,
         });
@@ -85,7 +85,7 @@ internal static class NotificationManager
             ViewButtonMessage = viewMessage,
             Type = type,
             TimeAdded = DateTime.Now,
-            Duration = duration,
+            Duration = Math.Min(duration, MaximumDuration),
             IsHovered = false,
             ClickCallback = clickCallback,
         });
@@ -160,8 +160,8 @@ internal static class NotificationManager
                     if (ImGui.Button(toast.ViewButtonMessage))
                     {
                         toast.ClickCallback(toast);
-                        ImGui.SameLine();
                     }
+                    ImGui.SameLine();
                 }
                 if (ImGui.Button("Dismiss"))
                     deleteToast = true;

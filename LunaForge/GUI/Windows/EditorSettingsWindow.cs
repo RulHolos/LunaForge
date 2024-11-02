@@ -37,16 +37,13 @@ internal class EditorSettingsWindow : ImGuiWindow
             if (ModalClosed)
                 GetSettings();
 
-            // TODO:
-            // RenderFontChooser
-            // Editor Theme colors.
-
             if (ImGui.BeginTabBar("EditorSettingsTabBar"))
             {
                 if (ImGui.BeginTabItem("General"))
                 {
                     RenderDiscordRPC();
                     RenderAutoBackup();
+                    RenderAutoUpdates();
 
                     ImGui.EndTabItem();
                 }
@@ -93,6 +90,10 @@ internal class EditorSettingsWindow : ImGuiWindow
     public int TempAutoBackupFreq = 1;
     public int TempBackupCountLimit = 5;
 
+    public bool TempUseAutoUpdates = true;
+    public bool TempCheckUpdatesAtStartup = true;
+    public int TempCheckUpdateFrequency = 30;
+
     #endregion
 
     public void GetSettings()
@@ -103,6 +104,9 @@ internal class EditorSettingsWindow : ImGuiWindow
         TempAutoBackup = Configuration.Default.AutoBackup;
         TempAutoBackupFreq = Configuration.Default.AutoBackupFreq;
         TempBackupCountLimit = Configuration.Default.BackupCountLimit;
+        TempUseAutoUpdates = Configuration.Default.UseAutoUpdates;
+        TempCheckUpdatesAtStartup = Configuration.Default.CheckUpdatesAtStartup;
+        TempCheckUpdateFrequency = Configuration.Default.CheckUpdateFrequency;
 
         foreach (ThemeProfile profile in Configuration.Default.ThemeProfiles)
         {
@@ -122,6 +126,9 @@ internal class EditorSettingsWindow : ImGuiWindow
         Configuration.Default.AutoBackup = TempAutoBackup;
         Configuration.Default.AutoBackupFreq = TempAutoBackupFreq;
         Configuration.Default.BackupCountLimit = TempBackupCountLimit;
+        Configuration.Default.UseAutoUpdates = TempUseAutoUpdates;
+        Configuration.Default.CheckUpdatesAtStartup = TempCheckUpdatesAtStartup;
+        Configuration.Default.CheckUpdateFrequency = TempCheckUpdateFrequency;
 
         MainWindow.ResetRPCState(TempUseDiscordRPC);
 
@@ -179,6 +186,21 @@ internal class EditorSettingsWindow : ImGuiWindow
         ImGui.SetNextItemWidth(150);
         ImGui.InputInt("##AutoBackupLimit", ref TempBackupCountLimit, 1, 2);
         TempBackupCountLimit = Math.Max(TempBackupCountLimit, 1);
+    }
+
+    private void RenderAutoUpdates()
+    {
+        ImGui.Spacing();
+        ImGui.SeparatorText("Automatic Updates");
+
+        ImGui.Checkbox("Use Auto Updates", ref TempUseAutoUpdates);
+        ImGui.Checkbox("Check Updates at Launch", ref TempCheckUpdatesAtStartup);
+
+        ImGui.Text("Update Check Frequency (in minutes)");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(150);
+        ImGui.InputInt("##UpdateCheckFrequencyInt", ref TempCheckUpdateFrequency, 1, 10);
+        TempCheckUpdateFrequency = Math.Max(TempCheckUpdateFrequency, 1);
     }
 
     #endregion
