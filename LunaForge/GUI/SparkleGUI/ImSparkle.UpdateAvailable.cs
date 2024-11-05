@@ -32,7 +32,7 @@ internal partial class SparkleManager
                 ReleaseNotes.Add(item.Version, notes);
             }
         }
-        catch { }
+        catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         ShowUpdateAvailableWindow = true;
     }
 
@@ -69,12 +69,12 @@ internal partial class SparkleManager
                 ImGui.TextWrapped(item.Description);
                 ImGui.Text("Changelog notes:");
 
-                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 50);
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 30);
                 if (ReleaseNotes.TryGetValue(item.Version, out string releaseNotes))
                     ImGui.TextWrapped(releaseNotes);
                 else
                     ImGui.TextWrapped("There was a problem getting the changelog notes for this version.");
-                ImGui.SetCursorPosX(ImGui.GetCursorPosX() - 50);
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() - 30);
             }
             ImGui.EndChild();
 
