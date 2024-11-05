@@ -165,6 +165,7 @@ internal class EditorSettingsWindow : ImGuiWindow
         ImGui.SeparatorText("Discord Rich Presence");
 
         ImGui.Checkbox("Use Discord RPC", ref TempUseDiscordRPC);
+        ImGuiEx.Tooltip("Be careful, as this might spoil what you are working on if people look at your discord profile.");
     }
 
     private void RenderAutoBackup()
@@ -173,6 +174,7 @@ internal class EditorSettingsWindow : ImGuiWindow
         ImGui.SeparatorText("Automatic Backups");
 
         ImGui.Checkbox("Auto Backup", ref TempAutoBackup);
+        ImGuiEx.Tooltip("Might make your project folder's size grow a lot.");
 
         ImGui.Text("Auto Backup Frequency (in minutes)");
         ImGui.SameLine();
@@ -193,10 +195,10 @@ internal class EditorSettingsWindow : ImGuiWindow
         ImGui.Spacing();
         ImGui.SeparatorText("Automatic Updates");
 
-        ImGui.Checkbox("Use Auto Updates", ref TempUseAutoUpdates);
+        ImGui.Checkbox("Auto Updates", ref TempUseAutoUpdates);
         ImGui.Checkbox("Check Updates at Launch", ref TempCheckUpdatesAtStartup);
 
-        ImGui.Text("Update Check Frequency (in minutes)");
+        ImGui.Text("Check Update Frequency (in minutes)");
         ImGui.SameLine();
         ImGui.SetNextItemWidth(150);
         ImGui.InputInt("##UpdateCheckFrequencyInt", ref TempCheckUpdateFrequency, 1, 10);

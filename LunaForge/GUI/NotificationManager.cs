@@ -43,7 +43,7 @@ internal static class NotificationManager
     /// </summary>
     public static float MaximumDuration { get; set; } = 60f; // 1 minute.
 
-    public static int ToastSize { get; set; } = 300;
+    public static int ToastWidth { get; set; } = 300;
 
     /// <summary>
     /// Adds a new notification toast to be displayed.
@@ -111,7 +111,7 @@ internal static class NotificationManager
         if (toasts.Count == 0)
             return; // Nothing to do.
 
-        Vector2 pos = new(ImGui.GetIO().DisplaySize.X - ToastSize, 40);
+        Vector2 pos = new(ImGui.GetIO().DisplaySize.X - ToastWidth, 40);
 
         for (int i = 0; i < toasts.Count; i++)
         {
@@ -130,7 +130,7 @@ internal static class NotificationManager
             float finalSize = textSize.Y + 40f;
 
             ImGui.SetNextWindowPos(pos);
-            ImGui.SetNextWindowSize(new Vector2(ToastSize - 10, finalSize));
+            ImGui.SetNextWindowSize(new Vector2(ToastWidth - 10, finalSize));
             var bgColor = toast.Type switch
             {
                 ToastType.Info => new Vector4(0.4f, 0.4f, 0.8f, 1.0f), // Default gray for info

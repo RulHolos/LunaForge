@@ -35,8 +35,8 @@ public struct DefaultConfig()
     [DefaultValue("")]
     public string CurrentThemeProfile { get; set; } = string.Empty;
 
-    [DefaultValue(true)]
-    public bool UseDiscordRPC { get; set; } = true;
+    [DefaultValue(false)]
+    public bool UseDiscordRPC { get; set; } = false;
 
     [DefaultValue(true)]
     public bool AutoBackup = true;
