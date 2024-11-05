@@ -8,30 +8,26 @@
         <item>
             <title>Version 1.0.0.1</title>
 			<description>
-				# LunaForge 1.0.0.1
+				|	Features
+				- New node: "Create Simple Laser". A plain laser supporting tasking. (Exactly like "Simple Enemies")
+				- New node: "Return".
+				- Added a "Open Recent" menu option on the "File" menu.
 
-				## Features
+				|	Changes
+				- Fixed some nodes' displayed description (capital letters)
+				- Cleaned generated code for all nodes.
 
-				* New node: "Create Simple Laser". A plain laser supporting tasking. (Exactly like "Simple Enemies")
-				* New node: "Return".
-				* Added a "Open Recent" menu option on the "File" menu.
-
-				## Changes
-
-				* Fixed some nodes' displayed description (capital letters)
-				* Cleaned generated code for all nodes.
-
-				## Fixes
-
-				* Fixed a display error on the "Input Point Set" input window.
-				* Fixed a lot of node's GetLines.
-				* Fixed a near-fatal bug where you could delete node attributes on the parameters window.
+				|	Fixes
+				- Fixed a display error on the "Input Point Set" input window.
+				- Fixed a lot of node's GetLines.
+				- Fixed a near-fatal bug where you could delete node attributes on the parameters window.
 			</description>
 			<sparkle:channel>alpha</sparkle:channel>
             <pubDate>Tue, 12 Nov 2024 00:00:00 +0000</pubDate>
             <enclosure url="https://github.com/RulHolos/LunaForge/releases/download/1.0.0.1/LunaForge_win_1_0_0_1.exe"
                        sparkle:version="1.0.0.1"
                        sparkle:os="windows"
+					   sparkle:criticalUpdate="true"
                        type="application/octet-stream"/>
         </item>
     </channel>

@@ -23,6 +23,7 @@ internal partial class SparkleManager
     public async Task ShowUpdateAvailable(UpdateDetectedEventArgs e)
     {
         UpdateDetectedArgs = e;
+        /*
         ReleaseNotesGrabber grabber = new(string.Empty, string.Empty, this);
         try
         {
@@ -33,6 +34,7 @@ internal partial class SparkleManager
             }
         }
         catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+        */
         ShowUpdateAvailableWindow = true;
     }
 
@@ -66,11 +68,15 @@ internal partial class SparkleManager
                     ImGui.PopStyleColor();
                 }
 
-                ImGui.TextWrapped(item.Description);
                 ImGui.Text("Changelog notes:");
 
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 30);
-                ImGui.TextWrapped(item.Description);
+                string finalString = "";
+                foreach (string str in item.Description.Split('\n'))
+                {
+                    finalString += str.Trim() + '\n';
+                }
+                ImGui.TextWrapped(finalString);
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() - 30);
             }
             ImGui.EndChild();
