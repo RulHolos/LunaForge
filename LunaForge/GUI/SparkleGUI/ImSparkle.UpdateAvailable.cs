@@ -70,10 +70,7 @@ internal partial class SparkleManager
                 ImGui.Text("Changelog notes:");
 
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 30);
-                if (ReleaseNotes.TryGetValue(item.Version, out string releaseNotes))
-                    ImGui.TextWrapped(releaseNotes);
-                else
-                    ImGui.TextWrapped("There was a problem getting the changelog notes for this version.");
+                ImGui.TextWrapped(item.Description);
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() - 30);
             }
             ImGui.EndChild();
