@@ -1,6 +1,8 @@
-﻿using ImGuiNET;
+﻿using IconFonts;
+using ImGuiNET;
 using LunaForge.GUI.Helpers;
 using NetSparkleUpdater;
+using NetSparkleUpdater.Enums;
 using NetSparkleUpdater.Events;
 using NetSparkleUpdater.Interfaces;
 using Raylib_cs;
@@ -23,18 +25,6 @@ internal partial class SparkleManager
     public async Task ShowUpdateAvailable(UpdateDetectedEventArgs e)
     {
         UpdateDetectedArgs = e;
-        /*
-        ReleaseNotesGrabber grabber = new(string.Empty, string.Empty, this);
-        try
-        {
-            foreach (AppCastItem item in e.AppCastItems)
-            {
-                string notes = await grabber.DownloadAllReleaseNotes([item], item, CancellationToken.None);
-                ReleaseNotes.Add(item.Version, notes);
-            }
-        }
-        catch (Exception ex) { Console.WriteLine(ex.ToString()); }
-        */
         ShowUpdateAvailableWindow = true;
     }
 
@@ -55,20 +45,33 @@ internal partial class SparkleManager
             ImGui.Text($"Update Available: {UpdateDetectedArgs.LatestVersion.Version}");
             ImGui.Text($"Current Version: {UpdateDetectedArgs.ApplicationConfig.InstalledVersion}");
 
+            if (ImGui.Button("Install Update"))
+            {
+                UserRespondedToUpdateCheck();
+            }
+
             ImGui.BeginChild("##UpdateAvailableItems");
             foreach (AppCastItem item in UpdateDetectedArgs.AppCastItems)
             {
                 ImGui.Spacing();
-                ImGui.SeparatorText(item.Version);
+                ImGui.PushStyleColor(ImGuiCol.Text, item.Version == UpdateDetectedArgs.ApplicationConfig.InstalledVersion
+                    ? ImGui.GetColorU32(new Vector4(0f, 1f, 0f, 1f))
+                    : ImGui.GetColorU32(ImGuiCol.Text));
+                ImGui.SeparatorText($"{item.Version} - {item.PublicationDate}");
+                if (ImGui.IsItemHovered() && item.Version == UpdateDetectedArgs.ApplicationConfig.InstalledVersion)
+                    ImGui.SetTooltip("Installed Version");
+                ImGui.PopStyleColor();
 
                 if (item.IsCriticalUpdate)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(new Vector4(1.0f, 0.0f, 0.0f, 1.0f)));
                     ImGui.Text("Critical Update!!");
                     ImGui.PopStyleColor();
+                    ImGui.Spacing();
                 }
 
                 ImGui.Text("Changelog notes:");
+                ImGui.Spacing();
 
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 30);
                 string finalString = "";
@@ -78,10 +81,18 @@ internal partial class SparkleManager
                 }
                 ImGui.TextWrapped(finalString);
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() - 30);
+
+                ImGui.Spacing();
+                ImGui.TextLinkOpenURL("Manual Download", item.DownloadLink);
             }
             ImGui.EndChild();
 
             ImGui.EndPopup();
         }
+    }
+
+    public void UserRespondedToUpdateCheck()
+    {
+        InitAndBeginDownload(UpdateDetectedArgs.LatestVersion);
     }
 }

@@ -29,7 +29,7 @@ internal partial class SparkleManager : SparkleUpdater
         StartLoop(
             LunaForge.Configuration.Default.CheckUpdatesAtStartup,
             LunaForge.Configuration.Default.CheckUpdatesAtStartup,
-            TimeSpan.FromHours(LunaForge.Configuration.Default.CheckUpdateFrequency)); // TODO: Replace this with Settings auto update.
+            TimeSpan.FromHours(LunaForge.Configuration.Default.CheckUpdateFrequency));
     }
 
     #region Main Rendering
@@ -44,9 +44,9 @@ internal partial class SparkleManager : SparkleUpdater
 
     private void SparkleManager_UpdateDetected(object sender, UpdateDetectedEventArgs e)
     {
-        void InstallCallback(Toast toast)
+        async void InstallCallback(Toast toast)
         {
-            ShowUpdateAvailable(e);
+            await ShowUpdateAvailable(e);
         }
 
         NotificationManager.AddToast("Update Found!\nClick to install.", "Install", duration: 10f, clickCallback: InstallCallback);

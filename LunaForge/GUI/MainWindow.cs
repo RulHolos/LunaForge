@@ -145,19 +145,39 @@ internal static class MainWindow
 
     #region Windows
 
-    public static List<ImGuiWindow> Windows { get; set; } = [];
+    /// <summary>
+    /// Key: Window identifier; Value: Window object.
+    /// </summary>
+    public static Dictionary<string, ImGuiWindow> Windows { get; set; } = [];
 
-    public static ToolboxWindow ToolboxWin;
-    public static NodeAttributeWindow NodeAttributeWin;
-    public static DefinitionsWindow DefinitionsWin;
-    public static TracesWindow TracesWin;
-    public static DebugLogWindow DebugLogWin;
-    public static NewProjWindow NewProjWin;
-    public static FileSystemWindow FSWin;
-    public static ViewCodeWindow ViewCodeWin;
-    public static SparkleWindow SparkleWin;
-    public static PluginManagerWindow PluginManagerWin;
-    public static EditorSettingsWindow EditorSettingsWin;
+    public static ToolboxWindow ToolboxWin => GetWindow<ToolboxWindow>("ToolboxWin");
+    public static NodeAttributeWindow NodeAttributeWin => GetWindow<NodeAttributeWindow>("NodeAttributeWin");
+    public static DefinitionsWindow DefinitionsWin => GetWindow<DefinitionsWindow>("DefinitionsWin");
+    public static TracesWindow TracesWin => GetWindow<TracesWindow>("TracesWin");
+    public static DebugLogWindow DebugLogWin => GetWindow<DebugLogWindow>("DebugLogWin");
+    public static NewProjWindow NewProjWin => GetWindow<NewProjWindow>("NewProjWin");
+    public static FileSystemWindow FSWin => GetWindow<FileSystemWindow>("FSWin");
+    public static ViewCodeWindow ViewCodeWin => GetWindow<ViewCodeWindow>("ViewCodeWin");
+    public static SparkleWindow SparkleWin => GetWindow<SparkleWindow>("SparkleWin");
+    public static PluginManagerWindow PluginManagerWin => GetWindow<PluginManagerWindow>("PluginManagerWin");
+    public static EditorSettingsWindow EditorSettingsWin => GetWindow<EditorSettingsWindow>("EditorSettingsWin");
+
+    private static void InitializeCoreWindows()
+    {
+        Windows = [];
+
+        Windows.TryAdd("ToolboxWin", ToolboxWin);
+        Windows.TryAdd("NodeAttributeWin", NodeAttributeWin);
+        Windows.TryAdd("DefinitionsWin", DefinitionsWin);
+        Windows.TryAdd("TracesWin", TracesWin);
+        Windows.TryAdd("DebugLogWin", DebugLogWin);
+        Windows.TryAdd("NewProjWin", NewProjWin);
+        Windows.TryAdd("FSWin", FSWin);
+        Windows.TryAdd("ViewCodeWin", ViewCodeWin);
+        Windows.TryAdd("SparkleWin", SparkleWin);
+        Windows.TryAdd("PluginManagerWin", PluginManagerWin);
+        Windows.TryAdd("EditorSettingsWin", EditorSettingsWin);
+    }
 
     #endregion
     #region Properties
@@ -212,17 +232,7 @@ internal static class MainWindow
     {
         Configuration.Load();
 
-        ToolboxWin = new();
-        NodeAttributeWin = new();
-        DefinitionsWin = new();
-        TracesWin = new();
-        DebugLogWin = new();
-        NewProjWin = new();
-        FSWin = new();
-        ViewCodeWin = new();
-        SparkleWin = new();
-        PluginManagerWin = new();
-        EditorSettingsWin = new();
+        InitializeCoreWindows();
 
         Workspaces = [];
 
@@ -322,21 +332,10 @@ internal static class MainWindow
 
     private static void Render()
     {
-        ToolboxWin.Render();
-        NodeAttributeWin.Render();
         foreach (LunaForgeProject? proj in Workspaces.ToList())
             proj?.Window?.Render();
-        DefinitionsWin.Render();
-        TracesWin.Render();
-        DebugLogWin.Render();
-        NewProjWin.Render();
-        FSWin.Render();
-        ViewCodeWin.Render();
-        SparkleWin.Render();
-        PluginManagerWin.Render();
-        EditorSettingsWin.Render();
 
-        foreach (ImGuiWindow window in Windows)
+        foreach (ImGuiWindow window in Windows.Values)
             window?.Render();
 
         InputWindowSelector.CurrentInputWindow?.Render();
@@ -391,6 +390,8 @@ internal static class MainWindow
     private static void SetupSparkle()
     {
         // TODO: return if not enabled in the settings.
+        if (!Configuration.Default.UseAutoUpdates)
+            return;
 
         Sparkle = new();
     }
@@ -565,7 +566,7 @@ internal static class MainWindow
                 ImGui.Separator();
                 if (ImGui.MenuItem("Check for Updates"))
                     SparkleWin.Sparkle.CheckForUpdatesAtUserRequest();
-                ImGui.MenuItem("About");
+                ImGui.MenuItem("About", string.Empty, ref GetWindow<AboutWindow>("AboutWin").ShowWindow);
                 ImGui.EndMenu();
             }
             ImGui.EndMainMenuBar();
@@ -879,6 +880,30 @@ internal static class MainWindow
             CloseCallback();
         }
         return true;
+    }
+
+    #endregion
+    #region Window manager
+
+    /// <summary>
+    /// Gets or create a window instance from a <typeparamref name="T"/> type with a window identifier.
+    /// </summary>
+    /// <remarks>
+    /// The newly created windows are directly added to <see cref="Windows"/>, no need to add them manually.
+    /// </remarks>
+    /// <typeparam name="T">The window type.</typeparam>
+    /// <param name="windowName">The window identifier.</param>
+    /// <returns>The window instance if it exists; otherwise, a new instance of <typeparamref name="T"/>.</returns>
+    public static T GetWindow<T>(string windowName) where T : new()
+    {
+        // If the window already exists, return it
+        if (Windows != null && Windows.TryGetValue(windowName, out var existingWindow))
+        {
+            return (T)(object)existingWindow;
+        }
+
+        Windows.Add(windowName, new T() as ImGuiWindow);
+        return newWindow;
     }
 
     #endregion
