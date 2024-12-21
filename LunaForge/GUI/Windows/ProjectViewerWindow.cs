@@ -201,9 +201,10 @@ public class ProjectViewerWindow : ImGuiWindow
     public bool TempLogWindowSub;
     public Vector2 TempDebugRes;
     public int TempSelectedRes;
-    public int TempSelectedNodePluginId = 0;
+    public int TempSelectedNodePluginId = -1;
     public NodePlugin TempSelectedNodePlugin = null;
     public string TempDifficulties = string.Empty; // 1 difficulty per line. Detected with line breaks.
+    public string TempLaunchArguments = string.Empty;
 
     public void OpenSettings()
     {
@@ -249,6 +250,10 @@ public class ProjectViewerWindow : ImGuiWindow
                     ImGui.Checkbox("Cheat mode", ref TempCheat);
                     ImGui.Spacing();
                     ImGui.Checkbox("Enable log window (LuaSTG Sub only)", ref TempLogWindowSub);
+                    ImGui.Spacing();
+                    ImGui.Separator();
+                    RenderLaunchArguments();
+                    ImGui.Spacing();
                     ImGui.Separator();
 
                     ImGui.EndTabItem();
@@ -379,6 +384,14 @@ public class ProjectViewerWindow : ImGuiWindow
         }
     }
 
+    private void RenderLaunchArguments()
+    {
+        ImGui.Text("Launch Arguments");
+        ImGuiEx.Tooltip("Advanced feature. Do not touch unless you know what you're doing.");
+        ImGui.SetNextItemWidth(-1);
+        ImGui.InputText("##LaunchArgumentsInput", ref TempLaunchArguments, 2048);
+    }
+
     private void RenderNodePluginList()
     {
         ImGui.BeginGroup();
@@ -387,10 +400,13 @@ public class ProjectViewerWindow : ImGuiWindow
             if (ImGui.BeginListBox($"##{ParentProject.ProjectName}_ProjectNodes", listSize))
             {
                 int i = 0;
+                if (TempSelectedNodePluginId == -1)
+                {
+                    TempSelectedNodePluginId = 0;
+                    TempSelectedNodePlugin = ParentProject.Toolbox.Plugins[0];
+                }
                 foreach (NodePlugin nodePlugin in ParentProject.Toolbox.Plugins)
                 {
-                    if (nodePlugin.DisplayName == "System")
-                        continue;
                     ImGui.PushStyleColor(ImGuiCol.Text, nodePlugin.Enabled ? ImGui.GetColorU32(ImGuiCol.Text) : ImGui.GetColorU32(ImGuiCol.TextDisabled));
                     if (ImGui.Selectable($"{nodePlugin.DisplayName}##nodePlugin_{i}", TempSelectedNodePluginId == i))
                     {
@@ -411,12 +427,15 @@ public class ProjectViewerWindow : ImGuiWindow
                 ImGui.Text(TempSelectedNodePlugin.DisplayName);
                 if (!string.IsNullOrEmpty(TempSelectedNodePlugin.Authors))
                     ImGui.TextWrapped($"By: {TempSelectedNodePlugin.Authors}");
-                string btnText = TempSelectedNodePlugin.Enabled ? "Disable" : "Enable";
-                if (ImGui.Button($"{btnText}"))
+                if (TempSelectedNodePlugin.DisplayName != "System")
                 {
-                    TempSelectedNodePlugin.ToggleState(ParentProject);
+                    string btnText = TempSelectedNodePlugin.Enabled ? "Disable" : "Enable";
+                    if (ImGui.Button($"{btnText}"))
+                    {
+                        TempSelectedNodePlugin.ToggleState(ParentProject);
+                    }
+                    ImGuiEx.Tooltip("You will need to reload your project for these changes to take effect.");
                 }
-                ImGui.TextWrapped("(You will need to reload your project for these changes to take effect.)");
                 ImGui.EndGroup();
             }
         }
@@ -445,6 +464,7 @@ public class ProjectViewerWindow : ImGuiWindow
         TempDebugRes = ParentProject.DebugRes;
         TempSelectedRes = ListOfRes.IndexOf(ParentProject.DebugRes);
         TempDifficulties = string.Join('\n', ParentProject.Difficulties);
+        TempLaunchArguments = ParentProject.LaunchArguments;
 
         SettingsModalClosed = false;
     }
@@ -461,6 +481,7 @@ public class ProjectViewerWindow : ImGuiWindow
         ParentProject.LogWindowSub = TempLogWindowSub;
         ParentProject.DebugRes = TempDebugRes;
         ParentProject.Difficulties = [.. TempDifficulties.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+        ParentProject.LaunchArguments = TempLaunchArguments;
 
         ParentProject.Save();
 
@@ -501,7 +522,7 @@ public class ProjectViewerWindow : ImGuiWindow
         }
 
         string lastUsedPath = Configuration.Default.LastUsedPath;
-        MainWindow.FileDialogManager.OpenFileDialog("Choose Definition", "LunaForge Definition{.lfd}", SelectPath, 1, string.IsNullOrEmpty(ParentProject.PathToProjectRoot)
+        MainWindow.FileDialogManager.OpenFileDialog("Choose Definition", "LunaForge Entry Files{.lfd,.lua}", SelectPath, 1, string.IsNullOrEmpty(ParentProject.PathToProjectRoot)
                 ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 : Path.GetDirectoryName(ParentProject.PathToProjectRoot), true);
     }

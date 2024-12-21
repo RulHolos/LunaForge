@@ -211,6 +211,7 @@ public class LunaDefinition : LunaProjectFile
                 {
                     if (node.ValidateChild(DraggedNode))
                         AddAndExecuteCommand(new DragDropCommand(DraggedNode, node));
+                    DraggedNode = null;
                 }
                 ImGui.EndDragDropTarget();
             }
@@ -249,7 +250,7 @@ public class LunaDefinition : LunaProjectFile
                             parent = parent.Parent;
                         }
                     }
-                    tempNode = TreeSerializer.DeserializeTreeNode(nodeToDeserialize);
+                    tempNode = TreeSerializer.DeserializeTreeNode(def, nodeToDeserialize);
                     tempNode.ParentDef = def;
                     tempNode.Hash = def.TreeNodeMaxHash;
                     def.TreeNodeMaxHash++;
@@ -260,7 +261,7 @@ public class LunaDefinition : LunaProjectFile
                 }
                 else
                 {
-                    root = TreeSerializer.DeserializeTreeNode(nodeToDeserialize);
+                    root = TreeSerializer.DeserializeTreeNode(def, nodeToDeserialize);
                     root.ParentDef = def;
                     root.Hash = def.TreeNodeMaxHash;
                     root.RaiseCreate(new() { Parent = root });

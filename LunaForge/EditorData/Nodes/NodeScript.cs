@@ -18,8 +18,8 @@ internal static class NodeScript
     {
         if (!File.Exists(context.PathToLuaFull))
         {
-            context.CheckTrace();
             context.InvalidNode = true;
+            context.CheckTrace();
             NotificationManager.AddToast($"Cannot load a node.\nCheck console for more infos.", ToastType.Error);
             Console.WriteLine($"Path to node {context.PathToLuaFull} doesn't exist.");
             return null;

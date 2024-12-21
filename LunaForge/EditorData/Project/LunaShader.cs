@@ -32,6 +32,8 @@ public class LunaShader : LunaProjectFile
 
     public override void Render()
     {
+        ImGui.Text("Shader Editor is a WIP.");
+        return;
         // TODO: wtf.
         using (Graph.DoCanvas($"ShaderCanvas_{FileName}"))
         {

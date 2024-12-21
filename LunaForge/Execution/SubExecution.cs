@@ -13,12 +13,12 @@ public class SubExecution(LunaForgeProject proj) : LSTGExecution
 
     public override void BeforeRun()
     {
-        Parameters = "\""
-            + "start_game=true is_debug=true setting.nosplash=true setting.windowed="
-            + ProjectExec.Windowed.ToString().ToLower() + " setting.resx=" + ProjectExec.DebugRes.X
-            + " setting.resy=" + ProjectExec.DebugRes.Y + " cheat=" + ProjectExec.Cheat.ToString().ToLower()
-            + " updatelib=" + false.ToString().ToLower() + " setting.mod=\'"
-            + ProjectExec.ProjectName + "\'\" "
+        Parameters = "\"" + string.Format(ProjectExec.LaunchArguments,
+            ProjectExec.Windowed.ToString().ToLower(),
+            ProjectExec.DebugRes.X,
+            ProjectExec.DebugRes.Y,
+            ProjectExec.Cheat.ToString().ToLower(),
+            $"\'{ProjectExec.ProjectName}\'") + "\""
             + (ProjectExec.LogWindowSub ? "--log-window" : "");
         UseShellExecute = false;
         CreateNoWindow = true;

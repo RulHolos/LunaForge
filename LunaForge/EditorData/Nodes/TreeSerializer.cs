@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using LunaForge.EditorData.Nodes.NodeData;
+using LunaForge.EditorData.Project;
+using LunaForge.GUI;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +25,16 @@ public static class TreeSerializer
         return JsonConvert.SerializeObject(node, typeof(TreeNode), TreeNodeSettings);
     }
 
-    public static TreeNode? DeserializeTreeNode(string node)
+    public static TreeNode? DeserializeTreeNode(LunaDefinition def, string node)
     {
-        return JsonConvert.DeserializeObject(node, typeof(TreeNode), TreeNodeSettings) as TreeNode;
+        try
+        {
+            return JsonConvert.DeserializeObject(node, typeof(TreeNode), TreeNodeSettings) as TreeNode;
+        }
+        catch (JsonSerializationException ex)
+        {
+            NotificationManager.AddToast("Couldn't parse project file.\nIs your file corrupted?", ToastType.Error);
+            return new LuaNode(def, Path.Combine(def.ParentProject.PathToNodeData, "You Shouldn't Even Be Able To See That.lua"));
+        }
     }
 }

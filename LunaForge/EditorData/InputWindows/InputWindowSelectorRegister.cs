@@ -49,6 +49,7 @@ public class InputWindowSelectorRegister
         target.Add("objectDef", (src, tar) => new ObjectDefInput(tar, "Object", src));
         target.Add("functionDef", (src, tar) => new ObjectDefInput(tar, "Function", src));
         target.Add("difficulty", (src, tar) => new DifficultySelectInput(tar, "Difficulty", src));
+        target.Add("difficultyNum", (src, tar) => new DifficultyNumSelectInput(tar, "Difficulty Index", src));
         // TODO: difficulty
 
         return target;

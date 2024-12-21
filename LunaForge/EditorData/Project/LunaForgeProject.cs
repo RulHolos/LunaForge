@@ -60,6 +60,9 @@ public partial class LunaForgeProject : ITraceThrowable
     // Project-wide defined difficulties. By default: ["Easy", "Normal", "Hard", "Lunatic", "Extra", "Phantasm"];
     public List<string> Difficulties = ["Easy", "Normal", "Hard", "Lunatic", "Extra", "Phantasm"];
 
+    [DefaultValue("start_game=true is_debug=true setting.nosplash=true setting.windowed={0} setting.resx={1} setting.resy={2} cheat={3} updatelib=false setting.mod={4}")]
+    public string LaunchArguments = "start_game = true is_debug=true setting.nosplash=true setting.windowed={0} setting.resx={1} setting.resy={2} cheat={3} updatelib=false setting.mod={4}";
+
     public Vector2 DebugRes = new(800, 600);
 
     /// <summary>
@@ -381,7 +384,9 @@ public partial class LunaForgeProject : ITraceThrowable
     #endregion
     #region Events
 
+    [YamlIgnore]
     public UpdateSelectedProjectEventHandler OnUpdateSelectedProject;
+    [YamlIgnore]
     public UnloadProjectEventHandler OnUnloadProject;
 
     public void RaiseUpdateSelected()

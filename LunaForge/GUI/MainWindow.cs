@@ -254,7 +254,7 @@ internal static class MainWindow
         GetPresets();
         GetRecentOpens();
         SetupDiscordRpc();
-        SetupSparkle();
+        //SetupSparkle();
 
         // Define the interface only if UseInterface is true. Should always be the case in release versions.
         if (UseInterface)
@@ -339,9 +339,9 @@ internal static class MainWindow
             window?.Render();
 
         InputWindowSelector.CurrentInputWindow?.Render();
-        FileDialogManager.Draw();
+        FileDialogManager?.Draw();
 
-        Sparkle.Render();
+        Sparkle?.Render();
 
         NotificationManager.Render();
     }
@@ -902,7 +902,8 @@ internal static class MainWindow
             return (T)(object)existingWindow;
         }
 
-        Windows.Add(windowName, new T() as ImGuiWindow);
+        T newWindow = new();
+        Windows.Add(windowName, newWindow as ImGuiWindow);
         return newWindow;
     }
 

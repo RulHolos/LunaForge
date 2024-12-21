@@ -32,11 +32,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="EditorData\Lang\en.json" />
     <None Remove="Images\Error.png" />
     <None Remove="Images\Info.png" />
     <None Remove="Images\Warning.png" />
     <None Remove="Templates\Empty.json" />
     <None Remove="Templates\Empty.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="EditorData\Lang\en.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
