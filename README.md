@@ -17,8 +17,6 @@
     <a href="https://rulholos.github.io/LunaForge/editor/LunaForge.html"><strong>Explore the docs</strong></a>
     <br />
     <br />
-    <a href="https://github.com/RulHolos/LunaForge">View Demo</a>
-    &middot;
     <a href="https://github.com/RulHolos/LunaForge/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
     <a href="https://github.com/RulHolos/LunaForge/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
@@ -105,7 +103,7 @@ Section in progress...
 
 Section in progress...
 
-_For more examples, please refer to the [Documentation](https://rulholos.github.io/LunaForge/editor/LunaForge.html_
+_For more examples, please refer to the [Documentation](https://rulholos.github.io/LunaForge/editor/LunaForge.html)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
