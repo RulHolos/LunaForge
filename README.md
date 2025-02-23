@@ -14,7 +14,7 @@
   <p align="center">
     <strong>LunaForge</strong> is a code editor and generator targeting the LuaSTG engine (all main branches).
     <br />
-    <a href="https://github.com/RulHolos/LunaForge"><strong>Explore the docs</strong></a>
+    <a href="https://rulholos.github.io/LunaForge/editor/LunaForge.html"><strong>Explore the docs</strong></a>
     <br />
     <br />
     <a href="https://github.com/RulHolos/LunaForge">View Demo</a>
@@ -68,10 +68,7 @@ There is more to come~
 
 ### Built With
 
-* [![.Net][dotnet]][NET-url]
-* [![C#][csharp]][csharp-url]
-* [![ImGUI][imgui-shield]][imgui-url]
-* [![Raylib][raylib-shield]][raylib-url]
+[![.Net][dotnet]][NET-url] [![C#][csharp]][csharp-url] [![ImGUI][imgui-shield]][imgui-url] [![Raylib][raylib-shield]][raylib-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -108,7 +105,7 @@ Section in progress...
 
 Section in progress...
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+_For more examples, please refer to the [Documentation](https://rulholos.github.io/LunaForge/editor/LunaForge.html_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
