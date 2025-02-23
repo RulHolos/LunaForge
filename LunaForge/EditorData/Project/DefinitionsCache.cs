@@ -1,4 +1,5 @@
 ﻿using LunaForge.EditorData.Nodes;
+using LunaForge.EditorData.Nodes.NodeData.Project;
 using LunaForge.GUI.Helpers;
 using System;
 using System.Collections.Generic;
@@ -21,8 +22,7 @@ public enum DefinitionMetaType
 public struct CachedDefinitionFile
 {
     public string PathToDefinition;
-    public List<CachedDefinition> Definitions;
-    public List<string> AccessibleFrom;
+    public HashSet<CachedDefinition> Definitions;
 }
 
 public struct CachedDefinition
@@ -37,7 +37,7 @@ public class DefinitionsCache
 {
     #region Serialized Properties
 
-    public List<CachedDefinitionFile> Definitions = [];
+    public HashSet<CachedDefinitionFile> Definitions = [];
 
     #endregion
 
@@ -101,75 +101,33 @@ public class DefinitionsCache
 
     public bool DefinitionExistsInCache(string relativeDefPath) => Definitions.Any(x => x.PathToDefinition == relativeDefPath);
 
+    private static string GetRelativePath(LunaDefinition def) => Path.GetRelativePath(def.ParentProject.PathToProjectRoot, def.FullFilePath);
+
     public void AddToCache(LunaDefinition loadedDefinition)
     {
         CachedDefinitionFile def = new()
         {
-            PathToDefinition = Path.GetRelativePath(loadedDefinition.ParentProject.PathToProjectRoot, loadedDefinition.FullFilePath),
+            PathToDefinition = GetRelativePath(loadedDefinition),
             Definitions = loadedDefinition.Definitions ?? [],
-            AccessibleFrom = loadedDefinition.AccessibleFrom ?? [],
         };
-        Definitions.RemoveAll(x => x.PathToDefinition == def.PathToDefinition);
-        Definitions.Add(def);
-        Save();
-    }
-
-    public void AddToCache(string relativeDefPath, string relativeSrcPath)
-    {
-        CachedDefinitionFile def = new()
-        {
-            PathToDefinition = relativeDefPath,
-            Definitions = [],
-            AccessibleFrom = [relativeSrcPath],
-        };
+        Definitions.RemoveWhere(x => x.PathToDefinition == def.PathToDefinition);
         Definitions.Add(def);
         Save();
     }
 
     public void RemoveFromCache(LunaDefinition loadedDefinition)
     {
-        Definitions.RemoveAll(x => x.PathToDefinition == Path.GetRelativePath(loadedDefinition.ParentProject.PathToProjectRoot, loadedDefinition.FullFilePath));
+        Definitions.RemoveWhere(x => x.PathToDefinition == GetRelativePath(loadedDefinition));
         Save();
     }
 
-    public void AddAccessibleFrom(string relativeDefPath, string relativeSrcPath)
-    {
-        foreach (CachedDefinitionFile def in Definitions)
-        {
-            if (def.PathToDefinition == relativeDefPath)
-            {
-                if (def.AccessibleFrom.Any(x => x == relativeSrcPath))
-                    break;
-                def.AccessibleFrom.Add(relativeSrcPath);
-                Save();
-                break;
-            }
-        }
-    }
-
-    public void RemoveAccessibleFrom(string relativeDefPath, string relativeSrcPath)
-    {
-        foreach (CachedDefinitionFile def in Definitions)
-        {
-            if (def.PathToDefinition == relativeDefPath)
-            {
-                def.AccessibleFrom.Remove(relativeSrcPath);
-                Save();
-                break;
-            }   
-        }
-    }
-
-    public CachedDefinition[] GetAccessibleDefinitionsWithType(string relativeSourceDef, string filter)
+    public CachedDefinition[] GetDefinitionsWithType(string filter)
     {
         List<CachedDefinition> defs = [];
         foreach (CachedDefinitionFile defFile in Definitions)
-        {
-            if (defFile.AccessibleFrom.Contains(relativeSourceDef) || defFile.PathToDefinition.Contains(relativeSourceDef))
-                foreach (CachedDefinition def in defFile.Definitions)
-                    if (def.MetaModelName == filter)
-                        defs.Add(def);
-        }
+            foreach (CachedDefinition def in defFile.Definitions)
+                if (def.MetaModelName == filter)
+                    defs.Add(def);
         defs.Sort((x, y) => x.ClassName.CompareTo(y.ClassName));
         return [.. defs];
     }

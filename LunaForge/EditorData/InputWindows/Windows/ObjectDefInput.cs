@@ -29,8 +29,7 @@ public class ObjectDefInput : InputWindow
         FilterByType = filter;
         DifficultyValues = [.. MainWindow.Workspaces.Current.Difficulties];
         FilterByDifficulty = DifficultyValues[0] ?? string.Empty; // By default: "Easy". Defaults on the first defined difficulty.
-        string relativeSourcePath = Path.GetRelativePath(owner.ParentNode.ParentDef.ParentProject.PathToProjectRoot, owner.ParentNode.ParentDef.FullFilePath);
-        Definitions = MainWindow.Workspaces.Current.DefCache.GetAccessibleDefinitionsWithType(relativeSourcePath, FilterByType);
+        Definitions = MainWindow.Workspaces.Current.DefCache.GetDefinitionsWithType(FilterByType);
     }
 
     public override void RenderModal()

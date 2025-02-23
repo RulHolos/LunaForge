@@ -45,9 +45,8 @@ public class LunaDefinition : LunaProjectFile
     public bool JustOpened = true;
     public bool JustInserted = false;
 
-    public List<CachedDefinition> Definitions { get; set; } = [];
-    public List<TreeNode> TempDefinitions { get; set; } = [];
-    public List<string> AccessibleFrom { get; set; } = [];
+    public HashSet<CachedDefinition> Definitions { get; set; } = [];
+    public HashSet<TreeNode> TempDefinitions { get; set; } = [];
 
     public TreeNode CopyClipboard { get; set; } = null;
 
@@ -517,12 +516,6 @@ public class LunaDefinition : LunaProjectFile
     #endregion
     #region DefCache
 
-    public void AddAccessibleFrom(string otherFilePath)
-    {
-        if (!AccessibleFrom.Any(x => x == otherFilePath))
-            AccessibleFrom.Add(otherFilePath);
-    }
-
     /// <summary>
     /// Called at saving time. Construct the node cache from all temporary nodes.
     /// </summary>
@@ -538,8 +531,8 @@ public class LunaDefinition : LunaProjectFile
             string? className = node.GetAttribute("Name");
             if (!(string.IsNullOrEmpty(node.GetAttribute("Difficulty")) || node.GetAttribute("Difficulty") == "Any"))
                 className += $":{node.GetAttribute("Difficulty")}";
-            string[]? parameters = node.GetInitParameters();
-            if (className != null && parameters != null)
+            string[]? parameters = node.GetInitParameters(); // ?? ([.. node.Attributes.Select(attr => attr.AttrName)]);
+            if (className != null)
             {
                 AddNodeToCache(className, parameters, node.MetaData.MetaModel);
             }
@@ -557,7 +550,7 @@ public class LunaDefinition : LunaProjectFile
         CachedDefinition def = new()
         {
             ClassName = className,
-            Parameters = parameterList,
+            Parameters = parameterList ?? [],
             MetaModelName = metaModel
         };
         if (!Definitions.Any(x => x.ClassName == def.ClassName))
@@ -566,7 +559,7 @@ public class LunaDefinition : LunaProjectFile
 
     public void RemoveNodeFromCache(string className)
     {
-        Definitions.RemoveAll(x => x.ClassName == className);
+        Definitions.RemoveWhere(x => x.ClassName == className);
     }
 
     #endregion

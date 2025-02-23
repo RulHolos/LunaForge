@@ -19,10 +19,11 @@ public class LoadDefinition : TreeNode
 {
     [JsonConstructor]
     private LoadDefinition() : base() { }
-    public LoadDefinition(LunaDefinition def) : this(def, "") { }
-    public LoadDefinition(LunaDefinition def, string filePath) : base(def)
+    public LoadDefinition(LunaDefinition def) : this(def, "", "false") { }
+    public LoadDefinition(LunaDefinition def, string filePath, string local) : base(def)
     {
         PathToDefinition = filePath;
+        Local = local;
     }
 
     [JsonIgnore]
@@ -35,15 +36,24 @@ public class LoadDefinition : TreeNode
         set => CheckAttr(0, "Path to Definition", "definitionFile").AttrValue = value;
     }
 
+    [JsonIgnore, NodeAttribute, DefaultValue("false")]
+    public string Local
+    {
+        get => CheckAttr(1, "Local variable", "bool").AttrValue;
+        set => CheckAttr(1, "Local variable", "bool").AttrValue = value;
+    }
+
     public override string ToString()
     {
-        return $"Load Definition from \"{GetAttribute(0)}\"";
+        string local = GetAttribute(1) == "true" ? "local " : "";
+        return $"Load {local}Definition from \"{Path.GetRelativePath(ParentDef.ParentProject.PathToProjectRoot, GetAttribute(0))}\"";
     }
 
     public override IEnumerable<string> ToLua(int spacing)
     {
         string sp = Indent(spacing);
-        yield return sp + $"require('{Path.ChangeExtension(
+        string local = GetAttribute(1) == "true" ? "local " : "";
+        yield return sp + $"{local}last_definition = Include('{Path.ChangeExtension(
             Path.GetRelativePath(ParentDef.ParentProject.PathToProjectRoot, GetAttribute(0) ?? string.Empty), ".lua")
             .Replace("\\", "/")}')\n";
     }
@@ -65,6 +75,7 @@ public class LoadDefinition : TreeNode
         return traces;
     }
 
+    /*
     public override void OnCreateNodeImpl(OnCreateEventArgs e)
     {
         AddCache(GetAttribute(0), ParentDef.FullFilePath);
@@ -104,4 +115,5 @@ public class LoadDefinition : TreeNode
         if (defCache.DefinitionExistsInCache(relativeDefPath))
             defCache.RemoveAccessibleFrom(relativeDefPath, relativeSrcPath);
     }
+    */
 }

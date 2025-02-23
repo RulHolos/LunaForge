@@ -522,7 +522,7 @@ public class ProjectViewerWindow : ImGuiWindow
         }
 
         string lastUsedPath = Configuration.Default.LastUsedPath;
-        MainWindow.FileDialogManager.OpenFileDialog("Choose Definition", "LunaForge Entry Files{.lfd,.lua}", SelectPath, 1, string.IsNullOrEmpty(ParentProject.PathToProjectRoot)
+        MainWindow.FileDialogManager.OpenFileDialog("Choose Definition", "LunaForge Definition{.lfd}", SelectPath, 1, string.IsNullOrEmpty(ParentProject.PathToProjectRoot)
                 ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 : Path.GetDirectoryName(ParentProject.PathToProjectRoot), true);
     }

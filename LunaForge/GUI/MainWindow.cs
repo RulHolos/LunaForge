@@ -228,7 +228,7 @@ internal static class MainWindow
     /// <summary>
     /// Raylib/ImGui window initialization and main rendering loop of the editor.
     /// </summary>
-    public static unsafe void Initialize()
+    public static void Initialize()
     {
         Configuration.Load();
 
@@ -364,7 +364,7 @@ internal static class MainWindow
             return true;
     }
 
-    public static unsafe bool LoadTTF(string pathToTTF, float size)
+    public static bool LoadTTF(string pathToTTF, float size)
     {
         try
         {

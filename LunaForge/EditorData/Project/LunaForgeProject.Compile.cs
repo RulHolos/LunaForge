@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -80,7 +81,9 @@ public partial class LunaForgeProject
             {
                 LunaShader shader = await LunaShader.CreateFromFile(this, shaderPath);
                 string pathToTemp = Path.GetRelativePath(PathToProjectRoot, shaderPath);
-                using FileStream fs = new(Path.Combine(CompileProcess.CurrentTempPath, Path.ChangeExtension(pathToTemp, shader.FileFormat)), FileMode.Create, FileAccess.Write);
+                using FileStream fs = new(Path.Combine(CompileProcess.CurrentTempPath,
+                    Path.ChangeExtension(pathToTemp, shader.FileFormat.GetAttributeOfType<DescriptionAttribute>().Description)),
+                    FileMode.Create, FileAccess.Write);
                 using (StreamWriter sw = new(fs))
                 {
                     sw.Write("Yellow.");

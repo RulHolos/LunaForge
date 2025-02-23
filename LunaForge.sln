@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "�
 		AppCast.xaml = AppCast.xaml
 		docfx.json = docfx.json
 		index.md = index.md
+		LICENSE.txt = LICENSE.txt
 		README.md = README.md
 		setup.iss = setup.iss
 		toc.yml = toc.yml

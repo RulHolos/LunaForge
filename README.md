@@ -1,79 +1,220 @@
-<p align="center" width="50%">
-    <img width="20%" src="https://raw.githubusercontent.com/RulHolos/LunaForge/main/LunaForge/Images/Icon.png">
-</p><h1 align="center">LunaForge</h1>
-<h4 align="center">
+<a id="readme-top"></a>
 
-([Currently in Alpha](https://github.com/RulHolos/LunaForge/releases))
+[![Contributors][contributors-shield]][contributors-url] [![Forks][forks-shield]][forks-url] [![Stargazers][stars-shield]][stars-url] [![Issues][issues-shield]][issues-url] [![project_license][license-shield]][license-url]
 
-</h4>
-
+<!-- PROJECT LOGO -->
+<br />
 <div align="center">
-    
-[![Build Docs](https://github.com/RulHolos/LunaForge/actions/workflows/docfx-build-publish.yml/badge.svg)](https://github.com/AtaeKurri/LunaForge/actions/workflows/docfx-build-publish.yml)
-[![Build Editor](https://github.com/RulHolos/LunaForge/actions/workflows/build.yml/badge.svg)](https://github.com/RulHolos/LunaForge/actions/workflows/build.yml)
+  <a href="https://github.com/RulHolos/LunaForge">
+    <img width="80px" height="80px" src="https://raw.githubusercontent.com/RulHolos/LunaForge/main/LunaForge/Images/Icon.png">
+  </a>
 
+<h3 align="center">LunaForge</h3>
+
+  <p align="center">
+    <strong>LunaForge</strong> is a code editor and generator targeting the LuaSTG engine (all main branches).
+    <br />
+    <a href="https://github.com/RulHolos/LunaForge"><strong>Explore the docs</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/RulHolos/LunaForge">View Demo</a>
+    &middot;
+    <a href="https://github.com/RulHolos/LunaForge/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    &middot;
+    <a href="https://github.com/RulHolos/LunaForge/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+  </p>
 </div>
 
-**LunaForge** is a code editor and generator targeting the LuaSTG engine (all main branches) based on THlib.
 
-The goal of LunaForge is to be a kind of "all-in-one" editor: It can compile plain lua script, compile nodes to lua, and shaders.
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#Differences with SharpX">Differences with Sharp X</a></li>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
+
+
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
+
+The goal of LunaForge is to be a kind of "all-in-one" editor: It can compile plain lua script, compile nodes to lua, and shaders.<br />
 There is more to come~
 
-If you find any issues, [please report it](https://github.com/RulHolos/LunaForge/issues/new) as this editor is still in very early stages.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Usage
 
-Placeholder
 
-## Differences with SharpX
+### Built With
 
-The main "why" point with LunaForge is "[SharpX](https://github.com/Sharp-X-Team/LuaSTG-Editor-Sharp-X) already exists, so why?"
+* [![.Net][dotnet]][NET-url]
+* [![C#][csharp]][csharp-url]
+* [![ImGUI][imgui-shield]][imgui-url]
+* [![Raylib][raylib-shield]][raylib-url]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+Section in progress...
+
+## Differences with Sharp X
+
+The main "why" point with LunaForge is "[Sharp X](https://github.com/Sharp-X-Team/LuaSTG-Editor-Sharp-X) already exists, so why?"
 - LunaForge uses a folder-based approach for projects instead of a single-file based approach.
 - LunaForge uses ImGui instead of WPF.
 - LunaForge allows you to set an entry point for your project, making it easier to structure your project.
 - Projects are sharable by defaullt since all files are relative to the root of the project.
 - LunaForge is meant to be cross-platform for Windows, Mac and Linux. (not the case yet)
 
-## Compilation
+### Prerequisites
 
-To compile your project to a LuaSTG-ready game, LunaForge goes through all your files in the project folder.
-It first tries to compile all .lfd (definition files) to .lua scripts.
-Then, after this has been done, the compiler checks for every file's checksums.
-If the file has changed since the last time it was packed into the game, it will be repacked.
+Section in progress...
 
-After all this has been done, the editor tries to start LuaSTG.
+### Installation
 
-**Please be aware that (almost) EVERY file inside your project folder will be packed. This can result in a large game size.**
-Note: Only the .lunalorge invisible folder (and its contents) and the Project.lfp file won't get included in the packing process.
+Section in progress...
 
-## For Linux
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-Linux version is **NOT** stable.
 
-No testing has been made yet.
 
-Please install [xsel](https://github.com/kfish/xsel) and make it callable.
+<!-- USAGE EXAMPLES -->
+## Usage
 
-## For MacOS
+Section in progress...
 
-MacOS version is **NOT** stable.
+_For more examples, please refer to the [Documentation](https://example.com)_
 
-No testing has been made yet.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Plugins
 
-LunaForge supports user-made plugins.
-Plugins allow for modifying/adding features to the editor.
 
-See the [plugin documentation](https://rulholos.github.io/LunaForge/plugins.html) to see how to create your editor plugins.
+<!-- ROADMAP -->
+## Roadmap
 
-## Nodes
+- [x] Lua generated nodes
+- [x] File Architecture
+- [x] UI
+- [x] UI customization
+- [x] Node view
+- [x] Script view
+- [ ] Shader view
+- [ ] Node cache
+- [ ] Building projects
+    - [x] Get Project files
+    - [x] Gather compile info
+    - [x] Check for checksum to avoid rebuilding the same file (if it exists in temp)
+    - [ ] Create editor_output.lua and append every file
+    - [ ] Run LuaSTG and link to debug info window
+- [ ] Plugin system
+- [ ] Logging
 
-LunaForge supports user-made nodes.
-Those are created in lua.
+See the [open issues](https://github.com/RulHolos/LunaForge/issues) for a full list of proposed features (and known issues).
 
-See the [node documentation](https://rulholos.github.io/LunaForge/nodes.html) to see how to create your nodes.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Credits
+
+
+<!-- CONTRIBUTING -->
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Top contributors:
+
+<a href="https://github.com/RulHolos/LunaForge/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=RulHolos/LunaForge" alt="contrib.rocks image" />
+</a>
+
+
+
+<!-- LICENSE -->
+## License
 
 All files from the **LunaForge.GUI.ImGuiFileDialog** namespace are taken and modified from [Dalamud](https://github.com/goatcorp/Dalamud).
+
+Distributed under the MIT license. See `LICENSE.txt` for more information.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- CONTACT -->
+## Contact
+
+Rül Hölos - [@RulHolos](https://twitter.com/RulHolos) - rulholos@protonmail.com
+
+Project Link: [https://github.com/RulHolos/LunaForge](https://github.com/RulHolos/LunaForge)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- ACKNOWLEDGMENTS -->
+## Acknowledgments
+
+* [LuaSTG Editor Sharp X](https://github.com/Sharp-X-Team/LuaSTG-Editor-Sharp-X) (By Tom, Ryann, Zino and Rül)
+* [LuaSTG branches](https://github.com/Legacy-LuaSTG-Engine)
+* [LuaSTG English Wiki](https://luastgen.miraheze.org/wiki/Main_Page) (The mizaheze one)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/RulHolos/LunaForge.svg?style=for-the-badge
+[contributors-url]: https://github.com/RulHolos/LunaForge/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/RulHolos/LunaForge.svg?style=for-the-badge
+[forks-url]: https://github.com/RulHolos/LunaForge/network/members
+[stars-shield]: https://img.shields.io/github/stars/RulHolos/LunaForge.svg?style=for-the-badge
+[stars-url]: https://github.com/RulHolos/LunaForge/stargazers
+[issues-shield]: https://img.shields.io/github/issues/RulHolos/LunaForge.svg?style=for-the-badge
+[issues-url]: https://github.com/RulHolos/LunaForge/issues
+[license-shield]: https://img.shields.io/github/license/RulHolos/LunaForge.svg?style=for-the-badge
+[license-url]: https://github.com/RulHolos/LunaForge/blob/master/LICENSE.txt
+[product-screenshot]: images/screenshot.png
+[dotnet]: https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white
+[NET-url]: https://dotnet.microsoft.com/fr-fr/
+[csharp]: https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white
+[csharp-url]: https://dotnet.microsoft.com/fr-fr/languages/csharp
+[imgui-shield]: https://img.shields.io/badge/ImGUI-20B2AA?style=for-the-badge
+[imgui-url]: https://github.com/ocornut/imgui
+[raylib-shield]: https://img.shields.io/badge/Raylib-AA5555?style=for-the-badge
+[raylib-url]: https://www.raylib.com

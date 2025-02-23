@@ -4,7 +4,7 @@
 #define MyAppName "LunaForge"
 #define MyAppVersion "1.0.0.0"
 #define MyAppPublisher "LunaForge"
-#define MyAppURL "https://github.com/AtaeKurri/LunaForge"
+#define MyAppURL "https://github.com/RulHolos/LunaForge"
 #define MyAppExeName "LunaForge.exe"
 #define MyAppAssocName MyAppName + " File"
 #define MyAppAssocExt ".lfp"
