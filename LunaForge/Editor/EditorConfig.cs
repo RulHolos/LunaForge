@@ -15,11 +15,13 @@ public class EditorConfig
 
     #region Config
 
-    public bool SetupDone { get; set; }
+    public bool SetupDone { get; set; } = false;
 
     public string ProjectsFolder { get; set; } = null!;
 
     public string? SelectedLayout { get; set; }
+
+    public string ProjectAuthor { get; set; } = "John Dough";
 
     #endregion
 

@@ -54,8 +54,10 @@ public static class WindowManager
     public static void ShowWindow<T>() where T : IEditorWindow, new()
     {
         IEditorWindow window = new T();
-        window.Shown += Shown;
-        window.Closed += Closed;
+        if (!window.Initialized)
+            window.Init();
+        //window.Shown += Shown;
+        //window.Closed += Closed;
         windows.Add(window);
     }
 
@@ -91,9 +93,6 @@ public static class WindowManager
         }
 
         ImGui.EndDisabled();
-
-        DialogManager.Draw();
-        MessageBoxes.Draw();
     }
 
     public static void DrawMenu()

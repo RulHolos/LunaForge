@@ -3,6 +3,7 @@ using LunaForge.Editor.Backend.Utilities;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,7 +25,6 @@ public static class ProjectManager
 
     public static string? CurrentProjectFolder { get; private set; }
     public static string? CurrentProjectFilePath { get; private set; }
-    public static string? CurrentProjectAssetsFolder { get; private set; }
     public static LunaProject? CurrentProject { get; private set; }
 
     public static event ProjectUnloadedHandler? ProjectUnloaded;
@@ -56,17 +56,18 @@ public static class ProjectManager
                 Loaded = true;
 
                 CurrentProjectFolder = Path.GetDirectoryName(CurrentProjectFilePath) ?? throw new Exception($"GetDirectoryName returned null for '{CurrentProjectFilePath}'");
+                var result = LunaProject.Load(Path.Combine(CurrentProjectFolder, "Project.lfp"));
+                CurrentProject = result.Item1;
+                if (CurrentProject == null)
+                    throw new InvalidOperationException($"There has been an error reading the Current Project file. Is it malformed? Reason:\n{result.Item2}");
 
-                CurrentProjectAssetsFolder = Path.Combine(CurrentProjectFolder, "Assets");
                 string projectName = Path.GetFileName(CurrentProjectFolder);
-                Directory.CreateDirectory(CurrentProjectAssetsFolder);
-
                 ProjectHistory.AddEntry(projectName, CurrentProjectFilePath);
             }
             catch (Exception ex)
             {
                 UnloadInternal();
-                Logger.Error($"Failed to load project '{path}'.");
+                Logger.Error($"Failed to load project '{path}'. Reason:\n{ex}");
                 MessageBox.Show($"Failed to load project '{path}'.", ex.Message);
                 return;
             }
@@ -94,7 +95,6 @@ public static class ProjectManager
             ProjectUnloaded?.Invoke(CurrentProjectFilePath);
             CurrentProjectFilePath = null;
             CurrentProjectFolder = null;
-            CurrentProjectAssetsFolder = null;
             CurrentProject = null;
             Loaded = false;
         }
@@ -105,7 +105,7 @@ public static class ProjectManager
 
     }
 
-    public static Task Create(string path)
+    public static Task CreateEmpty(string path)
     {
         return Task.Run(async () =>
         {
@@ -125,25 +125,53 @@ public static class ProjectManager
         });
     }
 
+    public static Task CreateFromTemplate(string path, string templatePath)
+    {
+        return Task.Run(async () =>
+        {
+            string projectFilePath = "";
+
+            await Load(projectFilePath);
+        });
+    }
+
     private static bool IsDirectoryEmpty(string path)
     {
         return !Directory.EnumerateFileSystemEntries(path).Any();
     }
 
-    private static string GenerateProject(string path)
+    private static string GenerateProject(string path, string templatePath = "")
     {
         if (Directory.Exists(path) && !IsDirectoryEmpty(path))
         {
-            throw new InvalidOperationException($"Directory '{path}' doesn't exist or is not empty.");
+            throw new InvalidOperationException($"Directory '{path}' is not empty.");
+        }
+        else if (!string.IsNullOrEmpty(templatePath) && !File.Exists(templatePath))
+        {
+            throw new InvalidOperationException($"Project Template '{templatePath}' wasn't found.");
         }
 
-        string projectName = Path.GetFileName(path);
-        string projectFilePath = Path.Combine(path, Path.ChangeExtension(projectName, ".lfp"));
-        LunaProject project = LunaProject.CreateNew(path);
+        LunaProject project;
+        // Empty
+        if (string.IsNullOrEmpty(templatePath))
+        {
+            Directory.CreateDirectory(path);
+            Directory.CreateDirectory(Path.Combine(path, "Assets"));
+            Directory.CreateDirectory(Path.Combine(path, "Definitions"));
+            Directory.CreateDirectory(Path.Combine(path, "Scripts"));
+            DirectoryInfo di = Directory.CreateDirectory(Path.Combine(path, ".lunaforge"));
+            di.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
 
-        var currentProjectAssetsFolder = Path.Combine(path, "Assets");
-        Directory.CreateDirectory(currentProjectAssetsFolder);
+            project = LunaProject.CreateNew(path);
+        }
+        // From template
+        else
+        {
+            ZipFile.ExtractToDirectory(Path.ChangeExtension(templatePath, ".zip"), path);
 
-        return projectFilePath;
+            project = LunaProject.CreateNew(path);
+        }
+        
+        return project.ProjectFile;
     }
 }

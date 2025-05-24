@@ -1,7 +1,9 @@
 ﻿using Hexa.NET.ImGui.Widgets;
+using Hexa.NET.ImGui.Widgets.Dialogs;
 using LunaForge.Editor.Backend.Utilities;
 using LunaForge.Editor.UI.Popups;
 using LunaForge.Editor.UI.Windows;
+using LunaForge.Editor.UI.Windows.ProjectBrowser;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -23,7 +25,10 @@ public static class Designer
         if (!EditorConfig.Default.SetupDone)
             PopupManager.Show<SetupWindow>();
 
+        PopupManager.Show<LauncherWindow>();
+
         WindowManager.ShowWindow<ProjectWindow>();
+        WindowManager.ShowWindow<ProjectBrowserWindow>();
 
         Logger.Information("Designer initialized");
     }
@@ -32,12 +37,14 @@ public static class Designer
     {
         MainMenuBar.Draw();
         WindowManager.Draw();
-        MessageBoxes.Draw();
         PopupManager.Draw();
+        DialogManager.Draw();
+        MessageBoxes.Draw();
     }
 
     public static void Dispose()
     {
+        //MainMenuBar.Dispose();
         WindowManager.Dispose();
         PopupManager.Dispose();
     }

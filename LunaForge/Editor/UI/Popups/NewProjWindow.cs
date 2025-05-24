@@ -1,4 +1,8 @@
 ﻿using Hexa.NET.ImGui;
+using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.Projects;
+using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +14,8 @@ namespace LunaForge.Editor.UI.Popups;
 
 public class NewProjWindow : Modal
 {
+    private static ILogger Logger = CoreLogger.Create("New Project Win");
+
     private bool first = true;
 
     public override string Name { get; } = "New Project";
@@ -22,6 +28,49 @@ public class NewProjWindow : Modal
         //| ImGuiWindowFlags.NoTitleBar
         | ImGuiWindowFlags.NoResize
         | ImGuiWindowFlags.NoMove;
+
+    private string projectName = "Untitled";
+    private string author = EditorConfig.Default.ProjectAuthor;
+    private TemplateDef SelectedTemplate;
+    private HashSet<TemplateDef> Templates;
+
+    private class TemplateDef()
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Version { get; set; } = "1.0.0.0";
+        public string ZipPath { get; set; } = string.Empty;
+    }
+
+    public NewProjWindow()
+    {
+        string templateDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "LunaForge", "Templates");
+        Directory.CreateDirectory(templateDir);
+
+        DirectoryInfo df = new(templateDir);
+        List<FileInfo> fis = [.. df.GetFiles("*.json")];
+
+        Templates = [.. from FileInfo fi in fis
+            where File.Exists(Path.Combine(templateDir, Path.ChangeExtension(fi.Name, ".zip")))
+            select GetTemplateInfo(templateDir, fi)];
+        Templates.Add(new() { Name = "Empty", Description = "Empty Project" });
+    }
+
+    private TemplateDef GetTemplateInfo(string templateDir, FileInfo fi)
+    {
+        try
+        {
+            using StreamReader sr = fi.OpenText();
+            TemplateDef def = JsonConvert.DeserializeObject<TemplateDef>(sr.ReadToEnd());
+            def.ZipPath = Path.Combine(templateDir, Path.ChangeExtension(fi.Name, ".zip"));
+            return def;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Cannot find template info for template '{fi.Name}'. Reason:\n{ex}");
+            return default;
+        }
+    }
 
     public override unsafe void Draw()
     {
@@ -53,6 +102,36 @@ public class NewProjWindow : Modal
         avail.Y -= footerHeight;
         ImGui.BeginChild("Content", avail);
 
+        ImGui.BeginGroup();
+        {
+            if (ImGui.BeginListBox("##TemplateList"))
+            {
+                foreach (var def in Templates)
+                {
+                    if (ImGui.Selectable($"{def.Name}", SelectedTemplate == def))
+                    {
+                        SelectedTemplate = def;
+                    }
+                }
+                ImGui.EndListBox();
+            }
+            ImGui.SameLine();
+
+            if (SelectedTemplate != null)
+            {
+                ImGui.BeginGroup();
+                ImGui.TextWrapped($"{SelectedTemplate.Name} (v{SelectedTemplate.Version})");
+                ImGui.TextWrapped(SelectedTemplate.Description);
+                ImGui.EndGroup();
+            }
+        }
+        ImGui.EndGroup();
+
+        ImGui.Separator();
+
+        ImGui.InputText("Name", ref projectName, 128);
+        ImGui.InputText("Author", ref author, 128);
+
         ImGui.EndChild();
 
         ImGui.BeginTable("#Table", 2, ImGuiTableFlags.SizingFixedFit);
@@ -67,12 +146,28 @@ public class NewProjWindow : Modal
             Close();
         }
         ImGui.SameLine();
+        ImGui.BeginDisabled(SelectedTemplate == null);
         if (ImGui.Button("Create"))
         {
-
+            EditorConfig.Default.ProjectAuthor = author;
+            CreateProject();
+            Close();
         }
+        ImGui.EndDisabled();
 
         ImGui.EndTable();
+    }
+
+    private void CreateProject()
+    {
+        if (SelectedTemplate.Name == "Empty")
+        {
+            ProjectManager.CreateEmpty(Path.Combine(EditorConfig.Default.ProjectsFolder, projectName));
+        }
+        else
+        {
+            ProjectManager.CreateFromTemplate(Path.Combine(EditorConfig.Default.ProjectsFolder, projectName), SelectedTemplate.ZipPath);
+        }
     }
 
     public override void Reset()

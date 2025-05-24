@@ -14,7 +14,12 @@ using System.Threading.Tasks;
 namespace LunaForge.Editor.UI;
 
 /*
- * No editor logic outside of UI interaction in the Windows code,
+ * No editor logic outside of UI interaction in the Windows code.
+ * 
+ * The undo/redo history is not global but local to each window.
+ * 
+ * Compilation is threaded. It looks at every files (.lfd, .lfs, .lua) and compiles them in parallel.
+ * 
  */
 
 public static class MainWindow
@@ -51,7 +56,7 @@ public static class MainWindow
     {
         Raylib.UnloadImage(EditorIcon);
 
-        //ServiceManager.Dispose();
+        ServiceManager.Dispose();
     }
 
     public static void Run()

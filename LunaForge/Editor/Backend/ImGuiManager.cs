@@ -2,6 +2,7 @@
 using Hexa.NET.ImNodes;
 using Hexa.NET.ImPlot;
 using Hexa.NET.Raylib;
+using LunaForge.Editor.Backend.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,11 +52,33 @@ public class ImGuiManager
         io.ConfigViewportsNoAutoMerge = false;
         io.ConfigViewportsNoTaskBarIcon = false;
 
-        // setup fonts.
-        var config = ImGui.ImFontConfig();
-        io.Fonts.AddFontDefault(config);
+        var fonts = io.Fonts;
+        fonts.FontBuilderFlags = (uint)ImFontAtlasFlags.NoPowerOfTwoHeight;
+        fonts.TexDesiredWidth = 2048;
 
-        //InitFontAwesome();
+        uint* glyphRanges = stackalloc uint[]
+        {
+                (uint)0xe005, (uint)0xe684,
+                (uint)0xF000, (uint)0xF8FF,
+                (uint)0 // null terminator
+            };
+
+        ImGuiFontBuilder defaultBuilder = new(fonts);
+        defaultBuilder.AddFontFromFileTTF("assets/shared/fonts/ARIAL.TTF", 15)
+                      .SetOption(conf => conf.GlyphMinAdvanceX = 16)
+                      .AddFontFromFileTTF("assets/shared/fonts/fa-solid-900.ttf", 14, glyphRanges)
+                      .AddFontFromFileTTF("assets/shared/fonts/fa-brands-400.ttf", 14, glyphRanges);
+        aliasToFont.Add("Default", defaultBuilder.Font);
+        defaultBuilder.Destroy();
+
+        ImGuiFontBuilder iconsRegularBuilder = new(fonts);
+        iconsRegularBuilder.AddFontFromFileTTF("assets/shared/fonts/ARIAL.TTF", 15)
+                           .SetOption(conf => conf.GlyphMinAdvanceX = 16)
+                           .AddFontFromFileTTF("assets/shared/fonts/fa-regular-400.ttf", 14, glyphRanges);
+        aliasToFont.Add("Icons-Regular", iconsRegularBuilder.Font);
+        iconsRegularBuilder.Destroy();
+
+        fonts.Build();
 
         // setup ImGui style
         var style = ImGui.GetStyle();
@@ -150,38 +173,6 @@ public class ImGuiManager
         ImGuiRaylibPlatform.Init();
     }
 
-    private ImFontPtr fontPtr;
-
-    /*private unsafe void InitFontAwesome()
-    {
-        ImFontConfigPtr icons_config = ImGui.ImFontConfig();
-        icons_config.MergeMode = true;
-        icons_config.PixelSnapH = true;
-        icons_config.FontDataOwnedByAtlas = false;
-
-        icons_config.GlyphMaxAdvanceX = float.MaxValue;
-        icons_config.RasterizerMultiply = 1.0f;
-        icons_config.OversampleH = 2;
-        icons_config.OversampleV = 1;
-
-        ushort[] IconsRange = [IconFonts.FontAwesome6.IconMin, IconFonts.FontAwesome6.IconMax, 0];
-        fixed (ushort* range = &IconsRange[0])
-        {
-            IconFonts.FontAwesome6.IconFontRanges = Marshal.AllocHGlobal(6);
-            Buffer.MemoryCopy(range, IconFonts.FontAwesome6.IconFontRanges.ToPointer(), 6, 6);
-            icons_config.GlyphRanges = (uint*)IconFonts.FontAwesome6.IconFontRanges;
-
-            byte[] fontDataBuffer = Convert.FromBase64String(IconFonts.FontAwesome6.IconFontData);
-
-            fixed (byte* buffer = fontDataBuffer)
-            {
-                fontPtr = ImGui.GetIO().Fonts.AddFontFromMemoryCompressedTTF()
-            }
-        }
-
-        ImGui.Destroy(icons_config);
-    }*/
-
     public unsafe void NewFrame()
     {
         // Set ImGui context
@@ -230,5 +221,37 @@ public class ImGuiManager
     public void Dispose()
     {
         ImGuiRaylibPlatform.Shutdown();
+    }
+
+    private static readonly Dictionary<string, ImFontPtr> aliasToFont = new();
+    private static int fontPushes = 0;
+
+    public static void PushFont(string name)
+    {
+        if (aliasToFont.TryGetValue(name, out ImFontPtr fontPtr))
+        {
+            ImGui.PushFont(fontPtr);
+            fontPushes++;
+        }
+    }
+
+    public static void PushFont(string name, bool condition)
+    {
+        if (condition && aliasToFont.TryGetValue(name, out ImFontPtr fontPtr))
+        {
+            ImGui.PushFont(fontPtr);
+            fontPushes++;
+        }
+    }
+
+    public static void PopFont()
+    {
+        if (fontPushes == 0)
+        {
+            return;
+        }
+
+        ImGui.PopFont();
+        fontPushes--;
     }
 }

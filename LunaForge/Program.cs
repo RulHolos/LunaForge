@@ -1,4 +1,5 @@
-﻿using LunaForge.Editor.UI;
+﻿global using FA = LunaForge.Editor.Backend.Utilities.FontAwesome;
+using LunaForge.Editor.UI;
 
 namespace LunaForge
 {

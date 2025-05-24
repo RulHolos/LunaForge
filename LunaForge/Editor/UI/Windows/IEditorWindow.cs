@@ -16,20 +16,18 @@ public interface IEditorWindow
     event Action<IEditorWindow>? Shown;
     event Action<IEditorWindow>? Closed;
 
-    void Dispose();
-    void DrawContent();
-    void DrawMenu();
-    void DrawWindow();
     void Init();
+    void DrawWindow();
+    void DrawMenu();
+    void DrawContent();
     void Focus();
+    void Dispose();
 }
 
 public abstract class EditorWindow : IEditorWindow
 {
     protected bool IsDocked;
     public virtual ImGuiWindowFlags Flags { get; set; }
-    protected bool windowEnded;
-    protected bool wasShown;
     protected bool initialized;
     protected bool isShown;
     public virtual bool CanBeClosed { get; set; } = true;
@@ -43,7 +41,6 @@ public abstract class EditorWindow : IEditorWindow
     public bool Initialized => initialized;
 
     public event Action<IEditorWindow>? Shown;
-
     public event Action<IEditorWindow>? Closed;
 
     public void Init()
@@ -58,11 +55,6 @@ public abstract class EditorWindow : IEditorWindow
 
     public virtual void DrawWindow()
     {
-        if (!IsShown)
-        {
-            return;
-        }
-
         bool hasBegun;
         if (!CanBeClosed)
             hasBegun = ImGui.Begin(Name, Flags);
@@ -70,53 +62,26 @@ public abstract class EditorWindow : IEditorWindow
             hasBegun = ImGui.Begin(Name, ref isShown, Flags);
         if (!hasBegun)
         {
-            if (wasShown)
-            {
-                OnClosed();
-            }
-            wasShown = false;
             ImGui.End();
             return;
         }
 
-        if (!wasShown)
-        {
-            OnShown();
-        }
-        wasShown = true;
-
-        windowEnded = false;
-
+        DoUndoRedo();
         DrawContent();
 
-        if (!windowEnded)
+        ImGui.End();
+    }
+
+    private void DoUndoRedo()
+    {
+        // Only undo/redo if the current window is focused. Avoids conflicts with other windows.
+        if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows))
         {
-            ImGui.End();
+
         }
-    }
-
-    protected virtual void OnShown()
-    {
-        Shown?.Invoke(this);
-    }
-
-    protected virtual void OnClosed()
-    {
-        Closed?.Invoke(this);
     }
 
     public abstract void DrawContent();
-
-    protected void EndWindow()
-    {
-        if (!IsShown)
-        {
-            return;
-        }
-
-        ImGui.End();
-        windowEnded = true;
-    }
 
     public virtual void DrawMenu()
     {
@@ -124,16 +89,6 @@ public abstract class EditorWindow : IEditorWindow
         {
             IsShown = true;
         }
-    }
-
-    public virtual void Show()
-    {
-        IsShown = true;
-    }
-
-    public virtual void Close()
-    {
-        IsShown = false;
     }
 
     public void Dispose()

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Widgets.Dialogs;
+using LunaForge.Editor.Backend;
 using LunaForge.Editor.Commands;
 using LunaForge.Editor.Projects;
 using LunaForge.Editor.UI.Dialogs;
@@ -36,7 +37,7 @@ public static class MainMenuBar
         if (!ImGui.BeginMainMenuBar())
             return;
 
-        if (ImGui.BeginMenu("File"))
+        if (ImGui.BeginMenu($"File"))
         {
             ImGui.EndMenu();
         }
@@ -68,10 +69,12 @@ public static class MainMenuBar
             }
             if (ImGui.MenuItem("Open Project"))
             {
-                OpenFileDialog dialog = new();
-                dialog.CurrentFolder = EditorConfig.Default.ProjectsFolder;
+                OpenFileDialog dialog = new()
+                {
+                    CurrentFolder = EditorConfig.Default.ProjectsFolder,
+                    OnlyAllowFilteredExtensions = true,
+                };
                 dialog.AllowedExtensions.Add(".lfp");
-                dialog.OnlyAllowFilteredExtensions = true;
                 dialog.Show(OpenProjectCallback);
             }
             ImGui.Separator();
@@ -96,12 +99,12 @@ public static class MainMenuBar
 
             ImGui.SeparatorText("Packaging");
 
-            if (ImGui.MenuItem($"Build Project", "F4"))
+            if (ImGui.MenuItem($"Build Project", "F4", false, ProjectManager.CurrentProject != null))
             {
 
             }
 
-            if (ImGui.MenuItem("Run LuaSTG", "F5"))
+            if (ImGui.MenuItem("Run LuaSTG", "F5", false, ProjectManager.CurrentProject != null))
             {
 
             }
@@ -134,13 +137,23 @@ public static class MainMenuBar
             ImGui.EndMenu();
         }
 
-        if (ImGui.BeginMenu("Help"))
+        if (ImGui.BeginMenu("Settings"))
         {
-            if (ImGui.MenuItem("Settings"))
+            if (ImGui.MenuItem("Editor Settings"))
             {
 
             }
 
+            if (ImGui.MenuItem("Project Settings", string.Empty, false, ProjectManager.CurrentProject != null))
+            {
+
+            }
+
+            ImGui.EndMenu();
+        }
+
+        if (ImGui.BeginMenu("Help"))
+        {
             if (ImGui.MenuItem("About"))
             {
 
@@ -177,15 +190,6 @@ public static class MainMenuBar
         if (result != DialogResult.Ok || sender is not CreateFileDialog dialog)
             return;
         LayoutManager.CreateNewLayout(dialog.FileName);
-    }
-
-    private static void NewProjectCallback(object? sender, DialogResult result)
-    {
-        if (result != DialogResult.Ok || sender is not SaveFileDialog dialog)
-            return;
-
-        Directory.CreateDirectory(dialog.SelectedFile!);
-        ProjectManager.Create(dialog.SelectedFile);
     }
 
     private static void OpenProjectCallback(object? sender, DialogResult result)
