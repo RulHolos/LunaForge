@@ -36,8 +36,10 @@ public abstract class LunaProjectFile : IDisposable
 
     public static T CreateNew<T>() where T : LunaProjectFile, new()
     {
-        T projectFile = new();
-
+        T projectFile = new()
+        {
+            IsUnsaved = true
+        };
         return projectFile;
     }
 

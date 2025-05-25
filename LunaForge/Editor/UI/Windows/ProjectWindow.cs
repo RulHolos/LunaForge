@@ -64,11 +64,11 @@ public class ProjectWindow : EditorWindow
 
             if (ImGui.Button("Tree View"))
             {
-                currentProject.ProjectFileCollection.Add(new LunaTreeView());
+                currentProject.ProjectFileCollection.Add(LunaProjectFile.CreateNew<LunaTreeView>());
             }
             if (ImGui.Button("Shader Editor"))
             {
-                currentProject.ProjectFileCollection.Add(new LunaNodeGraph());
+                currentProject.ProjectFileCollection.Add(LunaProjectFile.CreateNew<LunaNodeGraph>());
             }
 
             ImGui.EndTabItem();
