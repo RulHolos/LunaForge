@@ -15,7 +15,10 @@ public class ProjectWindow : EditorWindow
     public override ImGuiWindowFlags Flags { get; set; } = ImGuiWindowFlags.NoCollapse;
     public override bool CanBeClosed { get; set; } = false;
 
-    private LunaProject? currentProject;
+    private LunaProject? currentProject { get; set; }
+    private LunaProjectFile? currentFile { get; set; }
+
+    private LunaProjectFile? fileToClose = null;
 
     protected override void InitWindow()
     {
@@ -38,14 +41,21 @@ public class ProjectWindow : EditorWindow
         {
             for (int i = 0; i < currentProject.ProjectFileCollection.Count; i++)
             {
-                ImGuiTabItemFlags flags = ImGuiTabItemFlags.None;
-                if (currentProject.ProjectFileCollection[i].IsUnsaved)
+                LunaProjectFile file = currentProject.ProjectFileCollection[i];
+                if (currentFile != file)
+                    currentFile = file;
+
+                ImGuiTabItemFlags flags = ImGuiTabItemFlags.NoAssumedClosure | ImGuiTabItemFlags.NoPushId;
+                if (file.IsUnsaved)
                     flags |= ImGuiTabItemFlags.UnsavedDocument;
-                if (ImGui.BeginTabItem(currentProject.ProjectFileCollection[i].GetUniqueName(), flags))
+                if (ImGui.BeginTabItem(file.GetUniqueName(), ref file.IsOpened, flags))
                 {
-                    currentProject.ProjectFileCollection[i].Draw();
+                    file.Draw();
                     ImGui.EndTabItem();
                 }
+
+                if (!file.IsOpened)
+                    fileToClose = file;
             }
             if (currentProject.ProjectFileCollection.Count == 0)
             {
@@ -54,21 +64,42 @@ public class ProjectWindow : EditorWindow
 
             ImGui.EndTabBar();
         }
+
+        if (fileToClose != null)
+        {
+            currentProject.ProjectFileCollection.Remove(fileToClose);
+            fileToClose.Dispose();
+            fileToClose = null;
+        }
     }
 
     public void DrawNoFiles()
     {
         if (ImGui.BeginTabItem("No files..."))
         {
+            ImGui.Indent(50);
             ImGui.Text("You do not have any files open.\nPlease select a file type to begin!");
+            ImGui.Unindent(50);
 
-            if (ImGui.Button("Tree View"))
+            ImGui.Spacing(); ImGui.Spacing();
+            ImGui.SeparatorText("Visual Files");
+
+            if (ImGui.Button($"{FA.ListUl} Tree View"))
             {
-                currentProject.ProjectFileCollection.Add(LunaProjectFile.CreateNew<LunaTreeView>());
+                currentProject.ProjectFileCollection.Add(LunaProjectFile.CreateNew<LunaNodeTree>($"Unnamed {currentProject.ProjectFileCollection.MaxHash + 1}"));
             }
-            if (ImGui.Button("Shader Editor"))
+            ImGui.SameLine();
+            if (ImGui.Button($"{FA.ShareNodes} Shader Editor"))
             {
-                currentProject.ProjectFileCollection.Add(LunaProjectFile.CreateNew<LunaNodeGraph>());
+                currentProject.ProjectFileCollection.Add(LunaProjectFile.CreateNew<LunaNodeGraph>($"Unnamed {currentProject.ProjectFileCollection.MaxHash + 1}"));
+            }
+
+            ImGui.Spacing(); ImGui.Spacing();
+            ImGui.SeparatorText("Text-based Files");
+
+            if (ImGui.Button($"{FA.Pen} Lua Script"))
+            {
+                // Implement scripting.
             }
 
             ImGui.EndTabItem();

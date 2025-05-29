@@ -1,4 +1,6 @@
 ﻿using Hexa.NET.ImGui;
+using LunaForge.Editor.Commands;
+using LunaForge.Editor.UI.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,8 @@ public interface IEditorWindow
 
     event Action<IEditorWindow>? Shown;
     event Action<IEditorWindow>? Closed;
+
+    public CommandHistory History { get; set; }
 
     void Init();
     void DrawWindow();
@@ -42,6 +46,8 @@ public abstract class EditorWindow : IEditorWindow
 
     public event Action<IEditorWindow>? Shown;
     public event Action<IEditorWindow>? Closed;
+
+    public CommandHistory History { get; set; } = new();
 
     public void Init()
     {
@@ -77,7 +83,7 @@ public abstract class EditorWindow : IEditorWindow
         // Only undo/redo if the current window is focused. Avoids conflicts with other windows.
         if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows))
         {
-
+            WindowManager.CurrentFocusedWindow = this;
         }
     }
 

@@ -15,6 +15,8 @@ public static class WindowManager
 {
     private static readonly List<IEditorWindow> windows = [];
 
+    public static IEditorWindow? CurrentFocusedWindow { get; set; } = null;
+
     static WindowManager()
     {
 

@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Éléments de solution", "�
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LunaForge.Tests", "LunaForge.Tests\LunaForge.Tests.csproj", "{49AA2C05-6FC7-4E54-AA88-DF1C905FFCED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{2C8269D1-D2F8-4932-9AF1-F232B09FE4A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C8269D1-D2F8-4932-9AF1-F232B09FE4A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C8269D1-D2F8-4932-9AF1-F232B09FE4A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49AA2C05-6FC7-4E54-AA88-DF1C905FFCED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49AA2C05-6FC7-4E54-AA88-DF1C905FFCED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49AA2C05-6FC7-4E54-AA88-DF1C905FFCED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49AA2C05-6FC7-4E54-AA88-DF1C905FFCED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

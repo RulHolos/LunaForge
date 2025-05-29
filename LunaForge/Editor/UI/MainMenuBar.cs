@@ -12,6 +12,7 @@ using LunaForge.Editor.Projects;
 using LunaForge.Editor.UI.Dialogs;
 using LunaForge.Editor.UI.Managers;
 using LunaForge.Editor.UI.Popups;
+using LunaForge.Editor.UI.Windows;
 using PopupManager = LunaForge.Editor.UI.Managers.PopupManager;
 
 namespace LunaForge.Editor.UI;
@@ -202,29 +203,31 @@ public static class MainMenuBar
 
     private static unsafe void EditSubMenu()
     {
-        if (ImGui.MenuItem("Undo", "Ctrl+Z", false, History.CanUndo))
+        CommandHistory? currentHistoryCtx = WindowManager.CurrentFocusedWindow?.History;
+
+        if (ImGui.MenuItem("Undo", "Ctrl+Z", false, currentHistoryCtx.CanUndo && currentHistoryCtx != null))
         {
-            History.Undo();
+            currentHistoryCtx.Undo();
         }
-        if (ImGui.MenuItem("Redo", "Ctrl+Y", false, History.CanRedo))
+        if (ImGui.MenuItem("Redo", "Ctrl+Y", false, currentHistoryCtx.CanRedo && currentHistoryCtx != null))
         {
-            History.Redo();
+            currentHistoryCtx.Redo();
         }
 
-        if (History.UndoCount != 0)
+        if (currentHistoryCtx.UndoCount != 0 && currentHistoryCtx != null)
         {
             ImGui.Text("Undo Stack");
-            foreach (Command command in History.CommandStack)
+            foreach (Command command in currentHistoryCtx.CommandStack)
             {
                 ImGui.MenuItem(command.ToString());
             }
         }
-        if (History.UndoCount != 0 && History.RedoCount != 0)
+        if (currentHistoryCtx.UndoCount != 0 && currentHistoryCtx.RedoCount != 0 && currentHistoryCtx != null)
             ImGui.Separator();
-        if (History.RedoCount != 0)
+        if (currentHistoryCtx.RedoCount != 0 && currentHistoryCtx != null)
         {
             ImGui.Text("Redo Stack");
-            foreach (Command command in History.UndoCommandStack)
+            foreach (Command command in currentHistoryCtx.UndoCommandStack)
             {
                 ImGui.MenuItem(command.ToString());
             }

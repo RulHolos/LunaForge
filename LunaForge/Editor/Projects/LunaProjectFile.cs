@@ -22,6 +22,8 @@ public abstract class LunaProjectFile : IDisposable
 
     [JsonIgnore] public bool IsUnsaved;
 
+    [JsonIgnore] public bool IsOpened;
+
     public LunaProjectFile()
     {
         Logger = CoreLogger.Create(GetType().Name);
@@ -34,11 +36,13 @@ public abstract class LunaProjectFile : IDisposable
 
     public string GetUniqueName() => ToString() + $"##{Hash}";
 
-    public static T CreateNew<T>() where T : LunaProjectFile, new()
+    public static T CreateNew<T>(string name = "Unnamed") where T : LunaProjectFile, new()
     {
         T projectFile = new()
         {
-            IsUnsaved = true
+            FilePath = name,
+            IsUnsaved = true,
+            IsOpened = true,
         };
         return projectFile;
     }
@@ -59,6 +63,7 @@ public abstract class LunaProjectFile : IDisposable
 
         T projFile = JsonConvert.DeserializeObject<T>(filePath) ?? new T();
         projFile.FilePath = filePath;
+        projFile.IsOpened = true;
         return projFile;
     }
 
@@ -89,7 +94,10 @@ public abstract class LunaProjectFile : IDisposable
         }
     }
 
-    public abstract void Dispose();
+    public virtual void Dispose()
+    {
+        IsOpened = false;
+    }
 
     public abstract void Draw();
 }
