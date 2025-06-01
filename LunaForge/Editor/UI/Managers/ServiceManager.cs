@@ -12,7 +12,7 @@ namespace LunaForge.Editor.UI.Managers;
 public static class ServiceManager
 {
     private static readonly ILogger Logger;
-    private static readonly List<Service> Services = [];
+    public static readonly List<Service> Services = [];
 
     static ServiceManager()
     {
@@ -40,6 +40,22 @@ public static class ServiceManager
             if (forceInit)
                 service.Initialize();
         }
+        else
+            Logger.Warning($"Service of type '{typeof(T).Name}' is already registered. Skipping registration.");
+    }
+
+    public static void UnregisterService<T>() where T : Service
+    {
+        if (Services.Find(x => x is T) is Service service)
+        {
+            service?.Dispose();
+            Services.Remove(service);
+            Logger.Information($"Service '{service.Name}' unregistered.");
+        }
+        else
+        {
+            Logger.Warning($"Service of type '{typeof(T).Name}' not found. Cannot unregister.");
+        }
     }
 
     public static void Dispose()
@@ -50,5 +66,18 @@ public static class ServiceManager
             Logger.Information($"Service '{service.Name}' disposed.");
         }
         Services.Clear();
+    }
+
+    public static T GetService<T>() where T : Service, new()
+    {
+        T? service = (T?)Services.FirstOrDefault(x => x is T);
+        if (service != null)
+            return service;
+
+        service = new T();
+        Services.Add(service);
+        service.Initialize();
+
+        return service;
     }
 }

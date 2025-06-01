@@ -78,6 +78,9 @@ public abstract class EditorWindow : IEditorWindow
         ImGui.End();
     }
 
+    /// <summary>
+    /// Rework this, not only the window should be able to handle undo/redo, but also <see cref="LunaProjectFile"/>s.
+    /// </summary>
     private void DoUndoRedo()
     {
         // Only undo/redo if the current window is focused. Avoids conflicts with other windows.

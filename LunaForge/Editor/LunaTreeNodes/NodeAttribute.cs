@@ -1,4 +1,6 @@
 ﻿using LunaForge.Editor.Backend.Enums;
+using LunaForge.Editor.Commands;
+using LunaForge.Editor.Commands.CommandList;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,12 +44,13 @@ public class NodeAttribute
     /// Edits the attribute value with the given <paramref name="newValue"/> and raises the <see cref="OnNodeAttributeChanged"/> event.
     /// </summary>
     /// <param name="newValue">The value to be set.</param>
-    public void EditAttr(string newValue)
+    public void EditAttr(string newValue, bool force = false)
     {
         string oldValue = Value;
         Value = newValue;
 
-        OnNodeAttributeChanged?.Invoke(this, new(oldValue, newValue));
+        if (CommandHistory.StaticAddAndExecuteCommand(new EditAttributeCommand(this, oldValue, newValue)) || force);
+            OnNodeAttributeChanged?.Invoke(this, new(oldValue, newValue));
     }
 
     public INodeEditorWindow? GetEditorWindowFromType()

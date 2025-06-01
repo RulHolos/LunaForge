@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LunaForge.Editor.UI.Managers;
 using LunaForge.Editor.UI.Windows;
 
 namespace LunaForge.Editor.Commands;
@@ -44,5 +45,13 @@ public sealed class CommandHistory
         UndoCommandStack.Clear();
 
         return true;
+    }
+
+    public static bool StaticAddAndExecuteCommand(Command command)
+    {
+        if (WindowManager.CurrentFocusedWindow != null)
+            return WindowManager.CurrentFocusedWindow.History.AddAndExecuteCommand(command);
+        else
+            return false;
     }
 }

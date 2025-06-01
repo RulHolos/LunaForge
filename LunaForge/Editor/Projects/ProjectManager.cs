@@ -105,7 +105,13 @@ public static class ProjectManager
 
     }
 
-    public static Task CreateEmpty(string path)
+    /// <summary>
+    /// Creates an empty LunaForge project in the specified path.
+    /// </summary>
+    /// <param name="path">Path of the project file.</param>
+    /// <param name="initializeWithDefaultLib">Initialize a default THlib if true. Otherwise; false.</param>
+    /// <returns></returns>
+    public static Task CreateEmpty(string path, bool initializeWithDefaultLib)
     {
         return Task.Run(async () =>
         {
@@ -125,6 +131,12 @@ public static class ProjectManager
         });
     }
 
+    /// <summary>
+    /// Creates a LunaForge project from a template in the specified path.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="templatePath"></param>
+    /// <returns></returns>
     public static Task CreateFromTemplate(string path, string templatePath)
     {
         return Task.Run(async () =>

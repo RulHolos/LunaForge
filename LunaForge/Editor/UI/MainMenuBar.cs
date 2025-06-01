@@ -72,7 +72,7 @@ public static class MainMenuBar
             {
                 OpenFileDialog dialog = new()
                 {
-                    CurrentFolder = EditorConfig.Default.ProjectsFolder,
+                    CurrentFolder = EditorConfig.Default.Get<string>("ProjectsFolder").Value,
                     OnlyAllowFilteredExtensions = true,
                 };
                 dialog.AllowedExtensions.Add(".lfp");
@@ -111,6 +111,11 @@ public static class MainMenuBar
             }
 
             ImGui.EndMenu();
+        }
+
+        if (ImGui.BeginMenu("Git"))
+        {
+
         }
 
         if (ImGui.BeginMenu("Layout"))

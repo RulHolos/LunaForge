@@ -1,7 +1,11 @@
 ﻿using Hexa.NET.ImGui;
+using Hexa.NET.ImGui.Widgets;
+using Hexa.NET.ImGui.Widgets.Dialogs;
 using Hexa.NET.Raylib;
 using LunaForge.Editor.Backend;
+using LunaForge.Editor.Backend.Services;
 using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.Projects;
 using LunaForge.Editor.UI.Managers;
 using Serilog;
 using System;
@@ -31,7 +35,7 @@ public static class MainWindow
 
     private static ImGuiManager manager;
 
-    private static Image EditorIcon = Raylib.LoadImage(Path.Combine(Directory.GetCurrentDirectory(), "Assets/Icon.ico"));
+    public static Image EditorIcon = Raylib.LoadImage(Path.Combine(Directory.GetCurrentDirectory(), "Assets/Icon.png"));
 
     static MainWindow()
     {
@@ -50,6 +54,10 @@ public static class MainWindow
         manager = new();
 
         Designer.Init();
+
+        ServiceManager.RegisterService<DiscordRPCService>();
+
+        ServiceManager.InitServices();
     }
 
     public static void Dispose()
@@ -62,7 +70,6 @@ public static class MainWindow
     public static void Run()
     {
         bool exitWindow = false;
-        bool exitWindowRequested = false;
 
         while (!exitWindow && !ForceCloseWindow)
         {
@@ -74,10 +81,30 @@ public static class MainWindow
 
                 //ImGui.ShowDemoWindow();
 
-                if (Raylib.WindowShouldClose() || exitWindowRequested)
+                if (Raylib.WindowShouldClose())
                 {
-                    exitWindowRequested = true;
-                    exitWindow = true; // TODO: Close opened files logic.
+                    Logger.Debug("Exit window requested.");
+                    if (ProjectManager.CurrentProject != null && ProjectManager.CurrentProject.ProjectFileCollection.Any(x => x.IsUnsaved))
+                    {
+                        MessageBoxes.Show(
+                            new MessageBox("Closing", "Some files are not saved.\nDo you want to save all files before closing?", MessageBoxType.YesNoCancel, null,
+                            (s, e) =>
+                            {
+                                if (s.Result == MessageBoxResult.No)
+                                    exitWindow = true;
+                                else if (s.Result == MessageBoxResult.Yes)
+                                {
+                                    // TODO
+                                    
+                                    exitWindow = true;
+                                }
+                            })
+                        );
+                    }
+                    else
+                    {
+                        exitWindow = true;
+                    }
                 }
 
                 Raylib.BeginDrawing();
@@ -87,7 +114,7 @@ public static class MainWindow
             }
             catch (Exception ex)
             {
-                Logger.Fatal($"Fatal failure:\n{ex}");
+                Logger.Fatal($"Girl failure:\n{ex}");
             }
         }
 

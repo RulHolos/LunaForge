@@ -7,12 +7,16 @@ using System.Threading.Tasks;
 using System.Numerics;
 using LunaForge.Editor.LunaTreeNodes;
 using System.Xml.Linq;
+using LunaForge.Editor.UI;
+using Hexa.NET.Raylib;
+using LunaForge.Editor.LunaTreeNodes.Nodes;
 
 namespace LunaForge.Editor.Projects;
 
 [Serializable]
 public class WorkTree : List<TreeNode>
 {
+    public TreeNode? Root => this[0];
     private ulong Hash = 0;
 
     public delegate void NodeAdded(TreeNode node);
@@ -40,14 +44,23 @@ public class LunaNodeTree : LunaProjectFile
 {
     public WorkTree Nodes { get; set; } = [];
 
+    public TreeNode? SelectedNode { get; set; }
+
+    private bool justOpened = true;
+    private bool justInserted = false;
+
     public LunaNodeTree()
         : base()
     {
-
+        Nodes.Add(new RootNode());
     }
 
     public override void Draw()
     {
+        // Node toolbox (tabs) and insert child control
+        DrawHeader();
+
+        // Tree and Attributes
         ImGui.BeginTable("TreeNodeTableLayout", 2,
             ImGuiTableFlags.Resizable
             | ImGuiTableFlags.Reorderable);
@@ -70,29 +83,180 @@ public class LunaNodeTree : LunaProjectFile
         ImGui.EndTable();
     }
 
+    #region Data Control
+
+    private void DrawHeader()
+    {
+        ImGui.BeginTable("#Table", 2, ImGuiTableFlags.SizingFixedFit);
+        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("");
+
+        ImGui.TableNextRow();
+        ImGui.TableSetColumnIndex(0);
+
+        if (ImGui.BeginTabBar("##NodeToolbox"))
+        {
+            if (ImGui.BeginTabItem("General"))
+            {
+                ImGui.Button("Add Node");
+                ImGui.EndTabItem();
+            }
+
+            ImGui.EndTabBar();
+        }
+
+        ImGui.TableSetColumnIndex(1);
+
+        ImGui.Button("<"); ImGui.SetItemTooltip("Ancestor"); ImGui.SameLine();
+        ImGui.Button("^"); ImGui.SetItemTooltip("Before"); ImGui.SameLine();
+        ImGui.Button("v"); ImGui.SetItemTooltip("After"); ImGui.SameLine();
+        ImGui.Button(">"); ImGui.SetItemTooltip("Child");
+
+        ImGui.EndTable();
+    }
+
+    #endregion
     #region TreeView
 
     private void RenderTreeView()
     {
-        RenderTreeViewRecursive(Nodes);
+        if (Nodes.Count > 0) // There is no nodes in the WorkTree, so don't render anything. (Or else it crashes without any exceptions lmao)
+            RenderTreeViewRecursive(Nodes.Root);
     }
 
-    private void RenderTreeViewRecursive(List<TreeNode> parents)
+    private void RenderTreeViewRecursive(TreeNode? node, bool parentBanned = false)
     {
-        foreach (TreeNode child in parents)
+        if (node.IsSelected && (SelectedNode != node || SelectedNode == null))
+            SelectedNode = node;
+
+        if ((justOpened || justInserted) && node.IsSelected)
         {
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.Selected;
-
-            if (child.Children.Count == 0)
-                flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet;
-
-            if (ImGui.TreeNodeEx($"{child}##{child.Hash}", flags))
-            {
-                RenderTreeViewRecursive(child.Children);
-
-                ImGui.TreePop();
-            }
+            ImGui.SetScrollHereY();
+            justOpened = false;
+            justInserted = false;
         }
+
+        ImGui.PushID($"##Node-{node.Hash}");
+        // Propagate banned state to children (only for display purposes)
+        ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32((node.IsBanned || parentBanned) ? ImGuiCol.TextDisabled : ImGuiCol.Text));
+
+        ImGuiTreeNodeFlags flags =
+            ImGuiTreeNodeFlags.OpenOnArrow
+            | ImGuiTreeNodeFlags.OpenOnDoubleClick
+            | ImGuiTreeNodeFlags.SpanLabelWidth
+            | ImGuiTreeNodeFlags.FramePadding;
+        if (node == SelectedNode)
+            flags |= ImGuiTreeNodeFlags.Selected;
+        if (!node.HasChildren)
+            flags |= ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.Bullet;
+        if (node.IsExpanded)
+            flags |= ImGuiTreeNodeFlags.DefaultOpen;
+
+        bool isOpen = ImGui.TreeNodeEx(node.DisplayString, flags);
+
+        ImGui.PopStyleColor();
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+            SelectNode(node);
+        if (ImGui.BeginPopupContextItem($"{node.Hash}_context"))
+        {
+            SelectNode(node);
+            RenderContextMenu(node);
+            ImGui.EndPopup();
+        }
+
+        ImGui.PopID();
+
+        if (isOpen)
+        {
+            node.IsExpanded = true;
+            if (node.HasChildren)
+            {
+                foreach (TreeNode child in node.Children)
+                {
+                    RenderTreeViewRecursive(child, node.IsBanned || parentBanned);
+                }
+            }
+            ImGui.TreePop();
+        }
+        else
+        {
+            node.IsExpanded = false;
+        }
+    }
+
+    private void SelectNode(TreeNode node)
+    {
+        if (SelectedNode != null)
+            SelectedNode!.IsSelected = false;
+        SelectedNode = node;
+        node.IsSelected = true;
+    }
+
+    public void DeselectAllNodes()
+    {
+        SelectedNode = null;
+        Nodes.Root.ClearChildSelection();
+    }
+
+    public void RevealNode(TreeNode? node)
+    {
+        if (node == null)
+            return;
+        TreeNode tmp = node.ParentNode;
+        Nodes.Root.ClearChildSelection();
+        Stack<TreeNode> stack = [];
+        while (tmp != null)
+        {
+            stack.Push(tmp);
+            tmp = tmp.ParentNode;
+        }
+        while (stack.Count > 0)
+            stack.Pop().IsExpanded = true;
+        SelectedNode = node;
+        node.IsSelected = true;
+        justInserted = true;
+    }
+
+    public void RenderContextMenu(TreeNode node)
+    {
+        if (ImGui.MenuItem($"{FA.PenToSquare} Edit", string.Empty, false, true))
+        { } // TODO Edit Window
+
+        ImGui.Separator();
+
+        if (ImGui.MenuItem($"{FA.ArrowRotateLeft} Undo", "Ctrl+Z", false, false))
+        { } // TODO Undo
+        if (ImGui.MenuItem($"{FA.ArrowRotateRight} Redo", "Ctrl+Y", false, false))
+        { } // TODO Undo
+
+        ImGui.Separator();
+
+        if (ImGui.MenuItem($"{FA.Cut} Cut", "Ctrl+X", false, false))
+        { } // TODO Cut
+        if (ImGui.MenuItem($"{FA.Copy} Copy", "Ctrl+C", false, false))
+        { } // TODO Cut
+        if (ImGui.MenuItem($"{FA.Paste} Paste", "Ctrl+V", false, false))
+        { } // TODO Cut
+
+        ImGui.Separator();
+
+        if (ImGui.MenuItem($"{FA.Eraser} Delete", "Del", false, false))
+        { } // TODO Delete
+
+        ImGui.Separator();
+
+        if (ImGui.MenuItem($"{FA.FilterCircleXmark} Ban", string.Empty, node.IsBanned, false))
+        { } // TODO Ban
+
+        ImGui.Separator();
+
+        if (ImGui.MenuItem($"{FA.Code} View Code", string.Empty, false, false))
+        { } // TODO View Code
+
+        ImGui.Separator();
+
+        if (ImGui.MenuItem($"{FA.FileCirclePlus} Save as Preset", string.Empty, false, false))
+        { } // TODO Save as Preset
     }
 
     #endregion TreeView
@@ -129,7 +293,6 @@ public class LunaNodeTree : LunaProjectFile
     }
 
     #endregion Data Attributes
-
     #region Node Logic
 
     public void AddNode(TreeNode node)
@@ -144,6 +307,7 @@ public class LunaNodeTree : LunaProjectFile
 
     public override void Dispose()
     {
-        
+        //Nodes.Root.RemoveTraces();
+        SelectedNode = null;
     }
 }

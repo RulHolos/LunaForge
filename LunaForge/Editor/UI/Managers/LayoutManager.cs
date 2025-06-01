@@ -59,7 +59,7 @@ public static class LayoutManager
 
     public static string SelectedLayout
     {
-        get => EditorConfig.Default.SelectedLayout ??= defaultPath;
+        get => EditorConfig.Default.Get<string>("SelectedLayout").Value ??= defaultPath;
         set
         {
             if (layouts.Contains(new LayoutConfig() { Path = value }))
@@ -97,7 +97,7 @@ public static class LayoutManager
 
     private static unsafe void SetLayout(string value)
     {
-        EditorConfig.Default.SelectedLayout = value;
+        EditorConfig.Default.Get<string>("SelectedLayout").Value = value;
         changed = true;
     }
 

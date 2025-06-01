@@ -22,13 +22,14 @@ public static class Designer
     {
         WindowManager.Init();
 
-        if (!EditorConfig.Default.SetupDone)
+        if (!EditorConfig.Default.Get<bool>("SetupDone").Value)
             PopupManager.Show<SetupWindow>();
 
         PopupManager.Show<LauncherWindow>();
 
         WindowManager.ShowWindow<ProjectWindow>();
         WindowManager.ShowWindow<ProjectBrowserWindow>();
+        //WindowManager.ShowWindow<TerminalWindow>(); // Heavily rework
 
         Logger.Information("Designer initialized");
     }

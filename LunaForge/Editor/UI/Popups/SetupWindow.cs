@@ -15,7 +15,7 @@ public class SetupWindow : Modal
 {
     private int page = 0;
     private bool first = true;
-    private const int pageCount = 3;
+    private const int pageCount = 4;
 
     public override string Name { get; } = "Getting Started";
 
@@ -72,6 +72,10 @@ public class SetupWindow : Modal
             case 2:
                 Page3();
                 break;
+
+            case 3:
+                Page4();
+                break;
         }
 
         ImGui.EndChild();
@@ -114,8 +118,11 @@ public class SetupWindow : Modal
     {
         EditorConfig config = EditorConfig.Default;
         Directory.CreateDirectory(projectsFolder);
-        config.ProjectsFolder = projectsFolder;
-        config.SetupDone = true;
+
+        config.SetOrCreate("ProjectsFolder", projectsFolder);
+        config.SetOrCreate("SetupDone", true);
+
+        config.CommitAll();
         config.Save();
         Close();
     }
@@ -133,6 +140,7 @@ public class SetupWindow : Modal
     }
 
     private string projectsFolder = DetermineDefaultProjectsPath();
+    private string projectAuthor = EditorConfig.Default.Get<string>("ProjectAuthor").Value;
 
     private static string DetermineDefaultProjectsPath()
     {
@@ -160,8 +168,10 @@ public class SetupWindow : Modal
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
-            OpenFileDialog dialog = new();
-            dialog.OnlyAllowFolders = true;
+            OpenFileDialog dialog = new()
+            {
+                OnlyAllowFolders = true
+            };
             dialog.Show((s, e) =>
             {
                 if (e != DialogResult.Ok)
@@ -174,7 +184,20 @@ public class SetupWindow : Modal
         ImGui.Unindent();
     }
 
-    private static void Page3()
+    private void Page3()
+    {
+        ImGui.Text($"Step {page}: Setting up a project author");
+
+        ImGui.Dummy(new(0, 20));
+        ImGui.Indent(48);
+
+        ImGui.Text("Project Author");
+        ImGui.InputText("##TextInputProjectAuthor", ref projectAuthor, 1024);
+
+        ImGui.Unindent();
+    }
+
+    private void Page4()
     {
         ImGui.Text("Done!");
 
@@ -183,13 +206,20 @@ public class SetupWindow : Modal
 
         ImGui.Text("Links:");
         ImGui.Indent();
-        if (ImGui.MenuItem($"LunaForge on Github"))
-        {
-            Process.Start("explorer.exe", "https://github.com/RulHolos/LunaForge");
-        }
+        HyperLink($"{FA.Github} LunaForge on Github", () => Process.Start("explorer.exe", "https://github.com/RulHolos/LunaForge"));
 
         ImGui.Unindent();
         ImGui.Unindent();
+    }
+
+    private void HyperLink(string text, Action callback)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextLink));
+
+        if (ImGui.TextLink(text))
+            callback();
+
+        ImGui.PopStyleColor();
     }
 
     public override void Reset()

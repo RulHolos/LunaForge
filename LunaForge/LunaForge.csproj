@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <None Remove="assets\Icon.ico" />
+    <None Remove="assets\Icon.png" />
     <None Remove="assets\shared\fonts\arial.ttf" />
     <None Remove="assets\shared\fonts\fa-brands-400.ttf" />
     <None Remove="assets\shared\fonts\fa-regular-400.ttf" />
@@ -19,6 +20,9 @@
 
   <ItemGroup>
     <Content Include="assets\Icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="assets\Icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="assets\shared\fonts\arial.ttf">
@@ -36,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.7" />
     <PackageReference Include="Hexa.NET.ImGui.Widgets" Version="1.2.13" />
     <PackageReference Include="Hexa.NET.ImGui.Widgets.Extras" Version="1.0.6" />
@@ -44,6 +49,7 @@
     <PackageReference Include="Hexa.NET.Math" Version="2.0.6" />
     <PackageReference Include="Hexa.NET.Raylib" Version="1.2.1" />
     <PackageReference Include="Hexa.NET.Utilities" Version="2.2.2" />
+    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />

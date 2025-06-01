@@ -280,7 +280,7 @@ public class LauncherWindow : Modal
 
         if (ImGui.InputText("##ProjectName", ref newProjectName, 1024))
         {
-            newProjectPath = Path.Combine(EditorConfig.Default.ProjectsFolder, newProjectName);
+            newProjectPath = Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value, newProjectName);
             canCreateProject = IsValidProjectDir(newProjectPath) && !string.IsNullOrWhiteSpace(newProjectName);
             canCreateFailReason = canCreateProject ? null : string.IsNullOrWhiteSpace(newProjectName) ? $"{FA.Warning} Project name cannot be empty." : $"{FA.Warning} Project already exists.";
         }
@@ -315,7 +315,7 @@ public class LauncherWindow : Modal
         if (ImGui.Button("Create"))
         {
             Directory.CreateDirectory(newProjectPath);
-            ProjectManager.CreateEmpty(newProjectPath);
+            ProjectManager.CreateEmpty(newProjectPath, false);
             CreateProjectDialogReset();
             Close();
         }
@@ -327,14 +327,14 @@ public class LauncherWindow : Modal
     private void CreateProjectDialogReset()
     {
         newProjectName = "New Project";
-        newProjectPath = Path.Combine(EditorConfig.Default.ProjectsFolder ?? string.Empty, newProjectName);
+        newProjectPath = Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value ?? string.Empty, newProjectName);
 
         string newName = newProjectName;
         int i = 1;
         while (Directory.Exists(newProjectPath))
         {
             newName = $"{newProjectName} {i++}";
-            newProjectPath = Path.Combine(EditorConfig.Default.ProjectsFolder ?? string.Empty, newName);
+            newProjectPath = Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value ?? string.Empty, newName);
         }
         newProjectName = newName;
         canCreateProject = true;

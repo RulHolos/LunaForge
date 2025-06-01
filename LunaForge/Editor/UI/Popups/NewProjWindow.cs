@@ -30,7 +30,8 @@ public class NewProjWindow : Modal
         | ImGuiWindowFlags.NoMove;
 
     private string projectName = "Untitled";
-    private string author = EditorConfig.Default.ProjectAuthor;
+    private string author = EditorConfig.Default.Get<string>("ProjectAuthor").Value;
+    private bool initializeWithDefaultLib = true;
     private TemplateDef SelectedTemplate;
     private HashSet<TemplateDef> Templates;
 
@@ -131,6 +132,7 @@ public class NewProjWindow : Modal
 
         ImGui.InputText("Name", ref projectName, 128);
         ImGui.InputText("Author", ref author, 128);
+        ImGui.Checkbox("Initialize with default library", ref initializeWithDefaultLib);
 
         ImGui.EndChild();
 
@@ -149,7 +151,7 @@ public class NewProjWindow : Modal
         ImGui.BeginDisabled(SelectedTemplate == null);
         if (ImGui.Button("Create"))
         {
-            EditorConfig.Default.ProjectAuthor = author;
+            EditorConfig.Default.Get<string>("ProjectAuthor").Value = author;
             CreateProject();
             Close();
         }
@@ -162,11 +164,11 @@ public class NewProjWindow : Modal
     {
         if (SelectedTemplate.Name == "Empty")
         {
-            ProjectManager.CreateEmpty(Path.Combine(EditorConfig.Default.ProjectsFolder, projectName));
+            ProjectManager.CreateEmpty(Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value, projectName), initializeWithDefaultLib);
         }
         else
         {
-            ProjectManager.CreateFromTemplate(Path.Combine(EditorConfig.Default.ProjectsFolder, projectName), SelectedTemplate.ZipPath);
+            ProjectManager.CreateFromTemplate(Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value, projectName), SelectedTemplate.ZipPath);
         }
     }
 
