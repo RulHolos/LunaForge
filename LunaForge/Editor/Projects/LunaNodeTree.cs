@@ -88,11 +88,18 @@ public class LunaNodeTree : LunaProjectFile
     private void DrawHeader()
     {
         ImGui.BeginTable("#Table", 2, ImGuiTableFlags.SizingFixedFit);
-        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("");
+        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
 
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
+
+        ImGui.Button($"{FA.ArrowLeft}"); ImGui.SetItemTooltip("Ancestor"); ImGui.SameLine();
+        ImGui.Button($"{FA.ArrowUp}"); ImGui.SetItemTooltip("Before"); ImGui.SameLine();
+        ImGui.Button($"{FA.ArrowDown}"); ImGui.SetItemTooltip("After"); ImGui.SameLine();
+        ImGui.Button($"{FA.ArrowRight}"); ImGui.SetItemTooltip("Child");
+
+        ImGui.TableSetColumnIndex(1);
 
         if (ImGui.BeginTabBar("##NodeToolbox"))
         {
@@ -104,13 +111,6 @@ public class LunaNodeTree : LunaProjectFile
 
             ImGui.EndTabBar();
         }
-
-        ImGui.TableSetColumnIndex(1);
-
-        ImGui.Button("<"); ImGui.SetItemTooltip("Ancestor"); ImGui.SameLine();
-        ImGui.Button("^"); ImGui.SetItemTooltip("Before"); ImGui.SameLine();
-        ImGui.Button("v"); ImGui.SetItemTooltip("After"); ImGui.SameLine();
-        ImGui.Button(">"); ImGui.SetItemTooltip("Child");
 
         ImGui.EndTable();
     }

@@ -23,7 +23,7 @@ public class LunaProject
 
     #region Project Config
 
-    public List<string> openedFiles = [];
+    public ConfigSystem ProjectConfig { get; private set; } = new();
 
     #endregion
 
@@ -52,6 +52,8 @@ public class LunaProject
     {
         try
         {
+            ProjectConfig.Save(ProjectFile);
+            /*
             ISerializer serializer = new SerializerBuilder()
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .Build();
@@ -60,6 +62,7 @@ public class LunaProject
             using StreamWriter sw = new(ProjectFile);
             sw.WriteLine(yaml);
 
+            */
             return true;
         }
         catch (Exception ex)
@@ -76,6 +79,19 @@ public class LunaProject
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Project file doesn't exist: {path}");
 
+            LunaProject proj = new()
+            {
+                ProjectRoot = Path.GetDirectoryName(path),
+                ProjectConfig = ConfigSystem.Load<ConfigSystem>(path)
+            };
+
+            proj.ProjectConfig.Register(ConfigSystemCategory.CurrentProject, "OpenedFiles", new List<string>());
+            proj.ProjectConfig.CommitAll();
+            proj.Save();
+
+            /*if (!File.Exists(path))
+                throw new FileNotFoundException($"Project file doesn't exist: {path}");
+
             IDeserializer deserializer = new DeserializerBuilder()
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .IgnoreUnmatchedProperties()
@@ -84,7 +100,7 @@ public class LunaProject
             using StreamReader sr = new(path);
             LunaProject proj = deserializer.Deserialize<LunaProject>(sr);
             proj.ProjectRoot = Path.GetDirectoryName(path);
-
+            */
             return (proj, "");
         }
         catch (Exception ex)

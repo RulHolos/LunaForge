@@ -115,7 +115,7 @@ public static class MainMenuBar
 
         if (ImGui.BeginMenu("Git"))
         {
-
+            ImGui.EndMenu();
         }
 
         if (ImGui.BeginMenu("Layout"))
@@ -169,6 +169,9 @@ public static class MainMenuBar
             {
 
             }
+
+            if (ImGui.MenuItem("Redo Initial Setup"))
+                PopupManager.Show<SetupWindow>();
 
             ImGui.EndMenu();
         }

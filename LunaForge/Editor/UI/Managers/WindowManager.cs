@@ -11,6 +11,16 @@ using System.Threading.Tasks;
 
 namespace LunaForge.Editor.UI.Managers;
 
+public enum WindowCategory
+{
+    General,
+    Project,
+    Editor,
+    Debug,
+    Tools,
+    Settings
+}
+
 public static class WindowManager
 {
     private static readonly List<IEditorWindow> windows = [];
@@ -53,14 +63,34 @@ public static class WindowManager
         return editorWindow != null;
     }
 
-    public static void ShowWindow<T>() where T : IEditorWindow, new()
+    public static void RegisterAndShowWindow<T>(WindowCategory category = WindowCategory.General) where T : IEditorWindow, new()
     {
-        IEditorWindow window = new T();
+        IEditorWindow window = new T
+        {
+            Category = category
+        };
         if (!window.Initialized)
             window.Init();
-        //window.Shown += Shown;
-        //window.Closed += Closed;
+        window.Shown += Shown;
+        window.Closed += Closed;
         windows.Add(window);
+    }
+
+    public static void RegisterWindow<T>(WindowCategory category = WindowCategory.General) where T : IEditorWindow, new()
+    {
+        IEditorWindow window = new T
+        {
+            Category = category
+        };
+        window.Shown += Shown;
+        window.Closed += Closed;
+        windows.Add(window);
+    }
+
+    public static void ShowWindow<T>() where T : class, IEditorWindow
+    {
+        if (TryGetWindow(out T window))
+            window.Show();
     }
 
     private static void Closed(IEditorWindow window)
@@ -99,9 +129,28 @@ public static class WindowManager
 
     public static void DrawMenu()
     {
-        for (int i = 0; i < windows.Count; i++)
+        /*for (int i = 0; i < windows.Count; i++)
         {
             windows[i].DrawMenu();
+        }*/
+
+        foreach (WindowCategory category in Enum.GetValues<WindowCategory>())
+        {
+            if (ImGui.BeginMenu(Enum.GetName(category)))
+            {
+                foreach (IEditorWindow window in windows.Where(w => w.Category == category))
+                {
+                    if (ImGui.MenuItem($"{window.Name}", string.Empty, window.IsShown))
+                    {
+                        if (window.IsShown)
+                            window.Focus();
+                        else
+                            window.Show();
+                    }
+                }
+
+                ImGui.EndMenu();
+            }
         }
     }
 

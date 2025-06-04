@@ -11,6 +11,7 @@ namespace LunaForge.Editor.UI.Windows;
 
 public interface IEditorWindow
 {
+    WindowCategory Category { get; set; }
     bool Initialized { get; }
     bool IsShown { get; }
     string Name { get; }
@@ -21,6 +22,7 @@ public interface IEditorWindow
     public CommandHistory History { get; set; }
 
     void Init();
+    void Show();
     void DrawWindow();
     void DrawMenu();
     void DrawContent();
@@ -31,6 +33,7 @@ public interface IEditorWindow
 public abstract class EditorWindow : IEditorWindow
 {
     protected bool IsDocked;
+    public virtual WindowCategory Category { get; set; } = WindowCategory.General;
     public virtual ImGuiWindowFlags Flags { get; set; }
     protected bool initialized;
     protected bool isShown;
@@ -59,9 +62,16 @@ public abstract class EditorWindow : IEditorWindow
     {
     }
 
+    public void Show()
+    {
+        if (!Initialized)
+            Init();
+        IsShown = true;
+    }
+
     public virtual void DrawWindow()
     {
-        bool hasBegun;
+        bool hasBegun = false;
         if (!CanBeClosed)
             hasBegun = ImGui.Begin(Name, Flags);
         else
@@ -94,10 +104,7 @@ public abstract class EditorWindow : IEditorWindow
 
     public virtual void DrawMenu()
     {
-        if (ImGui.MenuItem(Name))
-        {
-            IsShown = true;
-        }
+        
     }
 
     public void Dispose()

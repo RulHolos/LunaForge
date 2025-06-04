@@ -97,7 +97,8 @@ public static class LayoutManager
 
     private static unsafe void SetLayout(string value)
     {
-        EditorConfig.Default.Get<string>("SelectedLayout").Value = value;
+        EditorConfig.Default.SetOrCreate("SelectedLayout", value);
+        EditorConfig.Default.CommitAllAndSave();
         changed = true;
     }
 

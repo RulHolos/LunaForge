@@ -27,9 +27,11 @@ public static class Designer
 
         PopupManager.Show<LauncherWindow>();
 
-        WindowManager.ShowWindow<ProjectWindow>();
-        WindowManager.ShowWindow<ProjectBrowserWindow>();
+        WindowManager.RegisterAndShowWindow<ProjectWindow>(WindowCategory.Project);
+        WindowManager.RegisterAndShowWindow<ProjectBrowserWindow>(WindowCategory.Project);
         //WindowManager.ShowWindow<TerminalWindow>(); // Heavily rework
+
+        WindowManager.RegisterWindow<SettingsWindow>(WindowCategory.Settings);
 
         Logger.Information("Designer initialized");
     }
