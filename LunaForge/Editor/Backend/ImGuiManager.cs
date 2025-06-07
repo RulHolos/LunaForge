@@ -3,6 +3,7 @@ using Hexa.NET.ImNodes;
 using Hexa.NET.ImPlot;
 using Hexa.NET.Raylib;
 using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.UI.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ public class ImGuiManager
     private ImGuiContextPtr guiContext;
     private ImNodesContextPtr nodesContext;
     private ImPlotContextPtr plotContext;
+    private bool resetLayout = true;
 
     public unsafe ImGuiManager()
     {
@@ -26,6 +28,9 @@ public class ImGuiManager
 
         // Set ImGui context
         ImGui.SetCurrentContext(guiContext);
+
+        // Set the Layout Manager state
+        resetLayout = !LayoutManager.Init();
 
         // Set ImGui context for ImPlot
         ImPlot.SetImGuiContext(guiContext);
@@ -187,6 +192,8 @@ public class ImGuiManager
         // Set ImPlot context
         ImPlot.SetCurrentContext(plotContext);
 
+        LayoutManager.NewFrame();
+
         // Start new frame, call order matters.
         ImGuiRaylibPlatform.NewFrame();
         ImGui.NewFrame();
@@ -194,7 +201,35 @@ public class ImGuiManager
         // Example for getting the central dockspace id of a window/viewport.
         ImGui.PushStyleColor(ImGuiCol.WindowBg, Vector4.Zero);
         DockSpaceId = ImGui.DockSpaceOverViewport(null, ImGuiDockNodeFlags.PassthruCentralNode, null); // passing null as first argument will use the main viewport
+
+        if (resetLayout)
+        {
+            ResetLayout();
+            resetLayout = false;
+        }
+
         ImGui.PopStyleColor(1);
+    }
+
+    public static unsafe void ResetLayout()
+    {
+        ImGuiP.ClearIniSettings();
+
+        uint rootDockspace = DockSpaceId;
+
+        ImGuiP.DockBuilderRemoveNode(rootDockspace);
+        ImGuiP.DockBuilderAddNode(rootDockspace, ImGuiDockNodeFlags.PassthruCentralNode);
+
+        uint down;
+        uint up = ImGuiP.DockBuilderSplitNode(rootDockspace, ImGuiDir.Up, 0.65f, null, &down);
+
+        uint next;
+        uint left = ImGuiP.DockBuilderSplitNode(up, ImGuiDir.Left, 0.15f, null, &next);
+        ImGuiP.DockBuilderDockWindow($"{FA.LinesLeaning} File Browser", left);
+        uint right = ImGuiP.DockBuilderSplitNode(next, ImGuiDir.Right, 0.25f, null, &next);
+        ImGuiP.DockBuilderDockWindow("Project Files", next);
+
+        ImGuiP.DockBuilderFinish(rootDockspace);
     }
 
     public static uint DockSpaceId { get; private set; }

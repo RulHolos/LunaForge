@@ -21,15 +21,15 @@ public enum WindowCategory
     Settings
 }
 
-public static class WindowManager
+public static unsafe class WindowManager
 {
     private static readonly List<IEditorWindow> windows = [];
 
     public static IEditorWindow? CurrentFocusedWindow { get; set; } = null;
 
-    static WindowManager()
+    static unsafe WindowManager()
     {
-
+    
     }
 
     public static IReadOnlyList<IEditorWindow> Windows => windows;
@@ -151,6 +151,14 @@ public static class WindowManager
 
                 ImGui.EndMenu();
             }
+        }
+    }
+
+    public static void RefreshStateFromConfig()
+    {
+        foreach (IEditorWindow window in windows)
+        {
+            
         }
     }
 

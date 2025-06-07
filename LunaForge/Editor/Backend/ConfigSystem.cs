@@ -215,7 +215,7 @@ public class ConfigSystem
         {
             config.Register(ConfigSystemCategory.General, "SetupDone", false);
             config.Register(ConfigSystemCategory.General, "ProjectsFolder", string.Empty);
-            config.Register(ConfigSystemCategory.General, "SelectedLayout", string.Empty);
+            config.Register<string?>(ConfigSystemCategory.General, "SelectedLayout", null);
             config.Register(ConfigSystemCategory.DefaultProject, "ProjectAuthor", "John Dough");
 
             config.CommitAll();

@@ -139,6 +139,10 @@ public static class MainMenuBar
             {
                 //WindowManager.ShowWindow<>
             }
+            if (ImGui.MenuItem("Reset Layout"))
+            {
+                LayoutManager.ResetLayout();
+            }
 
             ImGui.EndMenu();
         }

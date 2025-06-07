@@ -1,4 +1,5 @@
 ﻿using Hexa.NET.ImGui;
+using LunaForge.Editor.Backend;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ public struct LayoutConfig : IEquatable<LayoutConfig>
 public static class LayoutManager
 {
     private static readonly string basePath = Path.Combine(EditorConfig.BasePath, "Layouts");
-    private static readonly string defaultPath = Path.Combine(basePath, "default.ini");
+    private static readonly string defaultPath = Path.Combine(basePath, "default.json");
     private static readonly List<LayoutConfig> layouts = [];
     private static bool changed = false;
 
@@ -47,9 +48,9 @@ public static class LayoutManager
         if (!Directory.Exists(basePath))
             Directory.CreateDirectory(basePath);
         layouts.Add(new LayoutConfig(defaultPath, "Default"));
-        foreach (var file in Directory.GetFiles(basePath, "*.ini"))
+        foreach (string file in Directory.GetFiles(basePath, "*.json"))
         {
-            if (file.EndsWith("default.ini"))
+            if (file.EndsWith("default.json"))
                 continue;
             layouts.Add(new LayoutConfig(file));
         }
@@ -59,7 +60,7 @@ public static class LayoutManager
 
     public static string SelectedLayout
     {
-        get => EditorConfig.Default.Get<string>("SelectedLayout").Value ??= defaultPath;
+        get => EditorConfig.Default.Get<string?>("SelectedLayout").Value ??= defaultPath;
         set
         {
             if (layouts.Contains(new LayoutConfig() { Path = value }))
@@ -114,6 +115,11 @@ public static class LayoutManager
 
         var io = ImGui.GetIO();
         io.IniFilename = str;
+    }
+
+    public static void ResetLayout()
+    {
+        ImGuiManager.ResetLayout();
     }
 
     public static void CreateNewLayout(string name)
