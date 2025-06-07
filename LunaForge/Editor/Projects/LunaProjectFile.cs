@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hexa.NET.ImGui.Widgets.Dialogs;
 using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.UI;
 using LunaForge.Editor.UI.Dialogs;
 using LunaForge.Editor.UI.Managers;
 using Newtonsoft.Json;
@@ -71,30 +72,19 @@ public abstract class LunaProjectFile : IDisposable
     {
         string parsedJson = JsonConvert.SerializeObject(this);
 
-        void writeToFile(object? sender, DialogResult result)
+        void writeToFile(bool success, string path)
         {
-            if (result != DialogResult.Ok || sender is not SaveFileDialog dialog)
+            if (!success)
                 return;
-            string fileName = Path.ChangeExtension(Path.Combine(dialog.CurrentFolder, dialog.SelectedFile), dialog.AllowedExtensions[0]);
-            using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write);
+            using FileStream fs = new(path, FileMode.Create, FileAccess.Write);
             using StreamWriter sw = new(fs);
             sw.Write(parsedJson);
         }
         
         if (!File.Exists(FilePath) || saveAs)
         {
-            SaveFileDialog sfd = new(ProjectManager.CurrentProjectFolder)
-            {
-                OnlyAllowFilteredExtensions = true,
-                RootFolder = ProjectManager.CurrentProjectFolder,
-            };
-            if (this is LunaNodeTree)
-                sfd.AllowedExtensions.Add(".lfd");
-            else if (this is LunaNodeGraph)
-                sfd.AllowedExtensions.Add(".lfg");
-            else if (this is LunaScriptEditor)
-                sfd.AllowedExtensions.Add(".lua");
-            sfd.Show(writeToFile);
+            MainWindow.FileDialogManager.SaveFileDialog("Save Project File", "LunaForge Definition{.lfd,.lfg,.lua}",
+                FilePath, ".lfd", writeToFile, EditorConfig.Default.Get<string>("ProjectsFolder").Value);
         }
         else
         {

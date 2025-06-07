@@ -82,7 +82,7 @@ public partial class FileDialog
         this.flags = flags;
         this.selectionCountMax = selectionCountMax;
         this.isModal = isModal;
-        this.WindowFlags = ImGuiWindowFlags.NoNav;
+        this.WindowFlags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoCollapse;
         if (!isModal)
             this.WindowFlags |= ImGuiWindowFlags.NoScrollbar;
 

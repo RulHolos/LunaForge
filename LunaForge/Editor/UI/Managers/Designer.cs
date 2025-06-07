@@ -42,6 +42,7 @@ public static class Designer
         WindowManager.Draw();
         PopupManager.Draw();
         DialogManager.Draw();
+        MainWindow.FileDialogManager.Draw();
         MessageBoxes.Draw();
     }
 

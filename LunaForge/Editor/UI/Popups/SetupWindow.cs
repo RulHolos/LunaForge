@@ -8,12 +8,13 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using PopupManager = LunaForge.Editor.UI.Managers.PopupManager;
 
 namespace LunaForge.Editor.UI.Popups;
 
 public class SetupWindow : Modal
 {
-    private int page = 0;
+    public static int page = 0;
     private bool first = true;
     private const int pageCount = 4;
 
@@ -124,6 +125,7 @@ public class SetupWindow : Modal
 
         config.CommitAll();
         config.Save();
+        page = 0;
         Close();
     }
 
@@ -168,17 +170,13 @@ public class SetupWindow : Modal
         ImGui.SameLine();
         if (ImGui.Button("..."))
         {
-            OpenFileDialog dialog = new()
+            MainWindow.FileDialogManager.OpenFolderDialog("Select Projects Folder", (success, path) =>
             {
-                OnlyAllowFolders = true
-            };
-            dialog.Show((s, e) =>
-            {
-                if (e != DialogResult.Ok)
+                PopupManager.Show<SetupWindow>();
+                if (!success)
                     return;
-                projectsFolder = ((OpenFileDialog)s!).SelectedFile!;
-                Show();
-            });
+                projectsFolder = path;
+            }, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), true);
         }
 
         ImGui.Unindent();
@@ -224,7 +222,7 @@ public class SetupWindow : Modal
 
     public override void Reset()
     {
-
+        
     }
 }
 

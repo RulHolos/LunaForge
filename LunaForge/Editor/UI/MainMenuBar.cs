@@ -60,23 +60,12 @@ public static class MainMenuBar
         {
             if (ImGui.MenuItem("New Project"))
             {
-                /*
-                SaveFileDialog dialog = new();
-                dialog.CurrentFolder = EditorConfig.Default.ProjectsFolder;
-                dialog.AllowedExtensions.Add(".lfp");
-                dialog.OnlyAllowFilteredExtensions = true;
-                dialog.Show(NewProjectCallback);*/
                 PopupManager.Show<NewProjWindow>();
             }
             if (ImGui.MenuItem("Open Project"))
             {
-                OpenFileDialog dialog = new()
-                {
-                    CurrentFolder = EditorConfig.Default.Get<string>("ProjectsFolder").Value,
-                    OnlyAllowFilteredExtensions = true,
-                };
-                dialog.AllowedExtensions.Add(".lfp");
-                dialog.Show(OpenProjectCallback);
+                MainWindow.FileDialogManager.OpenFileDialog("Open Project", "LunaForge Project{.lfp}",
+                    OpenProjectCallback, 1, EditorConfig.Default.Get<string>("ProjectsFolder").Value);
             }
             ImGui.Separator();
             if (ImGui.BeginMenu("Open Recent"))
@@ -122,8 +111,7 @@ public static class MainMenuBar
         {
             if (ImGui.MenuItem("Save Current Layout"))
             {
-                CreateFileDialog dialog = new(LayoutManager.BasePath) { Extension = ".ini" };
-                dialog.Show(CreateNewLayoutCallback);
+                MainWindow.FileDialogManager.SaveFileDialog("Create New Layout", "Layout Definition{.json}", "default.json", ".json", CreateNewLayoutCallback);
             }
             if (ImGui.BeginMenu("Apply Layout"))
             {
@@ -198,19 +186,20 @@ public static class MainMenuBar
         ImGui.EndMainMenuBar();
     }
 
-    private static void CreateNewLayoutCallback(object? sender, DialogResult result)
+    private static void CreateNewLayoutCallback(bool success, string path)
     {
-        if (result != DialogResult.Ok || sender is not CreateFileDialog dialog)
+        if (!success)
             return;
-        LayoutManager.CreateNewLayout(dialog.FileName);
+
+        LayoutManager.CreateNewLayout(path);
     }
 
-    private static void OpenProjectCallback(object? sender, DialogResult result)
+    private static void OpenProjectCallback(bool success, List<string> paths)
     {
-        if (result != DialogResult.Ok || sender is not OpenFileDialog dialog)
+        if (!success)
             return;
 
-       ProjectManager.Load(dialog.SelectedFile);
+        ProjectManager.Load(paths[0]);
     }
 
     private static unsafe void EditSubMenu()

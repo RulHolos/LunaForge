@@ -1,6 +1,7 @@
 ﻿using Hexa.NET.ImGui;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -39,8 +40,22 @@ public partial class FileDialog
         this.wantsToQuit = false;
 
         this.ResetEvents();
+        Vector2 main_viewport_pos = ImGui.GetMainViewport().Pos;
+        Vector2 main_viewport_size = ImGui.GetMainViewport().Size;
+
+        ImGui.SetNextWindowPos(main_viewport_pos);
+        ImGui.SetNextWindowSize(main_viewport_size);
+        ImGui.SetNextWindowBgAlpha(0.9f);
+        unsafe
+        {
+            ImGui.Begin("Overlay", null,
+                ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove
+                | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoInputs);
+        }
+        ImGui.End();
 
         ImGui.SetNextWindowSize(new Vector2(800, 500), ImGuiCond.Once);
+        ImGui.SetNextWindowFocus();
 
         if (this.isModal && !this.okResultToConfirm)
         {
@@ -51,6 +66,8 @@ public partial class FileDialog
         {
             windowVisible = ImGui.Begin(name, ref this.visible, this.WindowFlags);
         }
+
+        ImGui.SetWindowPos(ImGui.GetMainViewport().Pos + (main_viewport_size / 2 - ImGui.GetWindowSize() / 2));
 
         bool wasClosed = false;
         if (windowVisible)
@@ -393,73 +410,59 @@ public partial class FileDialog
 
             if (this.filteredFiles.Count > 0)
             {
-                ImGuiListClipperPtr clipper;
-                unsafe
-                {
-                    clipper = new ImGuiListClipperPtr();
-                }
-
                 lock (this.filesLock)
                 {
-                    clipper.Begin(this.filteredFiles.Count);
-                    while (clipper.Step())
+                    for (int i = 0; i < this.filteredFiles.Count; i++)
                     {
-                        for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                        var file = this.filteredFiles[i];
+                        var selected = this.selectedFileNames.Contains(file.FileName);
+                        var needToBreak = false;
+
+                        var dir = file.Type == FileStructType.Directory;
+                        var item = !dir ? GetIcon(file.Ext) : new IconColorItem
                         {
-                            if (i < 0) continue;
+                            Color = dirTextColor,
+                            Icon = FA.Folder,
+                        };
 
-                            var file = this.filteredFiles[i];
-                            var selected = this.selectedFileNames.Contains(file.FileName);
-                            var needToBreak = false;
+                        ImGui.PushStyleColor(ImGuiCol.Text, selected ? selectedTextColor : item.Color);
 
-                            var dir = file.Type == FileStructType.Directory;
-                            var item = !dir ? GetIcon(file.Ext) : new IconColorItem
-                            {
-                                Color = dirTextColor,
-                                Icon = FA.Folder,
-                            };
+                        ImGui.TableNextRow();
 
-                            ImGui.PushStyleColor(ImGuiCol.Text, selected ? selectedTextColor : item.Color);
-
-                            ImGui.TableNextRow();
-
-                            if (ImGui.TableNextColumn())
-                            {
-                                needToBreak = this.SelectableItem(file, selected, char.ToString(item.Icon));
-                            }
-
-                            if (ImGui.TableNextColumn())
-                            {
-                                ImGui.TextUnformatted(file.Ext);
-                            }
-
-                            if (ImGui.TableNextColumn())
-                            {
-                                if (file.Type == FileStructType.File)
-                                {
-                                    ImGui.TextUnformatted(file.FormattedFileSize + " ");
-                                }
-                                else
-                                {
-                                    ImGui.TextUnformatted(" ");
-                                }
-                            }
-
-                            if (ImGui.TableNextColumn())
-                            {
-                                var sz = ImGui.CalcTextSize(file.FileModifiedDate);
-                                ImGui.SetNextItemWidth(sz.X + Scaled(5));
-                                ImGui.TextUnformatted(file.FileModifiedDate + " ");
-                            }
-
-                            ImGui.PopStyleColor();
-
-                            if (needToBreak) break;
+                        if (ImGui.TableNextColumn())
+                        {
+                            needToBreak = this.SelectableItem(file, selected, char.ToString(item.Icon));
                         }
-                    }
 
-                    clipper.End();
-                    clipper.Destroy();
+                        if (ImGui.TableNextColumn())
+                        {
+                            ImGui.TextUnformatted(file.Ext);
+                        }
+
+                        if (ImGui.TableNextColumn())
+                        {
+                            if (file.Type == FileStructType.File)
+                            {
+                                ImGui.TextUnformatted(file.FormattedFileSize + " ");
+                            }
+                            else
+                            {
+                                ImGui.TextUnformatted(" ");
+                            }
+                        }
+
+                        if (ImGui.TableNextColumn())
+                        {
+                            var sz = ImGui.CalcTextSize(file.FileModifiedDate);
+                            ImGui.SetNextItemWidth(sz.X + Scaled(5));
+                            ImGui.TextUnformatted(file.FileModifiedDate + " ");
+                        }
+
+                        ImGui.PopStyleColor();
+
+                        if (needToBreak)
+                            break;
+                    }
                 }
             }
 

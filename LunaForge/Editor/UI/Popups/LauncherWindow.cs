@@ -219,6 +219,7 @@ public class LauncherWindow : Modal
         }
         if (ImGui.Button($"{FA.MagnifyingGlass} Open Project", new(childSize.X, 50)))
         {
+            Close();
             MainWindow.FileDialogManager.OpenFileDialog("Open Project", "LunaForge Project{.lfp}",
                 OpenProjectCallback, 1, EditorConfig.Default.Get<string>("ProjectsFolder").Value);
         }
