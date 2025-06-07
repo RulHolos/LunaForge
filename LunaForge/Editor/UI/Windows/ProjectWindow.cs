@@ -1,4 +1,5 @@
 ﻿using Hexa.NET.ImGui;
+using Hexa.NET.ImGui.Widgets;
 using LunaForge.Editor.Projects;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ public class ProjectWindow : EditorWindow
     private LunaProjectFile? currentFile { get; set; }
 
     private LunaProjectFile? fileToClose = null;
+    private LunaProjectFile? filePendingModal = null;
 
     protected override void InitWindow()
     {
@@ -54,8 +56,19 @@ public class ProjectWindow : EditorWindow
                     ImGui.EndTabItem();
                 }
 
-                if (!file.IsOpened)
-                    fileToClose = file;
+                if (!file.IsOpened && currentProject.ProjectFileCollection.Contains(file))
+                {
+                    if (file.IsUnsaved)
+                    {
+                        filePendingModal = file;
+                        ConfirmCloseModal();
+                        file.IsOpened = true;
+                    }
+                    else
+                    {
+                        fileToClose = file;
+                    }
+                }
             }
             if (currentProject.ProjectFileCollection.Count == 0)
             {
@@ -71,6 +84,35 @@ public class ProjectWindow : EditorWindow
             fileToClose.Dispose();
             fileToClose = null;
         }
+    }
+
+    private void ConfirmCloseModal()
+    {
+        MessageBoxes.Show(
+            new MessageBox("Closing", $"{Path.GetFileName(filePendingModal?.FilePath)} has unsaved changes.\nDo you want to save before closing?", MessageBoxType.YesNoCancel, null,
+            (s, e) =>
+            {
+                if (s.Result == MessageBoxResult.Yes)
+                {
+                    if (File.Exists(filePendingModal.FilePath))
+                        filePendingModal.Save();
+                    else
+                        filePendingModal.Save(true); // TODO: Box for saving path?.
+                    fileToClose = filePendingModal;
+                    filePendingModal = null;
+                }
+                else if (s.Result == MessageBoxResult.No)
+                {
+                    fileToClose = filePendingModal;
+                    filePendingModal = null;
+                }
+                else
+                {
+                    filePendingModal = null;
+                    fileToClose = null;
+                }
+            })
+        );
     }
 
     public void DrawNoFiles()

@@ -53,16 +53,7 @@ public class LunaProject
         try
         {
             ProjectConfig.Save(ProjectFile);
-            /*
-            ISerializer serializer = new SerializerBuilder()
-                .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                .Build();
 
-            string yaml = serializer.Serialize(this);
-            using StreamWriter sw = new(ProjectFile);
-            sw.WriteLine(yaml);
-
-            */
             return true;
         }
         catch (Exception ex)
@@ -89,18 +80,6 @@ public class LunaProject
             proj.ProjectConfig.CommitAll();
             proj.Save();
 
-            /*if (!File.Exists(path))
-                throw new FileNotFoundException($"Project file doesn't exist: {path}");
-
-            IDeserializer deserializer = new DeserializerBuilder()
-                .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build();
-
-            using StreamReader sr = new(path);
-            LunaProject proj = deserializer.Deserialize<LunaProject>(sr);
-            proj.ProjectRoot = Path.GetDirectoryName(path);
-            */
             return (proj, "");
         }
         catch (Exception ex)

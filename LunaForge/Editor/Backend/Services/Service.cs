@@ -13,12 +13,14 @@ public abstract class Service
     public ILogger Logger { get; private set; }
 
     public abstract string Name { get; }
-    public bool Initialized { get; private set; } = false;
+    public bool Initialized { get; set; } = false;
+    public abstract bool Resetable { get; }
 
-    public virtual void Initialize()
+    public virtual bool Initialize()
     {
         Logger = CoreLogger.Create(Name);
         Initialized = true;
+        return Initialized;
     }
 
     public abstract void Reset();

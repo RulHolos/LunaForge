@@ -13,10 +13,35 @@ public class DiscordRPCService : Service
 {
     public override string Name => "Discord RPC";
 
+    public override bool Resetable => true;
+
     public DiscordRpcClient? Client { get; private set; }
 
-    public override void Initialize()
+    private RichPresence BaseState = new()
     {
+        Details = "Idle",
+        Timestamps = Timestamps.Now,
+        Assets = new()
+        {
+            LargeImageKey = "lunaforgeicon",
+            LargeImageText = "No Project Opened",
+        }
+    };
+
+    public override bool Initialize()
+    {
+        if (Initialized)
+            return true;
+
+        base.Initialize();
+
+        if (EditorConfig.Default.Get<bool>("UseDiscordRPC").Value == false)
+        {
+            Logger.Warning("Discord RPC is disabled. Skipping initialization.");
+            return false;
+        }
+
+        Client?.Dispose();
         Client = new("1301550302683725916")
         {
             Logger = new ConsoleLogger() { Level = LogLevel.Warning },
@@ -24,25 +49,15 @@ public class DiscordRPCService : Service
 
         Client.Initialize();
 
-        base.Initialize();
+        SetState(BaseState);
 
-        Reset();
+        return true;
     }
 
     public override void Reset()
     {
-        Client?.SetPresence(new RichPresence()
-        {
-            Details = "Idle",
-            Timestamps = Timestamps.Now,
-            Assets = new()
-            {
-                LargeImageKey = "lunaforgeicon",
-                LargeImageText = "No Project Opened",
-            }
-        });
-        if (Client == null)
-            Logger.Warning("Discord Client is null. No changes made.");
+        Initialized = false;
+        Initialize();
     }
 
     public void SetState(RichPresence state)

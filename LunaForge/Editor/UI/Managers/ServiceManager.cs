@@ -80,4 +80,20 @@ public static class ServiceManager
 
         return service;
     }
+
+    public static void ResetServices()
+    {
+        foreach (Service service in Services)
+        {
+            if (service.Resetable)
+            {
+                service.Reset();
+                Logger.Information($"Service '{service.Name}' reset.");
+            }
+            else
+            {
+                Logger.Warning($"Service '{service.Name}' is not resetable. Skipping reset.");
+            }
+        }
+    }
 }

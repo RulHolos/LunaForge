@@ -80,6 +80,7 @@ public abstract class TreeNode : IDisposable
         OnNodeDeleted?.Invoke(this);
     }
 
+    [JsonIgnore]
     public string DisplayString => ToString();
 
     #region Children logic

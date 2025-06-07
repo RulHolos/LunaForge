@@ -151,7 +151,7 @@ public static class MainMenuBar
         {
             if (ImGui.MenuItem("Editor Settings"))
             {
-
+                WindowManager.ShowWindow<SettingsWindow>();
             }
 
             if (ImGui.MenuItem("Project Settings", string.Empty, false, ProjectManager.CurrentProject != null))
@@ -166,7 +166,7 @@ public static class MainMenuBar
         {
             if (ImGui.MenuItem("About"))
             {
-
+                PopupManager.Show<AboutWindow>();
             }
 
             if (ImGui.MenuItem("Documentation"))
@@ -216,6 +216,8 @@ public static class MainMenuBar
     private static unsafe void EditSubMenu()
     {
         CommandHistory? currentHistoryCtx = WindowManager.CurrentFocusedWindow?.History;
+
+        ImGui.MenuItem($"History Context: ???", string.Empty, false, false);
 
         if (ImGui.MenuItem("Undo", "Ctrl+Z", false, currentHistoryCtx.CanUndo && currentHistoryCtx != null))
         {

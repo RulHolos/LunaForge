@@ -1,7 +1,9 @@
 ﻿using Hexa.NET.ImGui;
 using LunaForge.Editor.Backend.Utilities;
 using LunaForge.Editor.Projects;
+using LunaForge.Editor.UI.ImGuiExtension;
 using LunaForge.Editor.UI.Managers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +17,7 @@ namespace LunaForge.Editor.UI.Windows;
 
 public class SettingsWindow : EditorWindow
 {
-    private ConfigSystemCategory? displayedKey;
+    private ConfigSystemCategory? displayedKey = ConfigSystemCategory.General;
 
     private Hotkey? recordingHotkey;
     private string? filter = string.Empty;
@@ -27,9 +29,13 @@ public class SettingsWindow : EditorWindow
     private EditorConfig EditorConf => EditorConfig.Default;
     private ConfigSystem? CurrentProjConf => ProjectManager.CurrentProject?.ProjectConfig; // Fuck this line specifically
 
+    private Dictionary<string, string> Descriptions { get; set; } = [];
+
     public SettingsWindow()
     {
-
+        string path = Path.Combine(Directory.GetCurrentDirectory(), "assets", "SettingsDescription.json");
+        if (Path.Exists(path))
+            Descriptions = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(path));
     }
 
     public override unsafe void DrawContent()
@@ -40,6 +46,7 @@ public class SettingsWindow : EditorWindow
         ImGui.TableNextColumn();
 
         DisplayKey(ConfigSystemCategory.General);
+        DisplayKey(ConfigSystemCategory.Services);
         DisplayKey(ConfigSystemCategory.DefaultProject);
         if (CurrentProjConf != null)
             DisplayKey(ConfigSystemCategory.CurrentProject);
@@ -62,8 +69,9 @@ public class SettingsWindow : EditorWindow
 
                 unsavedChanged = false;
                 Flags &= ~ImGuiWindowFlags.UnsavedDocument;
+
+                ServiceManager.ResetServices();
             }
-            ImGui.EndDisabled();
             ImGui.SameLine();
             if (ImGui.Button("Cancel"))
             {
@@ -75,6 +83,7 @@ public class SettingsWindow : EditorWindow
                 unsavedChanged = false;
                 Flags &= ~ImGuiWindowFlags.UnsavedDocument;
             }
+            ImGui.EndDisabled();
 
             ImGui.SeparatorText(displayedKeyName);
 
@@ -96,6 +105,11 @@ public class SettingsWindow : EditorWindow
                     value.Revert();
                 }
                 ImGui.SetItemTooltip("Revert to default value");
+
+                ImGui.SameLine();
+
+                Descriptions.TryGetValue(value.Key, out string? description);
+                ImGuiEx.HelpMarker(description ?? "No description found for this config key.");
 
                 ImGui.SameLine();
 

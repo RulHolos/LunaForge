@@ -7,6 +7,7 @@ using LunaForge.Editor.Backend.Services;
 using LunaForge.Editor.Backend.Utilities;
 using LunaForge.Editor.Projects;
 using LunaForge.Editor.UI.Managers;
+using LunaForge.GUI.ImGuiFileDialog;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,8 @@ public static class MainWindow
     private static ImGuiManager manager;
 
     public static Image EditorIcon = Raylib.LoadImage(Path.Combine(Directory.GetCurrentDirectory(), "Assets/Icon.png"));
+
+    public static FileDialogManager FileDialogManager { get; set; } = new();
 
     static MainWindow()
     {
@@ -73,10 +76,8 @@ public static class MainWindow
 
         while (!exitWindow && !ForceCloseWindow)
         {
-#if !DEBUG
             try
             {
-#endif
                 manager.NewFrame();
 
                 Designer.Draw();
@@ -120,13 +121,11 @@ public static class MainWindow
                 Raylib.ClearBackground(Raylib.Blank);
                 manager.EndFrame();
                 Raylib.EndDrawing();
-#if !DEBUG
-        }
+            }
             catch (Exception ex)
             {
                 Logger.Fatal($"Girl failure:\n{ex}");
             }
-#endif
         }
 
         LayoutManager.Save();

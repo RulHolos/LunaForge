@@ -1,0 +1,8 @@
+﻿{
+  "SetupDone": "Dictates if the the setup process was completed.",
+  "ProjectsFolder": "The path to the project folder where LunaForge will store its projects.",
+  "SelectedLayout": "The layout that is currently selected for the LunaForge interface.",
+  "BypassLauncher": "Bypasses the Launcher and starts the editor without opening anything else.",
+  "ProjectAuthor": "The name of the author of the project. This is used for metadata purposes.",
+  "UseDiscordRPC": "If enabled, LunaForge will show a Discord Rich Presence while the application is running."
+}

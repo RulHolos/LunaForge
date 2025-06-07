@@ -1,4 +1,6 @@
-﻿using LunaForge.Editor.Backend.Utilities;
+﻿using LunaForge.Editor.Backend.Attributes;
+using LunaForge.Editor.Backend.Enums;
+using LunaForge.Editor.Backend.Utilities;
 using Newtonsoft.Json;
 using Serilog;
 using System;
@@ -17,6 +19,7 @@ namespace LunaForge.Editor;
 public enum ConfigSystemCategory
 {
     General,
+    Services,
     DefaultProject,
     CurrentProject
 }
@@ -213,15 +216,43 @@ public class ConfigSystem
 
         if (config is EditorConfig)
         {
-            config.Register(ConfigSystemCategory.General, "SetupDone", false);
-            config.Register(ConfigSystemCategory.General, "ProjectsFolder", string.Empty);
-            config.Register(ConfigSystemCategory.General, "SelectedLayout", string.Empty);
-            config.Register(ConfigSystemCategory.DefaultProject, "ProjectAuthor", "John Dough");
+            RegisterBaseConfigs(ref config);
 
             config.CommitAll();
             config.Save();
         }
 
         return config;
+    }
+
+    /// <summary>
+    /// Please add the description in SettingsDescription.json in assets.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="config"></param>
+    private static void RegisterBaseConfigs<T>(ref T config) where T : ConfigSystem
+    {
+        foreach (BaseConfigEnum enumVal in Enum.GetValues<BaseConfigEnum>())
+        {
+            BaseConfigAttribute attr = enumVal.GetAttributeOfType<BaseConfigAttribute>();
+
+            var method = typeof(T).GetMethod("Register");
+            var register = method.MakeGenericMethod(attr.DefaultValueType);
+            register.Invoke(config, [attr.Category, Enum.GetName(enumVal), attr.DefaultValue]);
+        }
+
+        /*
+        // ## GENERAL ##
+        config.Register(ConfigSystemCategory.General, "SetupDone", false);
+        config.Register(ConfigSystemCategory.General, "ProjectsFolder", string.Empty);
+        config.Register(ConfigSystemCategory.General, "SelectedLayout", string.Empty);
+        config.Register(ConfigSystemCategory.General, "BypassLauncher", false);
+
+        // ## SERVICES ##
+        config.Register(ConfigSystemCategory.Services, "UseDiscordRPC", false);
+
+        // ## DEFAULT PROJECT ##
+        config.Register(ConfigSystemCategory.DefaultProject, "ProjectAuthor", "John Dough");
+        */
     }
 }

@@ -17,7 +17,7 @@ public abstract class LunaProjectFile : IDisposable
 {
     [JsonIgnore] private static ILogger Logger;
 
-    [JsonIgnore] protected string? FilePath;
+    [JsonIgnore] public string? FilePath;
     [JsonIgnore] public int Hash;
 
     [JsonIgnore] public bool IsUnsaved;
@@ -75,22 +75,32 @@ public abstract class LunaProjectFile : IDisposable
         {
             if (result != DialogResult.Ok || sender is not SaveFileDialog dialog)
                 return;
-            using FileStream fs = new(dialog.SelectedFile, FileMode.Create, FileAccess.Write);
+            string fileName = Path.ChangeExtension(Path.Combine(dialog.CurrentFolder, dialog.SelectedFile), dialog.AllowedExtensions[0]);
+            using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write);
             using StreamWriter sw = new(fs);
             sw.Write(parsedJson);
         }
         
         if (!File.Exists(FilePath) || saveAs)
         {
-            using FileStream fs = new(FilePath, FileMode.Create, FileAccess.Write);
-            using StreamWriter sw = new(fs);
-            sw.Write(parsedJson);
+            SaveFileDialog sfd = new(ProjectManager.CurrentProjectFolder)
+            {
+                OnlyAllowFilteredExtensions = true,
+                RootFolder = ProjectManager.CurrentProjectFolder,
+            };
+            if (this is LunaNodeTree)
+                sfd.AllowedExtensions.Add(".lfd");
+            else if (this is LunaNodeGraph)
+                sfd.AllowedExtensions.Add(".lfg");
+            else if (this is LunaScriptEditor)
+                sfd.AllowedExtensions.Add(".lua");
+            sfd.Show(writeToFile);
         }
         else
         {
-            SaveFileDialog sfd = new(FilePath) { OnlyAllowFilteredExtensions = true };
-            sfd.AllowedExtensions.Add(".lfd");
-            sfd.Show(writeToFile);
+            using FileStream fs = new(FilePath, FileMode.Create, FileAccess.Write);
+            using StreamWriter sw = new(fs);
+            sw.Write(parsedJson);
         }
     }
 

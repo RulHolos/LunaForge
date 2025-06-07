@@ -40,8 +40,18 @@ public class WorkTree : List<TreeNode>
     }
 }
 
+public enum InsertMode
+{
+    Ancestor,
+    Before,
+    After,
+    Child,
+}
+
 public class LunaNodeTree : LunaProjectFile
 {
+    public InsertMode InsertMode { get; set; } = InsertMode.Child;
+
     public WorkTree Nodes { get; set; } = [];
 
     public TreeNode? SelectedNode { get; set; }
@@ -94,10 +104,10 @@ public class LunaNodeTree : LunaProjectFile
         ImGui.TableNextRow();
         ImGui.TableSetColumnIndex(0);
 
-        ImGui.Button($"{FA.ArrowLeft}"); ImGui.SetItemTooltip("Ancestor"); ImGui.SameLine();
-        ImGui.Button($"{FA.ArrowUp}"); ImGui.SetItemTooltip("Before"); ImGui.SameLine();
-        ImGui.Button($"{FA.ArrowDown}"); ImGui.SetItemTooltip("After"); ImGui.SameLine();
-        ImGui.Button($"{FA.ArrowRight}"); ImGui.SetItemTooltip("Child");
+        InsertButton($"{FA.ArrowLeft}", InsertMode.Ancestor); ImGui.SameLine();
+        InsertButton($"{FA.ArrowUp}", InsertMode.Before); ImGui.SameLine();
+        InsertButton($"{FA.ArrowDown}", InsertMode.After); ImGui.SameLine();
+        InsertButton($"{FA.ArrowRight}", InsertMode.Child);
 
         ImGui.TableSetColumnIndex(1);
 
@@ -113,6 +123,21 @@ public class LunaNodeTree : LunaProjectFile
         }
 
         ImGui.EndTable();
+    }
+
+    private void InsertButton(string label, InsertMode mode)
+    {
+        if (InsertMode == mode)
+            ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.ButtonActive));
+        else
+            ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.Button));
+
+        if (ImGui.Button(label))
+            InsertMode = mode;
+
+        ImGui.PopStyleColor();
+
+        ImGui.SetItemTooltip(Enum.GetName(mode));
     }
 
     #endregion

@@ -1,5 +1,4 @@
 ﻿using Hexa.NET.ImGui;
-using Hexa.NET.ImGui.Widgets.Dialogs;
 using Hexa.NET.Utilities.Text;
 using LunaForge.Editor.Backend;
 using LunaForge.Editor.Projects;
@@ -11,6 +10,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using PopupManager = LunaForge.Editor.UI.Managers.PopupManager;
 
 namespace LunaForge.Editor.UI.Popups;
 
@@ -94,13 +94,6 @@ public class LauncherWindow : Modal
         Vector2 avail = ImGui.GetContentRegionAvail();
         Vector2 entrySize = new(avail.X - widthSide, ImGui.GetTextLineHeight() * 2 + padding.Y * 2 + spacing.Y);
         Vector2 trueEntrySize = entrySize - new Vector2(ImGui.GetStyle().IndentSpacing, 0);
-
-
-        if (createProjectDialog)
-        {
-            CreateProjectDialog(avail);
-            return;
-        }
 
         byte* buffer = stackalloc byte[2048];
         StrBuilder builder = new(buffer, 2048);
@@ -221,14 +214,13 @@ public class LauncherWindow : Modal
 
         if (ImGui.Button($"{FA.SquarePlus} New Project", new(childSize.X, 50)))
         {
-            createProjectDialog = true;
+            Close();
+            PopupManager.Show<NewProjWindow>();
         }
         if (ImGui.Button($"{FA.MagnifyingGlass} Open Project", new(childSize.X, 50)))
         {
-            OpenFileDialog dialog = new();
-            dialog.AllowedExtensions.Add(".lfp");
-            dialog.OnlyAllowFilteredExtensions = true;
-            dialog.Show(OpenProjectCallback);
+            MainWindow.FileDialogManager.OpenFileDialog("Open Project", "LunaForge Project{.lfp}",
+                OpenProjectCallback, 1, EditorConfig.Default.Get<string>("ProjectsFolder").Value);
         }
         if (ImGui.Button($"{FA.Clone} Clone Project", new(childSize.X, 50)))
         {
@@ -242,104 +234,12 @@ public class LauncherWindow : Modal
         ImGui.EndChild();
     }
 
-    private void OpenProjectCallback(object? sender, DialogResult result)
+    private void OpenProjectCallback(bool success, List<string> path)
     {
-        if (result != DialogResult.Ok || sender is not OpenFileDialog dialog) return;
-        ProjectManager.Load(dialog.SelectedFile!);
+        if (!success)
+            return;
+        ProjectManager.Load(path[0]); // Only 1 possible choice so we can safely use index 0.
         Close();
-    }
-
-    private string newProjectName = "New Project";
-    private string newProjectPath = "";
-    private bool canCreateProject = false;
-    private string? canCreateFailReason;
-
-    private static bool IsDirectoryEmpty(string path)
-    {
-        return !Directory.EnumerateFileSystemEntries(path).Any();
-    }
-
-    private static bool IsValidProjectDir(string path)
-    {
-        return !Directory.Exists(path) || IsDirectoryEmpty(path);
-    }
-
-    private void CreateProjectDialog(Vector2 avail)
-    {
-        const float footerHeight = 50;
-        avail.Y -= footerHeight;
-        ImGui.BeginChild("Content", avail);
-
-        ImGui.Text("Create a new Project");
-
-        ImGui.Dummy(new(0, 20));
-
-        ImGui.Indent(48);
-
-        ImGui.Text("Project Name:");
-
-        if (ImGui.InputText("##ProjectName", ref newProjectName, 1024))
-        {
-            newProjectPath = Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value, newProjectName);
-            canCreateProject = IsValidProjectDir(newProjectPath) && !string.IsNullOrWhiteSpace(newProjectName);
-            canCreateFailReason = canCreateProject ? null : string.IsNullOrWhiteSpace(newProjectName) ? $"{FA.Warning} Project name cannot be empty." : $"{FA.Warning} Project already exists.";
-        }
-
-        ImGui.TextDisabled(newProjectPath);
-
-        if (!canCreateProject)
-        {
-            ImGui.Dummy(new(0, 20));
-            ImGui.TextColored(new(1, 0, 0, 1), canCreateFailReason ?? string.Empty);
-        }
-
-        ImGui.Unindent();
-
-        ImGui.EndChild();
-
-        ImGui.BeginTable("#Table", 2, ImGuiTableFlags.SizingFixedFit);
-        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("");
-
-        ImGui.TableNextRow();
-        ImGui.TableSetColumnIndex(1);
-
-        if (ImGui.Button("Cancel"))
-        {
-            CreateProjectDialogReset();
-        }
-        ImGui.SameLine();
-
-        ImGui.BeginDisabled(!canCreateProject);
-
-        if (ImGui.Button("Create"))
-        {
-            Directory.CreateDirectory(newProjectPath);
-            ProjectManager.CreateEmpty(newProjectPath, false);
-            CreateProjectDialogReset();
-            Close();
-        }
-        ImGui.EndDisabled();
-
-        ImGui.EndTable();
-    }
-
-    private void CreateProjectDialogReset()
-    {
-        newProjectName = "New Project";
-        newProjectPath = Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value ?? string.Empty, newProjectName);
-
-        string newName = newProjectName;
-        int i = 1;
-        while (Directory.Exists(newProjectPath))
-        {
-            newName = $"{newProjectName} {i++}";
-            newProjectPath = Path.Combine(EditorConfig.Default.Get<string>("ProjectsFolder").Value ?? string.Empty, newName);
-        }
-        newProjectName = newName;
-        canCreateProject = true;
-
-        createProjectDialog = false;
     }
 
     private unsafe void DisplayEntry(HistoryEntry entry, Vector2 padding, Vector2 spacing, float lineHeight, Vector2 entrySize)
@@ -449,7 +349,7 @@ public class LauncherWindow : Modal
 
     public override void Reset()
     {
-        CreateProjectDialogReset();
+        
     }
 }
 
