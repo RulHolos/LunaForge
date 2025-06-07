@@ -1,5 +1,7 @@
 ﻿using Hexa.NET.ImGui;
 using LunaForge.Editor.Backend;
+using LunaForge.Editor.UI.ImGuiExtension;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,28 +60,38 @@ public static class LayoutManager
 
     public static IReadOnlyList<LayoutConfig> Layouts => layouts;
 
-    public static string SelectedLayout
+    public static string SelectedLayoutPath
     {
-        get => EditorConfig.Default.Get<string?>("SelectedLayout").Value ??= defaultPath;
+        get
+        {
+            var entry = EditorConfig.Default.Get<string>("SelectedLayout");
+            if (string.IsNullOrEmpty(entry.Value))
+                entry.Value = defaultPath;
+            return entry.Value;
+        }
         set
         {
             if (layouts.Contains(new LayoutConfig() { Path = value }))
-            {
                 SetLayout(value);
-            }
         }
     }
+
+    public static ImGuiUnifiedConfig SelectedLayout;
 
     public static string BasePath => basePath;
 
     internal static unsafe bool Init()
     {
-        var layout = SelectedLayout!;
-        SetIniString(layout);
+        ImGuiIOPtr io = ImGui.GetIO();
+        io.IniFilename = null;
+
+        var layout = SelectedLayoutPath!;
+        SelectedLayout = ImGuiUnifiedConfig.Load(layout);
+        //SetIniString(layout);
 
         if (File.Exists(layout))
         {
-            ImGui.LoadIniSettingsFromDisk(layout);
+            ImGui.LoadIniSettingsFromMemory(SelectedLayout.ImGuiIniContent ?? string.Empty);
             return true;
         }
         return false;
@@ -89,9 +101,13 @@ public static class LayoutManager
     {
         if (changed)
         {
-            var layout = SelectedLayout!;
-            ImGui.LoadIniSettingsFromDisk(layout);
-            SetIniString(layout);
+            var layout = SelectedLayoutPath!;
+            SelectedLayout = ImGuiUnifiedConfig.Load(layout);
+
+            ImGui.LoadIniSettingsFromMemory(SelectedLayout.ImGuiIniContent ?? string.Empty);
+
+            SelectedLayout.Save(layout);
+            //SetIniString(layout);
             changed = false;
         }
     }
@@ -101,6 +117,22 @@ public static class LayoutManager
         EditorConfig.Default.SetOrCreate("SelectedLayout", value);
         EditorConfig.Default.CommitAllAndSave();
         changed = true;
+    }
+
+    public static unsafe void Save()
+    {
+        byte* ptr = ImGui.SaveIniSettingsToMemory();
+        if (ptr == null)
+            return;
+
+        int length = 0;
+        while (ptr[length] != 0)
+            length++;
+
+        string initStr = Encoding.UTF8.GetString(ptr, length);
+
+        SelectedLayout.ImGuiIniContent = initStr;
+        SelectedLayout.Save(SelectedLayoutPath);
     }
 
     private static unsafe void SetIniString(string value)
@@ -124,8 +156,11 @@ public static class LayoutManager
 
     public static void CreateNewLayout(string name)
     {
-        string path = Path.Combine(basePath, $"{name}.ini");
+        string path = Path.Combine(basePath, $"{name}.json");
         layouts.Add(new(path, name));
-        SetIniString(path);
+        SelectedLayoutPath = path;
+        SelectedLayout = ImGuiUnifiedConfig.Load(SelectedLayoutPath);
+        SelectedLayout.Save(SelectedLayoutPath);
+        //SetIniString(path);
     }
 }

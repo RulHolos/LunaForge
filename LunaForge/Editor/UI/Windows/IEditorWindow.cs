@@ -67,15 +67,23 @@ public abstract class EditorWindow : IEditorWindow
         if (!Initialized)
             Init();
         IsShown = true;
+        Shown.Invoke(this);
     }
 
     public virtual void DrawWindow()
     {
+        bool wasShown = isShown;
         bool hasBegun = false;
         if (!CanBeClosed)
             hasBegun = ImGui.Begin(Name, Flags);
         else
+        {
             hasBegun = ImGui.Begin(Name, ref isShown, Flags);
+
+            if (wasShown && !isShown)
+                Closed?.Invoke(this);
+        }
+            
         if (!hasBegun)
         {
             ImGui.End();

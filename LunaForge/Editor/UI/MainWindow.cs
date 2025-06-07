@@ -73,8 +73,10 @@ public static class MainWindow
 
         while (!exitWindow && !ForceCloseWindow)
         {
+#if !DEBUG
             try
             {
+#endif
                 manager.NewFrame();
 
                 Designer.Draw();
@@ -107,17 +109,27 @@ public static class MainWindow
                     }
                 }
 
+                ImGuiIOPtr io = ImGui.GetIO();
+                if (io.WantSaveIniSettings)
+                {
+                    LayoutManager.Save();
+                    io.WantSaveIniSettings = false;
+                }
+
                 Raylib.BeginDrawing();
                 Raylib.ClearBackground(Raylib.Blank);
                 manager.EndFrame();
                 Raylib.EndDrawing();
-            }
+#if !DEBUG
+        }
             catch (Exception ex)
             {
                 Logger.Fatal($"Girl failure:\n{ex}");
             }
+#endif
         }
 
+        LayoutManager.Save();
         manager.Dispose();
         Raylib.CloseWindow();
 

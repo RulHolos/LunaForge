@@ -129,8 +129,8 @@ public static class MainMenuBar
             {
                 foreach (var layout in LayoutManager.Layouts)
                 {
-                    if (ImGui.MenuItem(layout.Name, LayoutManager.SelectedLayout == layout.Path))
-                        LayoutManager.SelectedLayout = layout.Path;
+                    if (ImGui.MenuItem(layout.Name, LayoutManager.SelectedLayoutPath == layout.Path))
+                        LayoutManager.SelectedLayoutPath = layout.Path;
                 }
 
                 ImGui.EndMenu();

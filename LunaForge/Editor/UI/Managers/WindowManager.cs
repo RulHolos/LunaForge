@@ -69,10 +69,10 @@ public static unsafe class WindowManager
         {
             Category = category
         };
-        if (!window.Initialized)
-            window.Init();
         window.Shown += Shown;
         window.Closed += Closed;
+        if (!window.Initialized)
+            window.Init();
         windows.Add(window);
     }
 
@@ -96,12 +96,23 @@ public static unsafe class WindowManager
     private static void Closed(IEditorWindow window)
     {
         windows.Remove(window);
+        window.Dispose();
+
+        if (LayoutManager.SelectedLayout.Settings.ContainsKey($"{window.Name}.IsShown"))
+            LayoutManager.SelectedLayout.Settings.Remove($"{window.Name}.IsShown", out _);
+
+        ImGuiIOPtr io = ImGui.GetIO();
+        io.WantSaveIniSettings = true;
     }
 
     private static void Shown(IEditorWindow window)
     {
         if (!window.Initialized)
             window.Init();
+
+        LayoutManager.SelectedLayout.Settings.TryAdd($"{window.Name}.IsShown", true);
+        ImGuiIOPtr io = ImGui.GetIO();
+        io.WantSaveIniSettings = true;
     }
 
     public static void Init()
@@ -114,6 +125,8 @@ public static unsafe class WindowManager
     public static void Draw()
     {
         ImGui.BeginDisabled(BlockInput);
+
+        RefreshStateFromConfig();
 
         for (int i = 0; i < windows.Count; i++)
         {
@@ -156,10 +169,16 @@ public static unsafe class WindowManager
 
     public static void RefreshStateFromConfig()
     {
+        if (LayoutManager.SelectedLayout == null)
+            return;
         foreach (IEditorWindow window in windows)
         {
-            
-        }
+            if (LayoutManager.SelectedLayout.Settings.TryGetValue($"{window.Name}.IsShown", out object isShown))
+            {
+                if (Convert.ToBoolean(isShown))
+                    window.Show();
+            }
+        } 
     }
 
     public static void Dispose()
