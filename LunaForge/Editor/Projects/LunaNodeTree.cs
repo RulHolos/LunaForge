@@ -244,7 +244,7 @@ public class LunaNodeTree : LunaProjectFile
 
     public void RenderContextMenu(TreeNode node)
     {
-        if (ImGui.MenuItem($"{FA.PenToSquare} Edit", string.Empty, false, true))
+        if (ImGui.MenuItem($"{FA.PenToSquare} Edit", string.Empty, false))
         { } // TODO Edit Window
 
         ImGui.Separator();
@@ -270,8 +270,8 @@ public class LunaNodeTree : LunaProjectFile
 
         ImGui.Separator();
 
-        if (ImGui.MenuItem($"{FA.FilterCircleXmark} Ban", string.Empty, node.IsBanned, false))
-        { } // TODO Ban
+        if (ImGui.MenuItem($"{FA.FilterCircleXmark} Ban", string.Empty, node.IsBanned))
+            node.IsBanned = !node.IsBanned;
 
         ImGui.Separator();
 
@@ -289,6 +289,9 @@ public class LunaNodeTree : LunaProjectFile
 
     private void RenderAttributes()
     {
+        if (SelectedNode == null)
+            return;
+
         ImGui.BeginTable("NodeAttributes", 3,
             ImGuiTableFlags.Resizable
             | ImGuiTableFlags.RowBg
@@ -298,20 +301,20 @@ public class LunaNodeTree : LunaProjectFile
         ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed);
         ImGui.TableHeadersRow();
         
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < SelectedNode.Attributes.Count; i++)
         {
             ImGui.TableNextRow();
             ImGui.TableSetColumnIndex(0);
 
-            ImGui.Text($"Attribute {i}");
+            ImGui.Text($"{SelectedNode.Attributes[i].Name}");
 
             ImGui.TableSetColumnIndex(1);
 
-            ImGui.Text($"Value {i}");
+            ImGui.Text($"{SelectedNode.Attributes[i].Value}");
 
             ImGui.TableSetColumnIndex(2);
 
-            ImGui.Button($"[...]##{i}");
+            ImGui.Button($"[...]##Attr-{i}");
         }
 
         ImGui.EndTable();

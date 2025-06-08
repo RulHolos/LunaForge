@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hexa.NET.ImGui.Widgets.Dialogs;
 using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.Commands;
 using LunaForge.Editor.UI;
 using LunaForge.Editor.UI.Dialogs;
 using LunaForge.Editor.UI.Managers;
@@ -100,4 +101,50 @@ public abstract class LunaProjectFile : IDisposable
     }
 
     public abstract void Draw();
+
+    #region CommandHistory
+
+    public Stack<Command> CommandStack { get; private set; } = [];
+    public Stack<Command> UndoCommandStack { get; private set; } = [];
+
+    public bool CanUndo => CommandStack.Count > 0;
+    public bool CanRedo => UndoCommandStack.Count > 0;
+
+    public int UndoCount => CommandStack.Count;
+    public int RedoCount => UndoCommandStack.Count;
+
+    public void Undo()
+    {
+        if (!CanUndo) return;
+        CommandStack.Peek().Undo();
+        UndoCommandStack.Push(CommandStack.Pop());
+    }
+    public void Redo()
+    {
+        if (!CanRedo) return;
+        UndoCommandStack.Peek().Execute();
+        CommandStack.Push(UndoCommandStack.Pop());
+    }
+
+    public bool AddAndExecuteCommand(Command command)
+    {
+        if (command == null)
+            return false;
+
+        CommandStack.Push(command);
+        CommandStack.Peek().Execute();
+        UndoCommandStack.Clear();
+
+        return true;
+    }
+
+    public static bool AddAndExecuteCommandStatic(Command command)
+    {
+        if (command == null || ProjectFileCollection.CurrentF != null)
+            return false;
+
+        return ProjectFileCollection.CurrentF.AddAndExecuteCommand(command);
+    }
+
+    #endregion
 }

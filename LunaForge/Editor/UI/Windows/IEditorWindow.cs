@@ -19,8 +19,6 @@ public interface IEditorWindow
     event Action<IEditorWindow>? Shown;
     event Action<IEditorWindow>? Closed;
 
-    public CommandHistory History { get; set; }
-
     void Init();
     void Show();
     void DrawWindow();
@@ -49,8 +47,6 @@ public abstract class EditorWindow : IEditorWindow
 
     public event Action<IEditorWindow>? Shown;
     public event Action<IEditorWindow>? Closed;
-
-    public CommandHistory History { get; set; } = new();
 
     public void Init()
     {

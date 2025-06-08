@@ -17,7 +17,6 @@ public class ProjectWindow : EditorWindow
     public override bool CanBeClosed { get; set; } = false;
 
     private LunaProject? currentProject { get; set; }
-    private LunaProjectFile? currentFile { get; set; }
 
     private LunaProjectFile? fileToClose = null;
     private LunaProjectFile? filePendingModal = null;
@@ -44,8 +43,8 @@ public class ProjectWindow : EditorWindow
             for (int i = 0; i < currentProject.ProjectFileCollection.Count; i++)
             {
                 LunaProjectFile file = currentProject.ProjectFileCollection[i];
-                if (currentFile != file)
-                    currentFile = file;
+                if (currentProject.ProjectFileCollection.Current != file)
+                    currentProject.ProjectFileCollection.Current = file;
 
                 ImGuiTabItemFlags flags = ImGuiTabItemFlags.NoAssumedClosure | ImGuiTabItemFlags.NoPushId;
                 if (file.IsUnsaved)

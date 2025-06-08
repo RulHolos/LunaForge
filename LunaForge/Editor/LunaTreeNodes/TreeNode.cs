@@ -2,6 +2,8 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -39,9 +41,9 @@ public abstract class TreeNode : IDisposable
     public LunaNodeTree ParentTree;
 
     [JsonIgnore]
-    private List<TreeNode> children = [];
+    private ObservableCollection<TreeNode> children = [];
     [JsonIgnore]
-    public List<TreeNode> Children
+    public ObservableCollection<TreeNode> Children
     {
         get => children;
         set => children = value;
@@ -50,22 +52,34 @@ public abstract class TreeNode : IDisposable
     public bool HasChildren => Children.Count > 0;
 
     [JsonIgnore]
-    private List<NodeAttribute> attributes = [];
+    private ObservableCollection<NodeAttribute> attributes = [];
     [JsonIgnore]
-    public List<NodeAttribute> Attributes
+    public ObservableCollection<NodeAttribute> Attributes
     {
         get => attributes;
-        set => attributes = value;
+        set {
+            if (value == null)
+            {
+                attributes = [];
+                attributes.CollectionChanged += new NotifyCollectionChangedEventHandler(AttributesChanged);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot add a null attribute to a TreeNode.");
+            }
+        }
     }
 
     public delegate void NodeCreatedEventHandler(TreeNode node);
     public delegate void NodeDeletedEventHandler(TreeNode node);
+    public delegate void NodeAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args);
     public event NodeCreatedEventHandler? OnNodeCreated;
     public event NodeDeletedEventHandler? OnNodeDeleted;
+    public event NodeAttributeChanged OnNodeAttributeChanged;
 
     public TreeNode()
     {
-        NodeAttribute.OnNodeAttributeChanged += NodeAttribChanged;
+        OnNodeAttributeChanged += RaiseAttributeChanged;
         MetaData = new(this);
         OnNodeCreated?.Invoke(this);
     }
@@ -105,9 +119,44 @@ public abstract class TreeNode : IDisposable
     }
 
     #endregion
+    #region Attributes
 
-    public void NodeAttribChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args)
+    public void RaiseAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args)
     {
-
+        OnNodeAttributeChanged?.Invoke(attr, args);
     }
+
+    private void AttributesChanged(object sender, NotifyCollectionChangedEventArgs args)
+    {
+        NodeAttribute attr;
+        if (args.NewItems != null)
+        {
+            foreach (NodeAttribute na in Attributes)
+            {
+                attr = na;
+                if (attr != null)
+                    attr.ParentNode = this;
+            }
+        }
+    }
+
+    public NodeAttribute? GetAttr(int n)
+    {
+        if (Attributes.Count > n)
+            return attributes[n];
+        else
+            return null;
+    }
+
+    public NodeAttribute? GetAttr(string name)
+    {
+        var attrs = from NodeAttribute na in Attributes
+                    where na != null && !string.IsNullOrEmpty(na.Name) && na.Name == name
+                    select na;
+        if (attrs != null && attrs.Any())
+            return attrs.First();
+        return null;
+    }
+
+    #endregion
 }

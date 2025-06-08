@@ -12,6 +12,8 @@ public class ProjectFileCollection : List<LunaProjectFile>
 
     public LunaProjectFile? Current { get; set; } = null;
 
+    public static LunaProjectFile? CurrentF => ProjectManager.CurrentProject?.ProjectFileCollection.Current;
+
     public new void Add(LunaProjectFile proj)
     {
         proj.Hash = MaxHash;

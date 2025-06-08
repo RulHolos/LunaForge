@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LunaForge.Editor.Commands.CommandList;
+namespace LunaForge.Editor.Commands;
 
 public sealed class EditAttributeCommand(NodeAttribute attr, string oldVal, string newVal) : Command
 {

@@ -204,20 +204,20 @@ public static class MainMenuBar
 
     private static unsafe void EditSubMenu()
     {
-        CommandHistory? currentHistoryCtx = WindowManager.CurrentFocusedWindow?.History;
+        LunaProjectFile? currentHistoryCtx = ProjectFileCollection.CurrentF;
 
-        ImGui.MenuItem($"History Context: ???", string.Empty, false, false);
+        ImGui.MenuItem($"History Context: {Path.GetFileName(currentHistoryCtx?.FilePath ?? "Unnamed")}", string.Empty, false, false);
 
-        if (ImGui.MenuItem("Undo", "Ctrl+Z", false, currentHistoryCtx.CanUndo && currentHistoryCtx != null))
+        if (ImGui.MenuItem("Undo", "Ctrl+Z", false, currentHistoryCtx != null && currentHistoryCtx.CanUndo))
         {
-            currentHistoryCtx.Undo();
+            currentHistoryCtx?.Undo();
         }
-        if (ImGui.MenuItem("Redo", "Ctrl+Y", false, currentHistoryCtx.CanRedo && currentHistoryCtx != null))
+        if (ImGui.MenuItem("Redo", "Ctrl+Y", false, currentHistoryCtx != null && currentHistoryCtx.CanRedo))
         {
-            currentHistoryCtx.Redo();
+            currentHistoryCtx?.Redo();
         }
 
-        if (currentHistoryCtx.UndoCount != 0 && currentHistoryCtx != null)
+        if (currentHistoryCtx != null && currentHistoryCtx.UndoCount != 0)
         {
             ImGui.Text("Undo Stack");
             foreach (Command command in currentHistoryCtx.CommandStack)
@@ -225,9 +225,9 @@ public static class MainMenuBar
                 ImGui.MenuItem(command.ToString());
             }
         }
-        if (currentHistoryCtx.UndoCount != 0 && currentHistoryCtx.RedoCount != 0 && currentHistoryCtx != null)
+        if (currentHistoryCtx != null && currentHistoryCtx.UndoCount != 0 && currentHistoryCtx.RedoCount != 0)
             ImGui.Separator();
-        if (currentHistoryCtx.RedoCount != 0 && currentHistoryCtx != null)
+        if (currentHistoryCtx != null && currentHistoryCtx.RedoCount != 0)
         {
             ImGui.Text("Redo Stack");
             foreach (Command command in currentHistoryCtx.UndoCommandStack)
