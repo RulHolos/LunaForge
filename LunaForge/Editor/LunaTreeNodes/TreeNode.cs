@@ -15,7 +15,7 @@ namespace LunaForge.Editor.LunaTreeNodes;
  * Do that in a lua script, not TreeNode
  */
 
-public abstract class TreeNode : IDisposable
+public abstract class TreeNode : IDisposable, ICloneable
 {
     /// <summary>
     /// Things like IsFolder, IsLeaf, CannotBeDeleted, ...
@@ -70,18 +70,11 @@ public abstract class TreeNode : IDisposable
         }
     }
 
-    public delegate void NodeCreatedEventHandler(TreeNode node);
-    public delegate void NodeDeletedEventHandler(TreeNode node);
-    public delegate void NodeAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args);
-    public event NodeCreatedEventHandler? OnNodeCreated;
-    public event NodeDeletedEventHandler? OnNodeDeleted;
-    public event NodeAttributeChanged OnNodeAttributeChanged;
-
     public TreeNode()
     {
         OnNodeAttributeChanged += RaiseAttributeChanged;
         MetaData = new(this);
-        OnNodeCreated?.Invoke(this);
+        OnCreate?.Invoke(this);
     }
 
     public TreeNode(LunaNodeTree parentTree)
@@ -91,11 +84,15 @@ public abstract class TreeNode : IDisposable
 
     public void Dispose()
     {
-        OnNodeDeleted?.Invoke(this);
+        OnRemove?.Invoke(this);
     }
 
     [JsonIgnore]
     public string DisplayString => ToString();
+    [JsonIgnore]
+    public virtual string NodeName { get; set; } = string.Empty;
+
+    public abstract object Clone();
 
     #region Children logic
 
@@ -111,20 +108,72 @@ public abstract class TreeNode : IDisposable
         return true;
     }
 
+    public TreeNode GetRealParent()
+    {
+        TreeNode p = ParentNode;
+        while (p != null && p.MetaData.IsFolder)
+            p = p.ParentNode;
+        return p;
+    }
+
+    public IEnumerable<TreeNode> GetRealChildren()
+    {
+        foreach (TreeNode n in Children)
+        {
+            if (n.ParentNode == this)
+            {
+                if (n.MetaData.IsFolder)
+                    foreach (TreeNode t in n.GetRealChildren())
+                        yield return t;
+                else
+                    yield return n;
+            }
+        }
+    }
+
+    public bool CanLogicallyDelete()
+    {
+        if (MetaData.IsFolder)
+        {
+            foreach (TreeNode t in GetRealChildren())
+                if (t.MetaData.CannotBeDeleted)
+                    return false;
+            return true;
+        }
+        else
+            return !MetaData.CannotBeDeleted;
+    }
+
+    private void ChildrenChanged(object sender, NotifyCollectionChangedEventArgs args)
+    {
+
+    }
+
+    public void AddChild(TreeNode child)
+    {
+        Children.Add(child);
+    }
+
+    public void InsertChild(TreeNode node, int index)
+    {
+        Children.Insert(index, node);
+    }
+
+    public void RemoveChild(TreeNode node)
+    {
+        ParentTree.SelectedNode = node.GetNearestEdited();
+        Children.Remove(node);
+    }
+
     public void ClearChildSelection()
     {
         IsSelected = false;
-        foreach (TreeNode child in Children)
+        foreach (TreeNode child in children)
             child.ClearChildSelection();
     }
 
     #endregion
     #region Attributes
-
-    public void RaiseAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args)
-    {
-        OnNodeAttributeChanged?.Invoke(attr, args);
-    }
 
     private void AttributesChanged(object sender, NotifyCollectionChangedEventArgs args)
     {
@@ -156,6 +205,89 @@ public abstract class TreeNode : IDisposable
         if (attrs != null && attrs.Any())
             return attrs.First();
         return null;
+    }
+
+    #endregion
+    #region Near
+
+    public TreeNode GetNearestEdited()
+    {
+        TreeNode node = ParentNode;
+        if (node != null)
+        {
+            int id = node.children.IndexOf(this) - 1;
+            if (id >= 0)
+                node = node.children[id];
+            return node;
+        }
+        else
+        {
+            return this;
+        }
+    }
+
+    #endregion
+    #region Events
+
+    public delegate void NodeCreatedEventHandler(TreeNode node);
+    public delegate void NodeDeletedEventHandler(TreeNode node);
+    public delegate void NodeAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args);
+    public event NodeCreatedEventHandler? OnCreate;
+    public event NodeCreatedEventHandler? OnVirtualCreate;
+    public event NodeDeletedEventHandler? OnRemove;
+    public event NodeDeletedEventHandler? OnVirtualRemove;
+    public event NodeAttributeChanged OnNodeAttributeChanged;
+    public event NodeAttributeChanged OnDependencyAttributeChanged;
+
+    public void RaiseCreate(TreeNode node)
+    {
+        if (!IsBanned)
+            OnVirtualCreate?.Invoke(node);
+        OnCreate?.Invoke(node);
+        foreach (TreeNode n in children)
+            node.RaiseCreate(n);
+    }
+
+    public void RaiseVirtualCreate(TreeNode node)
+    {
+        if (!IsBanned)
+        {
+            OnVirtualCreate?.Invoke(node);
+            foreach (TreeNode n in children)
+                node.RaiseVirtualCreate(n);
+        }
+    }
+
+    public void RaiseRemove(TreeNode node)
+    {
+        if (!IsBanned)
+            OnVirtualRemove?.Invoke(node);
+        OnRemove?.Invoke(node);
+        foreach (TreeNode n in children)
+            node.RaiseRemove(n);
+    }
+
+    public void RaiseVirtualRemove(TreeNode node)
+    {
+        if (!IsBanned)
+        {
+            OnVirtualRemove?.Invoke(node);
+            foreach (TreeNode n in children)
+                node.RaiseVirtualRemove(n);
+        }
+    }
+
+    public void RaiseAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args)
+    {
+        OnNodeAttributeChanged?.Invoke(attr, args);
+        OnAttributeChangedImpl(attr, args);
+    }
+
+    public virtual void OnAttributeChangedImpl(NodeAttribute attr, NodeAttributeChangedEventArgs args) { }
+
+    public void RaiseDependencyAttributeChanged(NodeAttribute attr, NodeAttributeChangedEventArgs args)
+    {
+        OnDependencyAttributeChanged?.Invoke(attr, args);
     }
 
     #endregion

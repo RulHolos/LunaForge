@@ -10,6 +10,9 @@ using System.Xml.Linq;
 using LunaForge.Editor.UI;
 using Hexa.NET.Raylib;
 using LunaForge.Editor.LunaTreeNodes.Nodes;
+using Serilog;
+using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.Commands;
 
 namespace LunaForge.Editor.Projects;
 
@@ -50,11 +53,14 @@ public enum InsertMode
 
 public class LunaNodeTree : LunaProjectFile
 {
+    public static ILogger Logger = CoreLogger.Create("Node Tree");
+
     public InsertMode InsertMode { get; set; } = InsertMode.Child;
 
     public WorkTree Nodes { get; set; } = [];
 
     public TreeNode? SelectedNode { get; set; }
+    public TreeNode? DraggedNode = null;
 
     private bool justOpened = true;
     private bool justInserted = false;
@@ -209,39 +215,6 @@ public class LunaNodeTree : LunaProjectFile
         }
     }
 
-    private void SelectNode(TreeNode node)
-    {
-        if (SelectedNode != null)
-            SelectedNode!.IsSelected = false;
-        SelectedNode = node;
-        node.IsSelected = true;
-    }
-
-    public void DeselectAllNodes()
-    {
-        SelectedNode = null;
-        Nodes.Root.ClearChildSelection();
-    }
-
-    public void RevealNode(TreeNode? node)
-    {
-        if (node == null)
-            return;
-        TreeNode tmp = node.ParentNode;
-        Nodes.Root.ClearChildSelection();
-        Stack<TreeNode> stack = [];
-        while (tmp != null)
-        {
-            stack.Push(tmp);
-            tmp = tmp.ParentNode;
-        }
-        while (stack.Count > 0)
-            stack.Pop().IsExpanded = true;
-        SelectedNode = node;
-        node.IsSelected = true;
-        justInserted = true;
-    }
-
     public void RenderContextMenu(TreeNode node)
     {
         if (ImGui.MenuItem($"{FA.PenToSquare} Edit", string.Empty, false))
@@ -249,29 +222,29 @@ public class LunaNodeTree : LunaProjectFile
 
         ImGui.Separator();
 
-        if (ImGui.MenuItem($"{FA.ArrowRotateLeft} Undo", "Ctrl+Z", false, false))
-        { } // TODO Undo
-        if (ImGui.MenuItem($"{FA.ArrowRotateRight} Redo", "Ctrl+Y", false, false))
-        { } // TODO Undo
+        if (ImGui.MenuItem($"{FA.ArrowRotateLeft} Undo", "Ctrl+Z", false, CanUndo))
+            Undo();
+        if (ImGui.MenuItem($"{FA.ArrowRotateRight} Redo", "Ctrl+Y", false, CanRedo))
+            Redo();
 
         ImGui.Separator();
 
         if (ImGui.MenuItem($"{FA.Cut} Cut", "Ctrl+X", false, false))
-        { } // TODO Cut
+            Cut();
         if (ImGui.MenuItem($"{FA.Copy} Copy", "Ctrl+C", false, false))
-        { } // TODO Cut
+            Copy();
         if (ImGui.MenuItem($"{FA.Paste} Paste", "Ctrl+V", false, false))
-        { } // TODO Cut
+            Paste();
 
         ImGui.Separator();
 
         if (ImGui.MenuItem($"{FA.Eraser} Delete", "Del", false, false))
-        { } // TODO Delete
+            Delete();
 
         ImGui.Separator();
 
         if (ImGui.MenuItem($"{FA.FilterCircleXmark} Ban", string.Empty, node.IsBanned))
-            node.IsBanned = !node.IsBanned;
+            AddAndExecuteCommand(new SwitchBanCommand(node, !node.IsBanned));
 
         ImGui.Separator();
 
@@ -323,12 +296,210 @@ public class LunaNodeTree : LunaProjectFile
     #endregion Data Attributes
     #region Node Logic
 
+    private void SelectNode(TreeNode node)
+    {
+        if (SelectedNode != null)
+            SelectedNode!.IsSelected = false;
+        SelectedNode = node;
+        node.IsSelected = true;
+    }
+
+    public void DeselectAllNodes()
+    {
+        SelectedNode = null;
+        Nodes.Root.ClearChildSelection();
+    }
+
+    public void RevealNode(TreeNode? node)
+    {
+        if (node == null)
+            return;
+        TreeNode tmp = node.ParentNode;
+        Nodes.Root.ClearChildSelection();
+        Stack<TreeNode> stack = [];
+        while (tmp != null)
+        {
+            stack.Push(tmp);
+            tmp = tmp.ParentNode;
+        }
+        while (stack.Count > 0)
+            stack.Pop().IsExpanded = true;
+        SelectedNode = node;
+        node.IsSelected = true;
+        justInserted = true;
+    }
+
+    public unsafe void DoDragDropBehavior(TreeNode node)
+    {
+        //if (!node.MetaData.CannotBeDragged)
+        //{
+        if (ImGui.BeginDragDropSource())
+        {
+            ImGui.SetDragDropPayload("DRAG_TREE_NODE", null, 0);
+            DraggedNode = node;
+            ImGui.EndDragDropSource();
+        }
+        //}
+
+        //if (!node.MetaData.CannotBeDragTarget)
+        //{
+        if (ImGui.BeginDragDropTarget())
+        {
+            if (!ImGui.AcceptDragDropPayload("DRAG_TREE_NODE").IsNull && DraggedNode != null)
+            {
+                if (node.ValidateChild(DraggedNode))
+                    AddAndExecuteCommand(new TreeDragDropCommand(DraggedNode, node));
+                DraggedNode = null;
+            }
+            ImGui.EndDragDropTarget();
+        }
+        //}
+    }
+
+    /// <summary>
+    /// Command to lazyly add a node to the tree. Don't use for release, only debugging.
+    /// </summary>
+    /// <param name="node"></param>
+    [Obsolete("Use Insert instead.")]
     public void AddNode(TreeNode node)
     {
-        // Rework this to use a command instead of directly modifying the collection.
-        // Like, the History for each file loaded.
         Nodes.Add(node);
-        IsUnsaved = true;
+    }
+
+    public bool Insert(TreeNode parent, TreeNode node, bool doInvoke = true)
+    {
+        try
+        {
+            if (parent == null)
+                return false;
+            if (node.Children.Count > 0)
+                node.IsExpanded = true;
+            TreeNode oldSelection = parent;
+            Command cmd = null;
+            node.ParentTree = this;
+            switch (InsertMode)
+            {
+                case InsertMode.Ancestor:
+                    break;
+                case InsertMode.Before:
+                    if (oldSelection.ParentNode == null || !oldSelection.ParentNode.ValidateChild(node))
+                        return false;
+                    cmd = new InsertBeforeCommand(oldSelection, node);
+                    break;
+                case InsertMode.After:
+                    if (oldSelection.ParentNode == null || !oldSelection.ParentNode.ValidateChild(node))
+                        return false;
+                    cmd = new InsertAfterCommand(oldSelection, node);
+                    break;
+                case InsertMode.Child:
+                    if (!oldSelection.ValidateChild(node))
+                        return false;
+                    cmd = new InsertChildCommand(oldSelection, node);
+                    break;
+            }
+            if (oldSelection.ParentNode == null && InsertMode != InsertMode.Child)
+                return false;
+            if (AddAndExecuteCommand(cmd))
+            {
+                RevealNode(node);
+                if (doInvoke)
+                {
+                    CreateInvoke(node);
+                }
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to insert node. Reason:\n{ex}");
+            return false;
+        }
+    }
+
+    public void CreateInvoke(TreeNode node)
+    {
+        /*
+        NodeAttribute attr = node.GetCreateInvoke();
+        if (attr != null)
+        {
+            
+        }
+        */
+    }
+    
+    public bool Insert(TreeNode node, bool doInvoke = true) => Insert(SelectedNode, node, doInvoke);
+
+    #endregion
+    #region Command Logic
+
+    TreeNode? CopyClipboard;
+
+    public override void Cut()
+    {
+        try
+        {
+            CopyClipboard = (TreeNode)SelectedNode.Clone();
+            TreeNode prev = SelectedNode.GetNearestEdited();
+            AddAndExecuteCommand(new DeleteTreeNodeCommand(SelectedNode));
+            if (prev != null)
+                RevealNode(prev);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to cut node. Reason:\n{ex}");
+        }
+    }
+    public override bool Cut_CanExecute()
+    {
+        if (SelectedNode != null)
+            return SelectedNode.CanLogicallyDelete();
+        return false;
+    }
+
+    public override void Copy()
+    {
+        try
+        {
+            CopyClipboard = (TreeNode)SelectedNode.Clone();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Cannot copy node. Reason:\n{ex}");
+        }
+    }
+    public override bool Copy_CanExecute() => SelectedNode != null;
+
+    public override void Paste()
+    {
+        try
+        {
+            TreeNode node = CopyClipboard;
+            node.ParentTree = this;
+            TreeNode newNode = (TreeNode)node.Clone();
+            Insert(newNode, false);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Cannot paste node. Reason:\n{ex}");
+        }
+    }
+    public override bool Paste_CanExecute() => SelectedNode != null && CopyClipboard != null;
+
+    public override void Delete()
+    {
+        TreeNode? prev = SelectedNode?.GetNearestEdited();
+        if (SelectedNode == null)
+            return;
+        AddAndExecuteCommand(new DeleteTreeNodeCommand(SelectedNode));
+        if (prev != null)
+            RevealNode(prev);
+    }
+    public override bool Delete_CanExecute()
+    {
+        if (SelectedNode == null)
+            return false;
+        return SelectedNode.CanLogicallyDelete();
     }
 
     #endregion

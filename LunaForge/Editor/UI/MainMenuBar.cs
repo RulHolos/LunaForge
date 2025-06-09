@@ -219,7 +219,7 @@ public static class MainMenuBar
 
         if (currentHistoryCtx != null && currentHistoryCtx.UndoCount != 0)
         {
-            ImGui.Text("Undo Stack");
+            ImGui.SeparatorText("Undo Stack");
             foreach (Command command in currentHistoryCtx.CommandStack)
             {
                 ImGui.MenuItem(command.ToString());
@@ -229,7 +229,7 @@ public static class MainMenuBar
             ImGui.Separator();
         if (currentHistoryCtx != null && currentHistoryCtx.RedoCount != 0)
         {
-            ImGui.Text("Redo Stack");
+            ImGui.SeparatorText("Redo Stack");
             foreach (Command command in currentHistoryCtx.UndoCommandStack)
             {
                 ImGui.MenuItem(command.ToString());

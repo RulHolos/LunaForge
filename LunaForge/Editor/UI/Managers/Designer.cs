@@ -29,6 +29,7 @@ public static class Designer
 
         WindowManager.RegisterAndShowWindow<ProjectWindow>(WindowCategory.Project);
         WindowManager.RegisterAndShowWindow<ProjectBrowserWindow>(WindowCategory.Project);
+        WindowManager.RegisterAndShowWindow<ProjectIssuesWindow>(WindowCategory.Debug);
         //WindowManager.ShowWindow<TerminalWindow>(); // Heavily rework
 
         WindowManager.RegisterWindow<SettingsWindow>(WindowCategory.Settings);

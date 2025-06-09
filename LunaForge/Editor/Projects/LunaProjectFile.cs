@@ -22,8 +22,6 @@ public abstract class LunaProjectFile : IDisposable
     [JsonIgnore] public string? FilePath;
     [JsonIgnore] public int Hash;
 
-    [JsonIgnore] public bool IsUnsaved;
-
     [JsonIgnore] public bool IsOpened;
 
     public LunaProjectFile()
@@ -43,7 +41,6 @@ public abstract class LunaProjectFile : IDisposable
         T projectFile = new()
         {
             FilePath = name,
-            IsUnsaved = true,
             IsOpened = true,
         };
         return projectFile;
@@ -106,12 +103,27 @@ public abstract class LunaProjectFile : IDisposable
 
     public Stack<Command> CommandStack { get; private set; } = [];
     public Stack<Command> UndoCommandStack { get; private set; } = [];
+    public Command? SavedCommand { get; set; } = null;
 
     public bool CanUndo => CommandStack.Count > 0;
     public bool CanRedo => UndoCommandStack.Count > 0;
 
     public int UndoCount => CommandStack.Count;
     public int RedoCount => UndoCommandStack.Count;
+
+    [JsonIgnore]
+    public bool IsUnsaved
+    {
+        get
+        {
+            if (!File.Exists(FilePath))
+                return true;
+            else if (CommandStack.Count > 0)
+                return CommandStack.Peek() != SavedCommand;
+            else
+                return SavedCommand != null;
+        }
+    }
 
     public void Undo()
     {
@@ -145,6 +157,19 @@ public abstract class LunaProjectFile : IDisposable
 
         return ProjectFileCollection.CurrentF.AddAndExecuteCommand(command);
     }
+
+    #endregion
+    #region
+
+    public abstract void Cut();
+    public abstract bool Cut_CanExecute();
+    public abstract void Copy();
+    public abstract bool Copy_CanExecute();
+    public abstract void Paste();
+    public abstract bool Paste_CanExecute();
+
+    public abstract void Delete();
+    public abstract bool Delete_CanExecute();
 
     #endregion
 }

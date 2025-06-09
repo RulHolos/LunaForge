@@ -13,6 +13,10 @@ public interface ITreeNodeMeta
 
 public class TreeNodeMetaData : ITreeNodeMeta
 {
+
+    public bool IsFolder = false;
+    public bool CannotBeDeleted = false;
+
     /// <summary>
     /// Construct a <see cref="TreeNodeMetaData"/> Metadata based on a C#-defined <see cref="TreeNode"/> object.
     /// </summary>

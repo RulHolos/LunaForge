@@ -14,4 +14,9 @@ public class TestTreeNode : TreeNode
     {
 
     }
+
+    public override object Clone()
+    {
+        throw new NotImplementedException();
+    }
 }

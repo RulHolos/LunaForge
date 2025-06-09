@@ -26,4 +26,44 @@ public class LunaScriptEditor : LunaProjectFile
     {
         
     }
+
+    public override void Cut()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool Cut_CanExecute()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Copy()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool Copy_CanExecute()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Paste()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool Paste_CanExecute()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Delete()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool Delete_CanExecute()
+    {
+        throw new NotImplementedException();
+    }
 }
