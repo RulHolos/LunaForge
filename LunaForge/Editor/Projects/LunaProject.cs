@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tomlyn.Model;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace LunaForge.Editor.Projects;
 
-public class LunaProject
+public class LunaProject : IDisposable
 {
 
     private static ILogger Logger = CoreLogger.Create("LunaProject");
@@ -76,9 +77,29 @@ public class LunaProject
                 ProjectConfig = ConfigSystem.Load<ConfigSystem>(path)
             };
 
-            proj.ProjectConfig.Register(ConfigSystemCategory.CurrentProject, "OpenedFiles", new List<string>());
+            proj.ProjectConfig.Register<TomlArray>(ConfigSystemCategory.CurrentProject, "OpenedFiles", []);
             proj.ProjectConfig.CommitAll();
-            proj.Save();
+            proj.ProjectConfig.Save();
+
+            // Fix this
+            foreach (string filePath in proj.ProjectConfig.Get<TomlArray>("OpenedFiles", ConfigSystemCategory.CurrentProject).Value)
+            {
+                LunaProjectFile? file = null;
+                switch (Path.GetExtension(path))
+                {
+                    case ".lfd":
+                        file = LunaNodeTree.Load(path);
+                        break;
+                    case ".lfg":
+                        file = LunaProjectFile.Load<LunaNodeGraph>(path);
+                        break;
+                    case ".lua":
+                        file = LunaProjectFile.Load<LunaScriptEditor>(path);
+                        break;
+                }
+                if (file != null)
+                    proj.ProjectFileCollection.Add(file);
+            }
 
             return (proj, "");
         }
@@ -90,4 +111,15 @@ public class LunaProject
     }
 
     #endregion
+
+    public void Dispose()
+    {
+        TomlArray openedFiles = [.. ProjectFileCollection.Select(x => x.FilePath)];
+        ProjectConfig.SetOrCreate("OpenedFiles", openedFiles, ConfigSystemCategory.CurrentProject);
+        ProjectConfig.CommitAll();
+        ProjectConfig.Save();
+
+        foreach (LunaProjectFile file in ProjectFileCollection)
+            file.Dispose();
+    }
 }

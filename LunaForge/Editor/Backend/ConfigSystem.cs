@@ -110,11 +110,18 @@ public class ConfigSystem
 
     public ConfigSystemEntry<T> Get<T>(string key, ConfigSystemCategory category = ConfigSystemCategory.General)
     {
-        if (entries.TryGetValue(key, out var obj) && obj is ConfigSystemEntry<T> entry)
-            return entry;
+        if (!entries.TryGetValue(key, out var obj))
+        {
+            Logger.Warning($"Config entry '{key}' not found.");
+            return new ConfigSystemEntry<T>(category, key, default!);
+        }
+        if (obj is not ConfigSystemEntry<T> entry)
+        {
+            Logger.Warning($"Config entry '{key}' has type mismatch. Expected type: {typeof(T)}, got {obj.GetType()}");
+            return new ConfigSystemEntry<T>(category, key, default!);
+        }
 
-        Logger.Warning($"Config entry '{key}' not found or type mismatch.");
-        return new ConfigSystemEntry<T>(category, key, default!);
+        return entry;
     }
 
     public void SetOrCreate<T>(string key, T value, ConfigSystemCategory category = ConfigSystemCategory.General)

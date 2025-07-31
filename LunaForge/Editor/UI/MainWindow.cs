@@ -128,6 +128,7 @@ public static class MainWindow
             }
         }
 
+        ProjectManager.CurrentProject?.Dispose();
         LayoutManager.Save();
         manager.Dispose();
         Raylib.CloseWindow();

@@ -22,7 +22,7 @@ public abstract class LunaProjectFile : IDisposable
     [JsonIgnore] public string? FilePath;
     [JsonIgnore] public int Hash;
 
-    [JsonIgnore] public bool IsOpened;
+    [JsonIgnore] public bool IsOpened = true;
 
     public LunaProjectFile()
     {
@@ -66,7 +66,7 @@ public abstract class LunaProjectFile : IDisposable
         return projFile;
     }
 
-    public void Save(bool saveAs = false)
+    public virtual void Save(bool saveAs = false)
     {
         string parsedJson = JsonConvert.SerializeObject(this);
 

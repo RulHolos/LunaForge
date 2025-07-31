@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace LunaForge.Editor.LunaTreeNodes;
 
-public interface ITreeNodeMeta
-{
-
-}
-
-public class TreeNodeMetaData : ITreeNodeMeta
+public class TreeNodeMetaData
 {
 
     public bool IsFolder = false;

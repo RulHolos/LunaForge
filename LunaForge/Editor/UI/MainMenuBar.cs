@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Widgets.Dialogs;
+using LibGit2Sharp;
 using LunaForge.Editor.Backend;
 using LunaForge.Editor.Commands;
 using LunaForge.Editor.Projects;
@@ -85,6 +86,19 @@ public static class MainMenuBar
                     ImGui.MenuItem("No recent projects...", string.Empty, false, false);
 
                 ImGui.EndMenu();
+            }
+
+            ImGui.Separator();
+
+            if (ImGui.MenuItem("New Project File"))
+            {
+
+            }
+
+            if (ImGui.MenuItem("Open Project File"))
+            {
+                MainWindow.FileDialogManager.OpenFileDialog("Open Project File", "LunaForge Definition{.lfd,.lfg,.lua}",
+                    OpenProjectFileCallback, 1, EditorConfig.Default.Get<string>("ProjectsFolder").Value);
             }
 
             ImGui.SeparatorText("Packaging");
@@ -200,6 +214,31 @@ public static class MainMenuBar
             return;
 
         ProjectManager.Load(paths[0]);
+    }
+
+    private static void OpenProjectFileCallback(bool success, List<string> paths)
+    {
+        if (!success)
+            return;
+
+        foreach (var path in paths)
+        {
+            LunaProjectFile? file = null;
+            switch (Path.GetExtension(path))
+            {
+                case ".lfd":
+                    file = LunaNodeTree.Load(path);
+                    break;
+                case ".lfg":
+                    file = LunaProjectFile.Load<LunaNodeGraph>(path);
+                    break;
+                case ".lua":
+                    file = LunaProjectFile.Load<LunaScriptEditor>(path);
+                    break;
+            }
+            if (file != null)
+                ProjectManager.CurrentProject.ProjectFileCollection.Add(file);
+        }
     }
 
     private static unsafe void EditSubMenu()

@@ -1,4 +1,5 @@
-﻿using LunaForge.Editor.Projects;
+﻿using Lua;
+using LunaForge.Editor.Projects;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -108,6 +109,11 @@ public abstract class TreeNode : IDisposable, ICloneable
         return true;
     }
 
+    /// <summary>
+    /// Gets the first logical parent of this Node (not folder, ...)
+    /// </summary>
+    /// <returns>The TreeNode parent</returns>
+    [LuaMember]
     public TreeNode GetRealParent()
     {
         TreeNode p = ParentNode;
@@ -116,6 +122,11 @@ public abstract class TreeNode : IDisposable, ICloneable
         return p;
     }
 
+    /// <summary>
+    /// Gets a list of logical direct/nested children.
+    /// </summary>
+    /// <returns></returns>
+    [LuaMember]
     public IEnumerable<TreeNode> GetRealChildren()
     {
         foreach (TreeNode n in Children)
@@ -131,6 +142,11 @@ public abstract class TreeNode : IDisposable, ICloneable
         }
     }
 
+    /// <summary>
+    /// Can delete this node be deleted?
+    /// </summary>
+    /// <returns></returns>
+    [LuaMember]
     public bool CanLogicallyDelete()
     {
         if (MetaData.IsFolder)
@@ -149,6 +165,11 @@ public abstract class TreeNode : IDisposable, ICloneable
 
     }
 
+    /// <summary>
+    /// Adds a child to this node.
+    /// </summary>
+    /// <param name="child"></param>
+    [LuaMember]
     public void AddChild(TreeNode child)
     {
         Children.Add(child);
@@ -170,6 +191,29 @@ public abstract class TreeNode : IDisposable, ICloneable
         IsSelected = false;
         foreach (TreeNode child in children)
             child.ClearChildSelection();
+    }
+
+    /// <summary>
+    /// Loads the children of this node from the database.
+    /// </summary>
+    /// <returns></returns>
+    [LuaMember]
+    public List<TreeNode> LazyLoadChildren()
+    {
+        ulong parentId = this.Hash;
+        List<TreeNodeRecord> sqlChildren = [.. ParentTree.Database.Table<TreeNodeRecord>().Where(x => x.ParentId == parentId)];
+        var result = new List<TreeNode>();
+
+        foreach (var sql in sqlChildren)
+        {
+            var node = LunaNodeTree.CreateNodeInstanceFromSql(ParentTree, sql);
+            node.ParentNode = this;
+            node.Hash = sql.Id;
+
+            AddChild(node);
+        }
+
+        return result;
     }
 
     #endregion

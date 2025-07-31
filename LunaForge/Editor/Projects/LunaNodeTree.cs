@@ -13,33 +13,57 @@ using LunaForge.Editor.LunaTreeNodes.Nodes;
 using Serilog;
 using LunaForge.Editor.Backend.Utilities;
 using LunaForge.Editor.Commands;
+using SQLitePCL;
+using SQLite;
+using Newtonsoft.Json;
+using Hexa.NET.ImGui.Widgets;
+using LunaForge.Editor.UI.Managers;
 
 namespace LunaForge.Editor.Projects;
 
 [Serializable]
 public class WorkTree : List<TreeNode>
 {
-    public TreeNode? Root => this[0];
+    public TreeNode? Root => this.Find(x => x.ParentNode == null); // Considered as the root node.
     private ulong Hash = 0;
 
     public delegate void NodeAdded(TreeNode node);
     public delegate void NodeRemoved(TreeNode node);
 
-    public event NodeAdded OnNodeAdded;
-    public event NodeRemoved OnNodeRemoved;
+    public event NodeAdded? OnNodeAdded;
+    public event NodeRemoved? OnNodeRemoved;
 
     public new void Add(TreeNode node)
     {
-        node.Hash = Hash;
-        base.Add(node);
-        Hash++;
-        OnNodeAdded?.Invoke(node);
+        if (!Contains(node))
+        {
+            node.Hash = Hash++;
+            base.Add(node);
+            OnNodeAdded?.Invoke(node);
+        }
     }
 
     public new void Remove(TreeNode node)
     {
-        base.Remove(node);
-        OnNodeRemoved?.Invoke(node);
+        if (Contains(node))
+        {
+            base.Remove(node);
+            OnNodeRemoved?.Invoke(node);
+        }
+    }
+
+    public void AddWithParent(TreeNode node, TreeNode? parent = null)
+    {
+        if (!Contains(node))
+        {
+            if (parent != null)
+            {
+                parent.AddChild(node);
+                node.ParentNode = parent;
+            }
+
+            Add(node);
+        }
     }
 }
 
@@ -64,6 +88,12 @@ public class LunaNodeTree : LunaProjectFile
 
     private bool justOpened = true;
     private bool justInserted = false;
+
+    private SQLiteConnection? database;
+    public SQLiteConnection Database
+    {
+        get => database ??= new SQLiteConnection($"Data Source={FilePath}", SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create);
+    }
 
     public LunaNodeTree()
         : base()
@@ -503,10 +533,81 @@ public class LunaNodeTree : LunaProjectFile
     }
 
     #endregion
+    #region Saving and Loading
+
+    public static LunaNodeTree? Load(string filePath)
+    {
+        try
+        {
+            var file = new LunaNodeTree();
+
+            using var db = new SQLiteConnection(filePath);
+            db.CreateTable<TreeNodeRecord>();
+
+            var rootSql = db.Table<TreeNodeRecord>().FirstOrDefault(x => x.ParentId == null);
+            if (rootSql != null)
+            {
+                var rootNode = CreateNodeInstanceFromSql(file, rootSql);
+                rootNode.Hash = rootSql.Id;
+                rootNode.ParentTree = file;
+                file.Nodes[0] = rootNode;
+            }
+
+            file.IsOpened = true;
+            file.FilePath = filePath;
+
+            return file;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to load LunaNodeTree from file '{filePath}'. Reason:\n{ex}");
+            MessageBox.Show("Failed to load file...", $"Failed to load from file '{filePath}': File corrupted or malformed.");
+            return null;
+        }
+    }
+
+    public static TreeNode CreateNodeInstanceFromSql(LunaNodeTree tree, TreeNodeRecord sql)
+    {
+        TreeNode node = (TreeNode)JsonConvert.DeserializeObject(sql.SerializedNode, Type.GetType(sql.NodeName));
+        node.ParentNode = tree.Nodes.Find(x => x.Hash == sql.ParentId) ?? null;
+        node.ParentTree = tree;
+
+        return node;
+    }
+
+    public override void Save(bool saveAs = false)
+    {
+        void writeToFile(bool success, string path)
+        {
+            if (!success)
+                return;
+            using var db = new SQLiteConnection(path);
+            db.CreateTable<TreeNodeRecord>();
+            db.DeleteAll<TreeNodeRecord>();
+
+            var flatNodes = FlattenTreeHelper.FlattenTree(Nodes.Root);
+            foreach (var node in flatNodes)
+                db.Insert(node);
+        }
+
+        if (!File.Exists(FilePath) || saveAs)
+        {
+            MainWindow.FileDialogManager.SaveFileDialog("Save Project File", "LunaForge Definition{.lfd}",
+                FilePath, ".lfd", writeToFile, EditorConfig.Default.Get<string>("ProjectsFolder").Value);
+        }
+        else
+        {
+            writeToFile(true, FilePath);
+        }
+    }
+
+    #endregion
 
     public override void Dispose()
     {
         //Nodes.Root.RemoveTraces();
         SelectedNode = null;
+        database?.Close();
+        database?.Dispose();
     }
 }
