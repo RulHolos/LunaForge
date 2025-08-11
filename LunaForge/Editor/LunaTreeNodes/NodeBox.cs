@@ -7,20 +7,42 @@ using System.Threading.Tasks;
 
 namespace LunaForge.Editor.LunaTreeNodes;
 
-public class NodeBox(string name, string namespice, string desc, List<string> authors = null)
+[LuaObject]
+public partial class NodeBox
 {
-    public string Name { get; set; } = name;
-    public string Namespace { get; set; } = namespice;
-    public string Description { get; set; } = desc;
-    public List<string> Authors { get; set; } = authors ?? [];
+    [LuaMember]
+    public string Name { get; set; }
+    [LuaMember]
+    public string Namespace { get; set; }
+    [LuaMember]
+    public string Description { get; set; }
+    public List<string> Authors { get; set; }
 
     public List<NodeBoxTab> Tabs { get; private set; } = [];
+
+    public NodeBox() { }
+
+    public NodeBox(string name, string namespice, string desc, List<string> authors = null)
+    {
+        Name = name;
+        Namespace = namespice;
+        Description = desc;
+        Authors = authors ?? [];
+    }
+
+    [LuaMember("create")]
+    public static NodeBox Create(string name, string namespc, string description, string authors)
+    {
+        return new(name, namespc, description,
+            [.. authors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)]);
+    }
 
     public void AddTab(string name, List<object> nodes)
     {
         Tabs.Add(new(name, nodes));
     }
 
+    [LuaMember("add_tab")]
     public void AddTab(string name, LuaTable nodes)
     {
         NodeBoxTab tab = new(name);
@@ -35,13 +57,15 @@ public class NodeBox(string name, string namespice, string desc, List<string> au
     }
 }
 
-public class NodeBoxTab(string name, List<object> nodes = null)
+[LuaObject]
+public partial class NodeBoxTab(string name, List<object> nodes = null)
 {
     public string Name { get; private set; } = name;
     public List<object> Nodes { get; private set; } = nodes ?? [];
 }
 
-public class NodeBoxTabItem(string? name, bool isSeparator = false)
+[LuaObject]
+public partial class NodeBoxTabItem(string? name, bool isSeparator = false)
 {
     public bool IsSeparator { get; private set; } = isSeparator;
 }

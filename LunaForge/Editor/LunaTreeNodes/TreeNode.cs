@@ -12,11 +12,8 @@ using System.Threading.Tasks;
 
 namespace LunaForge.Editor.LunaTreeNodes;
 
-/*
- * Do that in a lua script, not TreeNode
- */
-
-public abstract class TreeNode : IDisposable, ICloneable
+[LuaObject]
+public partial class TreeNode
 {
     /// <summary>
     /// Things like IsFolder, IsLeaf, CannotBeDeleted, ...
@@ -42,9 +39,9 @@ public abstract class TreeNode : IDisposable, ICloneable
     public LunaNodeTree ParentTree;
 
     [JsonIgnore]
-    private ObservableCollection<TreeNode> children = [];
+    private List<TreeNode> children = [];
     [JsonIgnore]
-    public ObservableCollection<TreeNode> Children
+    public List<TreeNode> Children
     {
         get => children;
         set => children = value;
@@ -92,8 +89,6 @@ public abstract class TreeNode : IDisposable, ICloneable
     public string DisplayString => ToString();
     [JsonIgnore]
     public virtual string NodeName { get; set; } = string.Empty;
-
-    public abstract object Clone();
 
     #region Children logic
 

@@ -14,9 +14,4 @@ public class RootNode : TreeNode
     {
         return "Root";
     }
-
-    public override object Clone()
-    {
-        throw new NotImplementedException();
-    }
 }

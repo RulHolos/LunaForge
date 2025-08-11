@@ -10,11 +10,15 @@ namespace LunaForge.Editor.LunaTreeNodes;
 [LuaObject]
 public partial class LuaTreeNode
 {
-    public TreeNode treeNode { get; set; }
+    public TreeNode TreeNode { get; set; }
 
-    public LuaTreeNode(TreeNode node)
+    [LuaMember("create")]
+    public static LuaTreeNode Create()
     {
-        treeNode = node;
+        return new()
+        {
+
+        };
     }
 
     /// <summary>
@@ -24,6 +28,9 @@ public partial class LuaTreeNode
     [LuaMember]
     public LuaTreeNode GetRealParent()
     {
-        return new(treeNode.GetRealParent());
+        return new()
+        {
+            TreeNode = this.TreeNode.GetRealParent()
+        };
     }
 }

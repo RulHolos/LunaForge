@@ -1,4 +1,7 @@
-﻿using LunaForge.Editor.Backend.Utilities;
+﻿using Lua;
+using Lua.Standard;
+using LunaForge.Editor.Backend.Utilities;
+using LunaForge.Editor.LunaTreeNodes;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -22,6 +25,10 @@ public class LunaProject : IDisposable
 
     [YamlIgnore] public ProjectFileCollection ProjectFileCollection { get; private set; } = [];
 
+    [YamlIgnore] public List<LuaState> LuaStates { get; private set; } = [];
+
+    [YamlIgnore] public List<NodeBox> NodeBoxes { get; private set; } = [];
+
     #region Project Config
 
     public ConfigSystem ProjectConfig { get; private set; } = new();
@@ -33,19 +40,74 @@ public class LunaProject : IDisposable
         
     }
 
+    public LunaProject(string folder)
+    {
+        ProjectRoot = folder;
+
+        FindAllNodeBoxes();
+    }
+
     public static LunaProject CreateEmpty() => new();
 
     public static LunaProject CreateNew(string folder)
     {
-        LunaProject project = new()
-        {
-            ProjectRoot = folder
-        };
+        LunaProject project = new(folder);
 
         project.Save();
 
         return project;
     }
+
+    #region Lua
+
+    private async Task FindAllNodeBoxes()
+    {
+        Logger.Verbose("Reading all NodeBoxes...");
+
+        string[] allfiles = Directory.GetFiles(Path.Combine(DotFolder, "nodes"), "init.lua", SearchOption.AllDirectories);
+        Logger.Verbose($"NodeBoxes found: {allfiles.Length}");
+        Logger.Verbose($"Setting up Lua Environment...");
+
+        foreach (string file in allfiles)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(file);
+                LuaState state = LuaState.Create();
+                state.ModuleLoader = new LunaModuleLoader(dir);
+                SetSharedTypes(ref state);
+
+                LuaValue[] results = await state.DoFileAsync(Path.Combine(DotFolder, dir, "init.lua"));
+                var fdfsdf = results[0].Read<NodeBox>();
+
+                LuaStates.Add(state);
+            }
+            catch (LuaRuntimeException ex)
+            {
+                Logger.Error($"""
+                    A lua runtime exception as occured!
+                    {ex.Message}
+                    <=== Traceback ===>
+                    {ex.LuaTraceback}
+                    """);
+            }
+        }
+    }
+
+    private void SetSharedTypes(ref LuaState state)
+    {
+        state.OpenBasicLibrary();
+        state.OpenBitwiseLibrary();
+        state.OpenStringLibrary();
+        state.OpenTableLibrary();
+        state.OpenMathLibrary();
+        state.OpenModuleLibrary();
+
+        state.Environment["NodeBox"] = new NodeBox();
+        state.Environment["TreeNode"] = new TreeNode();
+    }
+
+    #endregion
 
     #region Serialization
 
@@ -71,9 +133,8 @@ public class LunaProject : IDisposable
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Project file doesn't exist: {path}");
 
-            LunaProject proj = new()
+            LunaProject proj = new(Path.GetDirectoryName(path))
             {
-                ProjectRoot = Path.GetDirectoryName(path),
                 ProjectConfig = ConfigSystem.Load<ConfigSystem>(path)
             };
 
@@ -121,5 +182,29 @@ public class LunaProject : IDisposable
 
         foreach (LunaProjectFile file in ProjectFileCollection)
             file.Dispose();
+    }
+}
+
+public class LunaModuleLoader(string folder) : ILuaModuleLoader
+{
+    /*
+     * En fait il faudrait que je compte le nombre de nodeboxes à load, et ensuite que je construise un lua state par nodebox.
+     * Là, actuellement c'est un par project, ce qui va pas, parce que le lua state sera global et ça me fait chier.
+     */
+
+    private readonly string folder = folder;
+
+    public bool Exists(string moduleName)
+    {
+        return File.Exists(Path.Combine(folder, moduleName));
+    }
+
+    public async ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+    {
+        string text = moduleName;
+        if (!Path.HasExtension(text))
+            text += ".lua";
+
+        return new LuaModule(moduleName, await File.ReadAllTextAsync(Path.Combine(folder, text), cancellationToken));
     }
 }
